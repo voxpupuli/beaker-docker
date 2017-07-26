@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+
+require 'rubygems' unless defined?(Gem)
+require 'beaker-docker'
+
+VERSION_STRING =
+"
+                                 _ .--.
+                                ( `    )
+        beaker-docker         .-'      `--,
+                  _..----.. (             )`-.
+                .'_|` _|` _|(  .__,           )
+               /_|  _|  _|  _(        (_,  .-'
+              ;|  _|  _|  _|  '-'__,--'`--'
+              | _|  _|  _|  _| |
+          _   ||  _|  _|  _|  _| %s
+        _( `--.\\_|  _|  _|  _|/
+     .-'       )--,|  _|  _|.`
+    (__, (_      ) )_|  _| /
+      `-.__.\\ _,--'\\|__|__/
+                    ;____;
+                     \\YT/
+                      ||
+                     |\"\"|
+                     '=='
+"
+
+
+
+puts BeakerDocker::VERSION
+
+exit 0
