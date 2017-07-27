@@ -1,0 +1,25 @@
+---
+HOSTS:
+  ubuntu1604-64-1:
+    platform: ubuntu-1604-x86_64 
+    hypervisor: docker
+    image: ubuntu:16.04
+    roles:
+      - master
+      - agent
+      - dashboard
+      - database
+      - classifier
+      - default
+    docker_cmd: '["/sbin/init"]'
+  ubuntu1604-64-2:
+    platform: ubuntu-1604-x86_64
+    hypervisor: docker
+    image: ubuntu:16.04
+    roles:
+      - agent
+    docker_cmd: '["/sbin/init"]'
+CONFIG:
+  nfs_server: none
+  consoleport: 443
+  log_level: verbose
