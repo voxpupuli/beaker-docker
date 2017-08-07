@@ -70,6 +70,17 @@ module Beaker
         container_opts = {
           'Image' => image_name,
           'Hostname' => host.name,
+          'name' => host.name,
+          'HostConfig' => {
+            'PortBindings' => {
+              '22/tcp' => [{ 'HostPort' => rand.to_s[2..5], 'HostIp' => '0.0.0.0'}]
+            },
+            'PublishAllPorts' => true,
+            'Privileged' => true,
+            'RestartPolicy' => {
+              'Name' => 'always'
+            }
+          }
         }
         container = find_container(host)
 
@@ -102,7 +113,7 @@ module Beaker
         fix_ssh(container) if @options[:provision] == false
 
         @logger.debug("Starting container #{container.id}")
-        container.start({"PublishAllPorts" => true, "Privileged" => true})
+        container.start
 
         # Find out where the ssh port is from the container
         # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
