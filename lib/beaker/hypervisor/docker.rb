@@ -337,7 +337,7 @@ module Beaker
     end
 
     # return true if we are inside a docker container
-    def am_i_in_container
+    def in_container?
       return File.file?('/.dockerenv')
     end
 
