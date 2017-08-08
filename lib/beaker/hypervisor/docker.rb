@@ -114,7 +114,7 @@ module Beaker
           ip = URI.parse(ENV['DOCKER_HOST']).host
         else
           # Swarm or local docker host
-          if am_i_in_container
+          if in_container?
             ip = container.json["NetworkSettings"]["Gateway"]
           else
             ip = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostIp"]
