@@ -114,7 +114,11 @@ module Beaker
           ip = URI.parse(ENV['DOCKER_HOST']).host
         else
           # Swarm or local docker host
-          ip = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostIp"]
+          if in_container?
+            ip = container.json["NetworkSettings"]["Gateway"]
+          else
+            ip = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostIp"]
+          end
         end
 
         @logger.info("Using docker server at #{ip}")
@@ -330,6 +334,11 @@ module Beaker
       ::Docker::Container.all.select do |c|
         c.info['Names'].include? "/#{host['docker_container_name']}"
       end.first
+    end
+
+    # return true if we are inside a docker container
+    def in_container?
+      return File.file?('/.dockerenv')
     end
 
   end

@@ -63,6 +63,7 @@ module Beaker
               },
             ],
           },
+          'Gateway' => '192.0.2.254'
         },
       })
       allow( container ).to receive(:kill)
@@ -301,6 +302,16 @@ module Beaker
           expect( hosts[0]['ssh'][:password] ).to be ===  'root'
           expect( hosts[0]['ssh'][:port] ).to be ===  8022
           expect( hosts[0]['ssh'][:forward_agent] ).to be === true
+        end
+
+        it 'should connect to gateway ip' do
+          FakeFS do
+            File.open('/.dockerenv', 'w') { }
+            docker.provision
+
+            expect( hosts[0]['ip'] ).to be === '192.0.2.254'
+            expect( hosts[0]['port'] ).to be === 8022
+          end
         end
 
       end
