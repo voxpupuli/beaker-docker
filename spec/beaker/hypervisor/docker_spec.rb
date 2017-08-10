@@ -180,6 +180,17 @@ module Beaker
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,
+            'name' => host.name,
+            'HostConfig' => {
+              'PortBindings' => {
+                '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+              },
+              'PublishAllPorts' => true,
+              'Privileged' => true,
+              'RestartPolicy' => {
+                'Name' => 'always'
+              }
+            }
           })
         end
 
@@ -199,6 +210,17 @@ module Beaker
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,
+            'name' => host.name,
+            'HostConfig' => {
+              'PortBindings' => {
+                '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+              },
+              'PublishAllPorts' => true,
+              'Privileged' => true,
+              'RestartPolicy' => {
+                'Name' => 'always'
+              }
+            }
           })
         end
 
@@ -214,6 +236,16 @@ module Beaker
             'Image' => image.id,
             'Hostname' => host.name,
             'name' => container_name,
+            'HostConfig' => {
+              'PortBindings' => {
+                '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+              },
+              'PublishAllPorts' => true,
+              'Privileged' => true,
+              'RestartPolicy' => {
+                'Name' => 'always'
+              }
+            }
           })
         end
 
@@ -251,6 +283,7 @@ module Beaker
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,
+            'name' => host.name,
             'HostConfig' => {
               'Binds' => [
                 '/source_folder:/mount_point',
@@ -258,7 +291,15 @@ module Beaker
                 '/different_folder:/different_mount:rw',
                 "#{File.expand_path('./')}:/relative_mount",
                 "#{File.expand_path('local_folder')}:/another_relative_mount",
-              ]
+              ],
+              'PortBindings' => {
+                '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+              },
+              'PublishAllPorts' => true,
+              'Privileged' => true,
+              'RestartPolicy' => {
+                'Name' => 'always'
+              }
             }
           })
         end
@@ -267,7 +308,7 @@ module Beaker
       end
 
       it 'should start the container' do
-        expect( container ).to receive(:start).with({'PublishAllPorts' => true, 'Privileged' => true})
+        expect( container ).to receive(:start)
 
         docker.provision
       end
