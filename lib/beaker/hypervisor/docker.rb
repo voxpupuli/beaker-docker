@@ -70,7 +70,6 @@ module Beaker
         container_opts = {
           'Image' => image_name,
           'Hostname' => host.name,
-          'name' => host.name,
           'HostConfig' => {
             'PortBindings' => {
               '22/tcp' => [{ 'HostPort' => rand.to_s[2..5], 'HostIp' => '0.0.0.0'}]
