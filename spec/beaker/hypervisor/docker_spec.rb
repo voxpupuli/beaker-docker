@@ -181,7 +181,6 @@ module Beaker
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,
-            'name' => host.name,
             'HostConfig' => {
               'PortBindings' => {
                 '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
@@ -192,7 +191,7 @@ module Beaker
                 'Name' => 'always'
               }
             }
-          })
+          }).with(hash_excluding('name'))
         end
 
         docker.provision
@@ -211,7 +210,6 @@ module Beaker
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,
-            'name' => host.name,
             'HostConfig' => {
               'PortBindings' => {
                 '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
@@ -222,7 +220,7 @@ module Beaker
                 'Name' => 'always'
               }
             }
-          })
+          }).with(hash_excluding('name'))
         end
 
         docker.provision
@@ -284,7 +282,6 @@ module Beaker
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,
-            'name' => host.name,
             'HostConfig' => {
               'Binds' => [
                 '/source_folder:/mount_point',
