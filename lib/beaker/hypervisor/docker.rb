@@ -94,6 +94,10 @@ module Beaker
             end
           end
 
+          if host['docker_cap_add']
+            container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
+          end
+
           if @options[:provision]
             if host['docker_container_name']
               container_opts['name'] = host['docker_container_name']
@@ -224,8 +228,8 @@ module Beaker
           dockerfile = File.read(host['dockerfile'])
         else
           raise "requested Dockerfile #{host['dockerfile']} does not exist"
-        end 
-      else 
+        end
+      else
         raise("Docker image undefined!") if (host['image']||= nil).to_s.empty?
 
         # specify base image
@@ -272,6 +276,14 @@ module Beaker
             RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
             RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
             RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
+          EOF
+        when /archlinux/
+          dockerfile += <<-EOF
+            RUN pacman -Sy
+            RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
+            RUN ssh-keygen -A
+            RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
+            RUN systemctl enable sshd
           EOF
         else
           # TODO add more platform steps here

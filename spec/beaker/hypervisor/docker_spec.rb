@@ -15,7 +15,8 @@ module Beaker
     "cumulus-2.2-x86_64",
     "fedora-22-x86_64",
     "centos-7-x86_64",
-    "sles-12-x86_64"
+    "sles-12-x86_64",
+    "archlinux-2017.12.27-x86_64"
   ]
 
   describe Docker do
@@ -305,6 +306,30 @@ module Beaker
         docker.provision
       end
 
+      it 'should create a container with capabilities added' do
+        hosts.each_with_index do |host, index|
+          host['docker_cap_add'] = ['NET_ADMIN', 'SYS_ADMIN']
+
+          expect( ::Docker::Container ).to receive(:create).with({
+            'Image' => image.id,
+            'Hostname' => host.name,
+            'HostConfig' => {
+              'PortBindings' => {
+                '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+              },
+              'PublishAllPorts' => true,
+              'Privileged' => true,
+              'RestartPolicy' => {
+                'Name' => 'always'
+              },
+              'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN']
+            }
+          })
+        end
+
+        docker.provision
+      end
+
       it 'should start the container' do
         expect( container ).to receive(:start)
 
@@ -524,6 +549,16 @@ module Beaker
 
           expect( dockerfile ).to be =~ /RUN dnf install -y sudo/
         end
+      end
+
+      it 'should use pacman on archlinux' do
+        FakeFS.deactivate!
+        dockerfile = docker.send(:dockerfile_for, {
+          'platform' => 'archlinux-current-x86_64',
+          'image' => 'foobar',
+        })
+
+        expect( dockerfile ).to be =~ /RUN pacman -S --noconfirm openssh/
       end
 
       it 'should use user dockerfile if specified' do
