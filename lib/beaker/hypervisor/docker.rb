@@ -279,6 +279,7 @@ module Beaker
           EOF
         when /archlinux/
           dockerfile += <<-EOF
+            RUN pacman --noconfirm -Sy archlinux-keyring
             RUN pacman --noconfirm -Syu
             RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
             RUN ssh-keygen -A
