@@ -279,7 +279,7 @@ module Beaker
           EOF
         when /archlinux/
           dockerfile += <<-EOF
-            RUN pacman -Sy
+            RUN pacman --noconfirm -Syu
             RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
             RUN ssh-keygen -A
             RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
