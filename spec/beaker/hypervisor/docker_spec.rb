@@ -20,7 +20,16 @@ module Beaker
   ]
 
   describe Docker do
-    let(:hosts) { make_hosts }
+    let(:hosts) {
+      the_hosts = make_hosts
+      the_hosts[2]['dockeropts'] = {
+        'Labels' => {
+          'one' => 3,
+          'two' => 4,
+        },
+      }
+      the_hosts
+    }
 
     let(:logger) do
       logger = double('logger')
@@ -35,7 +44,13 @@ module Beaker
     let(:options) {{
       :logger => logger,
       :forward_ssh_agent => true,
-      :provision => true
+      :provision => true,
+      :dockeropts => {
+        'Labels' => {
+          'one' => 1,
+          'two' => 2,
+        },
+      },
     }}
 
     let(:image) do
@@ -65,7 +80,7 @@ module Beaker
             ],
           },
           'Gateway' => '192.0.2.254'
-        },
+        }
       })
       allow( container ).to receive(:kill)
       allow( container ).to receive(:delete)
@@ -191,7 +206,11 @@ module Beaker
               'RestartPolicy' => {
                 'Name' => 'always'
               }
-            }
+            },
+            'Labels' => {
+              'one' => 1,
+              'two' => 2,
+            },
           }).with(hash_excluding('name'))
         end
 
@@ -220,7 +239,11 @@ module Beaker
               'RestartPolicy' => {
                 'Name' => 'always'
               }
-            }
+            },
+            'Labels' => {
+              'one' => 1,
+              'two' => 2,
+            },
           }).with(hash_excluding('name'))
         end
 
@@ -245,7 +268,11 @@ module Beaker
               'RestartPolicy' => {
                 'Name' => 'always'
               }
-            }
+            },
+            'Labels' => {
+              'one' => (index == 2 ? 3 : 1),
+              'two' => (index == 2 ? 4 : 2),
+            },
           })
         end
 
@@ -299,7 +326,11 @@ module Beaker
               'RestartPolicy' => {
                 'Name' => 'always'
               }
-            }
+            },
+            'Labels' => {
+              'one' => (index == 2 ? 3 : 1),
+              'two' => (index == 2 ? 4 : 2),
+            },
           })
         end
 
@@ -323,7 +354,11 @@ module Beaker
                 'Name' => 'always'
               },
               'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN']
-            }
+            },
+            'Labels' => {
+              'one' => (index == 2 ? 3 : 1),
+              'two' => (index == 2 ? 4 : 2),
+            },
           })
         end
 

@@ -12,6 +12,10 @@ HOSTS:
       - classifier
       - default
     docker_cmd: '["/sbin/init"]'
+    dockeropts:
+      Labels:
+        one: '1'
+        two: '2'
   ubuntu1604-64-2:
     platform: ubuntu-1604-x86_64
     hypervisor: docker
@@ -23,3 +27,7 @@ CONFIG:
   nfs_server: none
   consoleport: 443
   log_level: verbose
+  dockeropts:
+    Labels:
+      one: '3'
+      two: '4'
