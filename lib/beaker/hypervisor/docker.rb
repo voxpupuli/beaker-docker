@@ -81,6 +81,12 @@ module Beaker
             }
           }
         }
+        if host['dockeropts'] || @options[:dockeropts]
+          dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
+          dockeropts.each do |k,v|
+            container_opts[k] = v
+          end
+        end
         container = find_container(host)
 
         # If the specified container exists, then use it rather creating a new one
