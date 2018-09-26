@@ -205,7 +205,7 @@ module Beaker
               'Privileged' => true,
               'RestartPolicy' => {
                 'Name' => 'always'
-              }
+              },
             },
             'Labels' => {
               'one' => 1,
@@ -238,7 +238,7 @@ module Beaker
               'Privileged' => true,
               'RestartPolicy' => {
                 'Name' => 'always'
-              }
+              },
             },
             'Labels' => {
               'one' => 1,
@@ -267,7 +267,7 @@ module Beaker
               'Privileged' => true,
               'RestartPolicy' => {
                 'Name' => 'always'
-              }
+              },
             },
             'Labels' => {
               'one' => (index == 2 ? 3 : 1),
@@ -325,7 +325,7 @@ module Beaker
               'Privileged' => true,
               'RestartPolicy' => {
                 'Name' => 'always'
-              }
+              },
             },
             'Labels' => {
               'one' => (index == 2 ? 3 : 1),
@@ -353,7 +353,7 @@ module Beaker
               'RestartPolicy' => {
                 'Name' => 'always'
               },
-              'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN']
+              'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
             },
             'Labels' => {
               'one' => (index == 2 ? 3 : 1),
@@ -365,8 +365,30 @@ module Beaker
         docker.provision
       end
 
-      it 'should start the container' do
-        expect( container ).to receive(:start)
+      it 'should create a container with tmpfs added' do
+        hosts.each_with_index do |host, index|
+          host['docker_tmpfs'] = ['/run/systemd/system']
+
+          expect( ::Docker::Container ).to receive(:create).with({
+            'Image' => image.id,
+            'Hostname' => host.name,
+            'HostConfig' => {
+              'PortBindings' => {
+                '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+              },
+              'PublishAllPorts' => true,
+              'Privileged' => true,
+              'RestartPolicy' => {
+                'Name' => 'always'
+              },
+              'Tmpfs' => {'/run/systemd/system' => ''},
+            },
+            'Labels' => {
+              'one' => (index == 2 ? 3 : 1),
+              'two' => (index == 2 ? 4 : 2),
+            },
+          })
+        end
 
         docker.provision
       end

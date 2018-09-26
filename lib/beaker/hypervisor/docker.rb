@@ -81,12 +81,14 @@ module Beaker
             }
           }
         }
+
         if host['dockeropts'] || @options[:dockeropts]
           dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
           dockeropts.each do |k,v|
             container_opts[k] = v
           end
         end
+
         container = find_container(host)
 
         # If the specified container exists, then use it rather creating a new one
@@ -107,6 +109,14 @@ module Beaker
 
           if host['docker_cap_add']
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
+          end
+
+          if host['docker_tmpfs']
+            tmpfs_mounts ||= {}
+            host['docker_tmpfs'].each do |v|
+              tmpfs_mounts[v] = ''
+            end
+            container_opts['HostConfig']['Tmpfs'] = tmpfs_mounts
           end
 
           if @options[:provision]

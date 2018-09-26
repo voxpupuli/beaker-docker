@@ -16,6 +16,8 @@ HOSTS:
       Labels:
         one: '1'
         two: '2'
+    docker_tmpfs:
+      - /run/systemd/system
   ubuntu1604-64-2:
     platform: ubuntu-1604-x86_64
     hypervisor: docker
