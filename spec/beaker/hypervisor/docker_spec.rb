@@ -169,8 +169,26 @@ module Beaker
         allow( docker ).to receive(:dockerfile_for)
       end
 
+      context 'when the host has "use_image_entry_point" set to true on the host' do
+
+        before :each do
+          hosts.each do |host|
+            host['use_image_entry_point'] = true
+          end
+        end
+
+        it 'should not call #dockerfile_for but run methods necessary for ssh installation' do
+          expect( docker ).not_to receive(:dockerfile_for)
+          expect( docker ).to receive(:install_ssh_components).exactly(3).times #once per host
+          expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
+          docker.provision
+        end
+      end
+
       it 'should call dockerfile_for with all the hosts' do
         hosts.each do |host|
+          expect( docker ).not_to receive(:install_ssh_components)
+          expect( docker ).not_to receive(:fix_ssh)
           expect( docker ).to receive(:dockerfile_for).with(host).and_return('')
         end
 
