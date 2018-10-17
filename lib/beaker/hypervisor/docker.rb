@@ -51,9 +51,19 @@ module Beaker
         @logger.notify "provisioning #{host.name}"
 
         @logger.debug("Creating image")
-        image = ::Docker::Image.build(dockerfile_for(host), {
-           :rm => true, :buildargs => buildargs_for(host)
-        })
+        unless host['use_image_entry_point']
+          image = ::Docker::Image.build(dockerfile_for(host), {
+             :rm => true, :buildargs => buildargs_for(host)
+          })
+        else
+          df = <<-DF
+            FROM #{host['image']}
+            EXPOSE 22
+          DF
+          image = ::Docker::Image.build(df, {
+            :rm => true, :buildargs => buildargs_for(host)
+          })
+        end
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
@@ -129,6 +139,12 @@ module Beaker
         @logger.debug("Starting container #{container.id}")
         container.start
 
+        if host['use_image_entry_point']
+          @logger.notify('Installing ssh components and starting ssh daemon in container')
+          install_ssh_components(container, host)
+          # run fixssh to configure and start the ssh service
+          fix_ssh(container)
+        end
         # Find out where the ssh port is from the container
         # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
         # IP of the swarm slave via the container data
@@ -169,6 +185,48 @@ module Beaker
 
       hack_etc_hosts @hosts, @options
 
+    end
+
+    # When using the entrypoint of an image, run this method to download and install ssh
+    # alongside your container's CMD
+    def install_ssh_components(container, host)
+      case host['platform']
+      when /ubuntu/, /debian/
+        container.exec(%w(apt-get update))
+        container.exec(%w(apt-get install -y openssh-server openssh-client))
+      when /cumulus/
+        container.exec(%w(apt-get update))
+        container.exec(%w(apt-get install -y openssh-server openssh-client))
+      when /fedora-(2[2-9])/
+        container.exec(%w(dnf clean all))
+        container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
+        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
+        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+      when /^el-/, /centos/, /fedora/, /redhat/, /eos/
+        container.exec(%w(yum clean all))
+        container.exec(%w(yum install -y sudo openssh-server openssh-clients))
+        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
+        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+      when /opensuse/, /sles/
+        container.exec(%w(zypper -n in openssh))
+        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
+        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+        container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
+      when /archlinux/
+        container.exec(%w(pacman --noconfirm -Sy archlinux-keyring))
+        container.exec(%w(pacman --noconfirm -Syu))
+        container.exec(%w(pacman -S --noconfirm openssh))
+        container.exec(%w(ssh-keygen -A))
+        container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
+        container.exec(%w(systemctl enable sshd))
+      else
+        # TODO add more platform steps here
+        raise "platform #{host['platform']} not yet supported on docker"
+      end
+
+      # Make sshd directory, set root password
+      container.exec(%w(mkdir -p /var/run/sshd))
+      container.exec(['/bin/sh', '-c', "echo root:#{root_password} | chpasswd"])
     end
 
     def cleanup
