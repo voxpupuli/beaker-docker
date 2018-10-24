@@ -163,6 +163,34 @@ module Beaker
       end
     end
 
+    describe '#install_ssh_components' do
+      let(:test_container) { double('container') }
+      let(:host) {hosts[0]}
+      before :each do
+        allow( ::Docker ).to receive(:validate_version!)
+        allow( docker ).to receive(:dockerfile_for)
+      end
+
+      platforms.each do |platform|
+        it 'should call exec at least twice' do
+          host['platform'] = platform
+          expect(test_container).to receive(:exec).at_least(:twice)
+          docker.install_ssh_components(test_container, host)
+        end
+      end
+
+      it 'should accept alpine as valid platform' do
+        host['platform'] = 'alpine-3.8-x86_64'
+        expect(test_container).to receive(:exec).at_least(:twice)
+        docker.install_ssh_components(test_container, host)
+      end
+
+      it 'should raise an error with an unsupported platform' do
+        host['platform'] = 'boogeyman-2000-x86_64'
+        expect{docker.install_ssh_components(test_container, host)}.to raise_error(RuntimeError, /boogeyman/)
+      end
+    end
+
     describe '#provision' do
       before :each do
         allow( ::Docker ).to receive(:validate_version!)
@@ -178,6 +206,24 @@ module Beaker
         end
 
         it 'should not call #dockerfile_for but run methods necessary for ssh installation' do
+          expect( docker ).not_to receive(:dockerfile_for)
+          expect( docker ).to receive(:install_ssh_components).exactly(3).times #once per host
+          expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
+          docker.provision
+        end
+      end
+
+      context 'when the host has a "dockerfile" for the host' do
+
+        before :each do
+          hosts.each do |host|
+            host['dockerfile'] = 'mydockerfile'
+          end
+        end
+
+        it 'should not call #dockerfile_for but run methods necessary for ssh installation' do
+          allow( File ).to receive(:exist?).with('mydockerfile').and_return(true)
+          allow( ::Docker::Image ).to receive(:build_from_dir).and_return(image)
           expect( docker ).not_to receive(:dockerfile_for)
           expect( docker ).to receive(:install_ssh_components).exactly(3).times #once per host
           expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
@@ -463,7 +509,7 @@ module Beaker
             host['docker_container_name'] = container_name
 
             expect( ::Docker::Container ).to receive(:all).and_return([container])
-            expect(container).to receive(:exec).exactly(4).times
+            expect(docker).to receive(:fix_ssh).exactly(1).times
           end
           docker.provision
         end
@@ -535,10 +581,6 @@ module Beaker
       end
       it 'should raise on an unsupported platform' do
         expect { docker.send(:dockerfile_for, {'platform' => 'a_sidewalk', 'image' => 'foobar' }) }.to raise_error(/platform a_sidewalk not yet supported/)
-      end
-
-      it 'should raise on missing image' do
-        expect { docker.send(:dockerfile_for, {'platform' => 'centos-7-x86_64'})}.to raise_error(/Docker image undefined/)
       end
 
       it 'should set "ENV container docker"' do
@@ -613,16 +655,6 @@ module Beaker
 
         expect( dockerfile ).to be =~ /RUN pacman -S --noconfirm openssh/
       end
-
-      it 'should use user dockerfile if specified' do
-        FakeFS.deactivate!
-        dockerfile = docker.send(:dockerfile_for, {
-          'dockerfile' => 'README.md'
-        })
-
-        expect( dockerfile ).to be == File.read('README.md')
-      end
-
     end
   end
 end
