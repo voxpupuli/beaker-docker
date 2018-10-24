@@ -16,7 +16,7 @@ end
 # We don't put beaker in as a test dependency because we
 # don't want to create a transitive dependency
 group :acceptance_testing do
-  gem "beaker", *location_for(ENV['BEAKER_VERSION'] || '~> 3.0')
+  gem "beaker", *location_for(ENV['BEAKER_VERSION'] || '~> 4.0')
 end
 
 
