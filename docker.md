@@ -48,6 +48,32 @@ By default the docker container just runs an sshd which is adequate for 'puppet 
     CONFIG:
       type: foss
 
+### Using the entrypoint of an image and not sshd ###
+Instead of using ssh as the CMD for a container, beaker will use the entrypoint already defined if `use_image_entry_point` is used. Beaker will still load ssh onto the container and start it, but ssh will not be the entrypoint for the container. Below is an example of using the puppetserver image.
+
+    HOSTS:
+      puppetserver:
+        platform: ubuntu-1604-x86_64 
+        hypervisor: docker
+        image: puppet/puppetserver-standalone:6.0.1
+        use_image_entry_point: true
+        roles:
+          - master
+    CONFIG:
+      type: foss
+
+### Using dockerfiles with beaker hosts files ###
+Beaker can utilize a dockerfile specified in hosts file; use the `dockerfile` attribute of a host to specify the location of the dockerfile. Beaker will use the directory it is run in to pass as the context for dockerfile DSL commands such as COPY and VOLUME, so make sure the paths are set correctly for the right context.
+
+    HOSTS:
+      ubuntu-12-10:
+        platform: ubuntu-12.10-x64
+        dockerfile: path/to/my/dockerfile
+        hypervisor: docker
+        docker_cmd: '["/sbin/init"]'
+    CONFIG:
+      type: foss
+
 ### Preserve Docker Image ###
 Unless the image configuration changes you might want to keep the Docker image for multiple spec runs. Use `docker_preserve_image` option for a host.
 
