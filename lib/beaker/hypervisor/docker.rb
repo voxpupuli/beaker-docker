@@ -50,20 +50,46 @@ module Beaker
       @hosts.each do |host|
         @logger.notify "provisioning #{host.name}"
 
+        container_opts = {}
         @logger.debug("Creating image")
-        unless host['use_image_entry_point']
-          image = ::Docker::Image.build(dockerfile_for(host), {
-             :rm => true, :buildargs => buildargs_for(host)
-          })
-        else
-          df = <<-DF
+          if dockerfile = host['dockerfile']
+            install_and_run_ssh = true
+            container_opts['ExposedPorts'] = {'22/tcp' => {} }
+            # assume that the dockerfile is in the repo and tests are running
+            # from the root of the repo; maybe add support for external Dockerfiles
+            # with external build dependencies later.
+            if File.exist?(dockerfile)
+              dir = File.expand_path(dockerfile).chomp(dockerfile)
+              image = ::Docker::Image.build_from_dir(
+                dir,
+                { 'dockerfile' => dockerfile,
+                  :rm => true,
+                  :buildargs => buildargs_for(host)
+                }
+              )
+            else
+              raise "Unable to find dockerfile at #{dockerfile}"
+            end
+          elsif host['use_image_entry_point']
+            install_and_run_ssh = true
+            df = <<-DF
             FROM #{host['image']}
             EXPOSE 22
           DF
-          image = ::Docker::Image.build(df, {
-            :rm => true, :buildargs => buildargs_for(host)
+
+            if cmd = host['docker_cmd']
+              df += cmd
+            end
+            image = ::Docker::Image.build(df, {
+              :rm => true, :buildargs => buildargs_for(host)
+            })
+
+          else
+
+          image = ::Docker::Image.build(dockerfile_for(host), {
+             :rm => true, :buildargs => buildargs_for(host)
           })
-        end
+          end
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
@@ -77,7 +103,7 @@ module Beaker
           image_name = image.id
         end
 
-        container_opts = {
+        container_opts.merge! ( {
           'Image' => image_name,
           'Hostname' => host.name,
           'HostConfig' => {
@@ -90,7 +116,7 @@ module Beaker
               'Name' => 'always'
             }
           }
-        }
+        } )
         if host['dockeropts'] || @options[:dockeropts]
           dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
           dockeropts.each do |k,v|
@@ -139,11 +165,11 @@ module Beaker
         @logger.debug("Starting container #{container.id}")
         container.start
 
-        if host['use_image_entry_point']
-          @logger.notify('Installing ssh components and starting ssh daemon in container')
+        if install_and_run_ssh
+          @logger.notify("Installing ssh components and starting ssh daemon in #{host} container")
           install_ssh_components(container, host)
           # run fixssh to configure and start the ssh service
-          fix_ssh(container)
+          fix_ssh(container, host)
         end
         # Find out where the ssh port is from the container
         # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
@@ -187,8 +213,7 @@ module Beaker
 
     end
 
-    # When using the entrypoint of an image, run this method to download and install ssh
-    # alongside your container's CMD
+    # This sideloads sshd after a container starts
     def install_ssh_components(container, host)
       case host['platform']
       when /ubuntu/, /debian/
@@ -219,6 +244,9 @@ module Beaker
         container.exec(%w(ssh-keygen -A))
         container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
         container.exec(%w(systemctl enable sshd))
+      when /alpine/
+        container.exec(%w(apk add --update openssh))
+        container.exec(%w(ssh-keygen -A))
       else
         # TODO add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
@@ -291,110 +319,100 @@ module Beaker
     end
 
     def dockerfile_for(host)
-      if host['dockerfile'] then
-        @logger.debug("attempting to load user Dockerfile from #{host['dockerfile']}")
-        if File.exist?(host['dockerfile']) then
-          dockerfile = File.read(host['dockerfile'])
-        else
-          raise "requested Dockerfile #{host['dockerfile']} does not exist"
-        end
+      # specify base image
+      dockerfile = <<-EOF
+        FROM #{host['image']}
+        ENV container docker
+      EOF
+
+      # additional options to specify to the sshd
+      # may vary by platform
+      sshd_options = ''
+
+      # add platform-specific actions
+      service_name = "sshd"
+      case host['platform']
+      when /ubuntu/, /debian/
+        service_name = "ssh"
+        dockerfile += <<-EOF
+          RUN apt-get update
+          RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::DEBIAN_PACKAGES.join(' ')}
+        EOF
+        when  /cumulus/
+          dockerfile += <<-EOF
+          RUN apt-get update
+          RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::CUMULUS_PACKAGES.join(' ')}
+        EOF
+      when /fedora-(2[2-9])/
+        dockerfile += <<-EOF
+          RUN dnf clean all
+          RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
+          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
+        EOF
+      when /^el-/, /centos/, /fedora/, /redhat/, /eos/
+        dockerfile += <<-EOF
+          RUN yum clean all
+          RUN yum install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
+          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
+        EOF
+      when /opensuse/, /sles/
+        dockerfile += <<-EOF
+          RUN zypper -n in openssh #{Beaker::HostPrebuiltSteps::SLES_PACKAGES.join(' ')}
+          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
+          RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
+        EOF
+      when /archlinux/
+        dockerfile += <<-EOF
+          RUN pacman --noconfirm -Sy archlinux-keyring
+          RUN pacman --noconfirm -Syu
+          RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
+          RUN ssh-keygen -A
+          RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
+          RUN systemctl enable sshd
+        EOF
       else
-        raise("Docker image undefined!") if (host['image']||= nil).to_s.empty?
-
-        # specify base image
-        dockerfile = <<-EOF
-          FROM #{host['image']}
-          ENV container docker
-        EOF
-
-        # additional options to specify to the sshd
-        # may vary by platform
-        sshd_options = ''
-
-        # add platform-specific actions
-        service_name = "sshd"
-        case host['platform']
-        when /ubuntu/, /debian/
-          service_name = "ssh"
-          dockerfile += <<-EOF
-            RUN apt-get update
-            RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::DEBIAN_PACKAGES.join(' ')}
-          EOF
-          when  /cumulus/
-            dockerfile += <<-EOF
-            RUN apt-get update
-            RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::CUMULUS_PACKAGES.join(' ')}
-          EOF
-        when /fedora-(2[2-9])/
-          dockerfile += <<-EOF
-            RUN dnf clean all
-            RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
-            RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
-            RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-          EOF
-        when /^el-/, /centos/, /fedora/, /redhat/, /eos/
-          dockerfile += <<-EOF
-            RUN yum clean all
-            RUN yum install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
-            RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
-            RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-          EOF
-        when /opensuse/, /sles/
-          dockerfile += <<-EOF
-            RUN zypper -n in openssh #{Beaker::HostPrebuiltSteps::SLES_PACKAGES.join(' ')}
-            RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
-            RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-            RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
-          EOF
-        when /archlinux/
-          dockerfile += <<-EOF
-            RUN pacman --noconfirm -Sy archlinux-keyring
-            RUN pacman --noconfirm -Syu
-            RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
-            RUN ssh-keygen -A
-            RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
-            RUN systemctl enable sshd
-          EOF
-        else
-          # TODO add more platform steps here
-          raise "platform #{host['platform']} not yet supported on docker"
-        end
-
-        # Make sshd directory, set root password
-        dockerfile += <<-EOF
-          RUN mkdir -p /var/run/sshd
-          RUN echo root:#{root_password} | chpasswd
-        EOF
-
-        # Configure sshd service to allowroot login using password
-        # Also, disable reverse DNS lookups to prevent every. single. ssh
-        # operation taking 30 seconds while the lookup times out.
-        dockerfile += <<-EOF
-          RUN sed -ri 's/^#?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
-          RUN sed -ri 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-          RUN sed -ri 's/^#?UseDNS .*/UseDNS no/' /etc/ssh/sshd_config
-        EOF
-
-
-        # Any extra commands specified for the host
-        dockerfile += (host['docker_image_commands'] || []).map { |command|
-          "RUN #{command}\n"
-        }.join('')
-
-        # Override image entrypoint
-        if host['docker_image_entrypoint']
-          dockerfile += "ENTRYPOINT #{host['docker_image_entrypoint']}\n"
-        end
-
-        # How to start a sshd on port 22.  May be an init for more supervision
-        # Ensure that the ssh server can be restarted (done from set_env) and container keeps running
-        cmd = host['docker_cmd'] || ["sh","-c","service #{service_name} start ; tail -f /dev/null"]
-        dockerfile += <<-EOF
-          EXPOSE 22
-          CMD #{cmd}
-        EOF
-
+        # TODO add more platform steps here
+        raise "platform #{host['platform']} not yet supported on docker"
       end
+
+      # Make sshd directory, set root password
+      dockerfile += <<-EOF
+        RUN mkdir -p /var/run/sshd
+        RUN echo root:#{root_password} | chpasswd
+      EOF
+
+      # Configure sshd service to allowroot login using password
+      # Also, disable reverse DNS lookups to prevent every. single. ssh
+      # operation taking 30 seconds while the lookup times out.
+      dockerfile += <<-EOF
+        RUN sed -ri 's/^#?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
+        RUN sed -ri 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        RUN sed -ri 's/^#?UseDNS .*/UseDNS no/' /etc/ssh/sshd_config
+      EOF
+
+
+      # Any extra commands specified for the host
+      dockerfile += (host['docker_image_commands'] || []).map { |command|
+        "RUN #{command}\n"
+      }.join('')
+
+      # Override image entrypoint
+      if host['docker_image_entrypoint']
+        dockerfile += "ENTRYPOINT #{host['docker_image_entrypoint']}\n"
+      end
+
+      # How to start a sshd on port 22.  May be an init for more supervision
+      # Ensure that the ssh server can be restarted (done from set_env) and container keeps running
+      cmd = host['docker_cmd'] || ["sh","-c","service #{service_name} start ; tail -f /dev/null"]
+      dockerfile += <<-EOF
+        EXPOSE 22
+        CMD #{cmd}
+      EOF
+
+    # end
 
       @logger.debug("Dockerfile is #{dockerfile}")
       return dockerfile
@@ -402,7 +420,9 @@ module Beaker
 
     # a puppet run may have changed the ssh config which would
     # keep us out of the container.  This is a best effort to fix it.
-    def fix_ssh(container)
+    # Optionally pass in a host object to to determine which ssh
+    # restart command we should try.
+    def fix_ssh(container, host=nil)
       @logger.debug("Fixing ssh on container #{container.id}")
       container.exec(['sed','-ri',
                       's/^#?PermitRootLogin .*/PermitRootLogin yes/',
@@ -413,7 +433,13 @@ module Beaker
       container.exec(['sed','-ri',
                       's/^#?UseDNS .*/UseDNS no/',
                       '/etc/ssh/sshd_config'])
-      container.exec(%w(service ssh restart))
+      if host
+        if host['platform'] =~ /alpine/
+          container.exec(%w(/usr/sbin/sshd))
+        else
+          container.exec(%w(service ssh restart))
+        end
+      end
     end
 
 
