@@ -60,7 +60,13 @@ module Beaker
             # with external build dependencies later.
             if File.exist?(dockerfile)
               dir = File.expand_path(dockerfile).chomp(dockerfile)
-              image = ::Docker::Image.build_from_dir(dir, {'dockerfile' => dockerfile})
+              image = ::Docker::Image.build_from_dir(
+                dir,
+                { 'dockerfile' => dockerfile,
+                  :rm => true,
+                  :buildargs => buildargs_for(host)
+                }
+              )
             else
               raise "Unable to find dockerfile at #{dockerfile}"
             end

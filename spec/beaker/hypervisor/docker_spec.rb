@@ -216,6 +216,7 @@ module Beaker
       context 'when the host has a "dockerfile" for the host' do
 
         before :each do
+          allow( docker ).to receive(:buildargs_for).and_return('buildargs')
           hosts.each do |host|
             host['dockerfile'] = 'mydockerfile'
           end
@@ -223,7 +224,7 @@ module Beaker
 
         it 'should not call #dockerfile_for but run methods necessary for ssh installation' do
           allow( File ).to receive(:exist?).with('mydockerfile').and_return(true)
-          allow( ::Docker::Image ).to receive(:build_from_dir).and_return(image)
+          allow( ::Docker::Image ).to receive(:build_from_dir).with("/", hash_including(:rm => true, :buildargs => 'buildargs')).and_return(image)
           expect( docker ).not_to receive(:dockerfile_for)
           expect( docker ).to receive(:install_ssh_components).exactly(3).times #once per host
           expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
