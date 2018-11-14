@@ -123,10 +123,11 @@ module Beaker
             container_opts[k] = v
           end
         end
-        container = find_container(host)
 
-        # If the specified container exists, then use it rather creating a new one
-        if container.nil?
+        # Provisioning - Only provision if:
+        # - provisioning was explicitly requested via options, or
+        # - the host's container can't be found via its name or ID
+        if @options[:provision] || (container = find_container(host)).nil?
           unless host['mount_folders'].nil?
             container_opts['HostConfig'] ||= {}
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
@@ -145,14 +146,12 @@ module Beaker
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
           end
 
-          if @options[:provision]
-            if host['docker_container_name']
-              container_opts['name'] = host['docker_container_name']
-            end
-
-            @logger.debug("Creating container from image #{image_name}")
-            container = ::Docker::Container.create(container_opts)
+          if host['docker_container_name']
+            container_opts['name'] = host['docker_container_name']
           end
+
+          @logger.debug("Creating container from image #{image_name}")
+          container = ::Docker::Container.create(container_opts)
         end
 
         if container.nil?
@@ -203,7 +202,7 @@ module Beaker
         }
 
         @logger.debug("node available as  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
-        host['docker_container'] = container
+        host['docker_container_id'] = container.id
         host['docker_image'] = image
         host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s
 
@@ -260,7 +259,7 @@ module Beaker
     def cleanup
       @logger.notify "Cleaning up docker"
       @hosts.each do |host|
-        if container = host['docker_container']
+        if (container = find_container(host))
           @logger.debug("stop container #{container.id}")
           begin
             container.kill
@@ -446,12 +445,19 @@ module Beaker
     # return the existing container if we're not provisioning
     # and docker_container_name is set
     def find_container(host)
-      return nil if host['docker_container_name'].nil? || @options[:provision]
-      @logger.debug("Looking for an existing container called #{host['docker_container_name']}")
-
-      ::Docker::Container.all.select do |c|
-        c.info['Names'].include? "/#{host['docker_container_name']}"
-      end.first
+      if (id = host['docker_container_id'])
+        @logger.debug("Looking for an existing container with ID #{id}")
+        container = ::Docker::Container.all.select do |container|
+          container.id == id
+        end.first
+        return container unless container.nil?
+      end
+      if (name = host['docker_container_name'])
+        @logger.debug("Looking for an existing container with name #{name}")
+        ::Docker::Container.all.select do |container|
+          container.info['Names'].include? "/#{name}"
+        end.first
+      end
     end
 
     # return true if we are inside a docker container

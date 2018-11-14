@@ -63,7 +63,7 @@ module Beaker
 
     let(:container) do
       container = double('Docker::Container')
-      allow( container ).to receive(:id)
+      allow( container ).to receive(:id).and_return('abcdef')
       allow( container ).to receive(:start)
       allow( container ).to receive(:info).and_return(
         *(0..2).map { |index| { 'Names' => ["/spec-container-#{index}"] } }
@@ -493,7 +493,7 @@ module Beaker
         docker.provision
 
         expect( hosts[0]['docker_image'] ).to be === image
-        expect( hosts[0]['docker_container'] ).to be === container
+        expect( hosts[0]['docker_container_id'] ).to be === container.id
       end
 
       context 'provision=false' do
@@ -533,6 +533,7 @@ module Beaker
       before :each do
         # get into a state where there's something to clean
         allow( ::Docker ).to receive(:validate_version!)
+        allow( ::Docker::Container ).to receive(:all).and_return([container])
         allow( docker ).to receive(:dockerfile_for)
         docker.provision
       end
