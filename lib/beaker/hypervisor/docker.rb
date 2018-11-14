@@ -12,7 +12,7 @@ module Beaker
     def initialize(hosts, options)
       require 'docker'
       @options = options
-      @logger = options[:logger]
+      @logger = options[:logger] || Beaker::Logger.new
       @hosts = hosts
 
       # increase the http timeouts as provisioning images can be slow
