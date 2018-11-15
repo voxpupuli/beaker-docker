@@ -55,9 +55,8 @@ module Beaker
 
     let(:image) do
       image = double('Docker::Image')
-      allow( image ).to receive(:id)
+      allow( image ).to receive(:id).and_return("zyxwvu")
       allow( image ).to receive(:tag)
-      allow( image ).to receive(:delete)
       image
     end
 
@@ -492,7 +491,7 @@ module Beaker
       it 'should record the image and container for later' do
         docker.provision
 
-        expect( hosts[0]['docker_image'] ).to be === image
+        expect( hosts[0]['docker_image_id'] ).to be === image.id
         expect( hosts[0]['docker_container_id'] ).to be === container.id
       end
 
@@ -534,6 +533,7 @@ module Beaker
         # get into a state where there's something to clean
         allow( ::Docker ).to receive(:validate_version!)
         allow( ::Docker::Container ).to receive(:all).and_return([container])
+        allow( ::Docker::Image ).to receive(:remove).with(image.id)
         allow( docker ).to receive(:dockerfile_for)
         docker.provision
       end
@@ -552,7 +552,7 @@ module Beaker
 
       it 'should delete the images' do
         allow( docker ).to receive( :sleep ).and_return(true)
-        expect( image ).to receive(:delete)
+        expect( ::Docker::Image ).to receive(:remove).with(image.id)
         docker.cleanup
       end
 
@@ -561,7 +561,7 @@ module Beaker
         hosts.each do |host|
           host['docker_preserve_image']=true
         end
-        expect( image ).to_not receive(:delete)
+        expect( ::Docker::Image ).to_not receive(:remove)
         docker.cleanup
       end
 
@@ -570,7 +570,7 @@ module Beaker
         hosts.each do |host|
           host['docker_preserve_image']=false
         end
-        expect( image ).to receive(:delete)
+        expect( ::Docker::Image ).to receive(:remove).with(image.id)
         docker.cleanup
       end
 

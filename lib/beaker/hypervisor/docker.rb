@@ -203,7 +203,7 @@ module Beaker
 
         @logger.debug("node available as  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
         host['docker_container_id'] = container.id
-        host['docker_image'] = image
+        host['docker_image_id'] = image.id
         host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s
 
       end
@@ -275,15 +275,19 @@ module Beaker
           end
         end
 
-        # Do not remove the image if docker_reserve_image is set to true, otherwise remove it
-        if image = (host['docker_preserve_image'] ? nil : host['docker_image'])
-          @logger.debug("delete image #{image.id}")
-          begin
-            image.delete
-          rescue Excon::Errors::ClientError => e
-            @logger.warn("deletion of image #{image.id} failed: #{e.response.body}")
-          rescue ::Docker::Error::DockerError => e
-            @logger.warn("deletion of image #{image.id} caused internal Docker error: #{e.message}")
+        # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
+        unless host['docker_preserve_image']
+          if (id = host['docker_image_id'])
+            @logger.debug("deleting image #{host['docker_image_id']}")
+            begin
+              ::Docker::Image.remove(id)
+            rescue Excon::Errors::ClientError => e
+              @logger.warn("deletion of image #{id} failed: #{e.response.body}")
+            rescue ::Docker::Error::DockerError => e
+              @logger.warn("deletion of image #{id} caused internal Docker error: #{e.message}")
+            end
+          else
+            @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
           end
         end
       end
