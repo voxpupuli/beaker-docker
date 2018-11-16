@@ -319,6 +319,7 @@ module Beaker
           container_name = "spec-container-#{index}"
           host['docker_container_name'] = container_name
 
+          allow(::Docker::Container).to receive(:all).and_return([])
           expect( ::Docker::Container ).to receive(:create).with({
             'Image' => image.id,
             'Hostname' => host.name,

@@ -52,44 +52,43 @@ module Beaker
 
         container_opts = {}
         @logger.debug("Creating image")
-          if dockerfile = host['dockerfile']
-            install_and_run_ssh = true
-            container_opts['ExposedPorts'] = {'22/tcp' => {} }
-            # assume that the dockerfile is in the repo and tests are running
-            # from the root of the repo; maybe add support for external Dockerfiles
-            # with external build dependencies later.
-            if File.exist?(dockerfile)
-              dir = File.expand_path(dockerfile).chomp(dockerfile)
-              image = ::Docker::Image.build_from_dir(
-                dir,
-                { 'dockerfile' => dockerfile,
-                  :rm => true,
-                  :buildargs => buildargs_for(host)
-                }
-              )
-            else
-              raise "Unable to find dockerfile at #{dockerfile}"
-            end
-          elsif host['use_image_entry_point']
-            install_and_run_ssh = true
-            df = <<-DF
+
+        dockerfile = host['dockerfile']
+        if dockerfile
+          install_and_run_ssh = true
+          container_opts['ExposedPorts'] = {'22/tcp' => {} }
+          # assume that the dockerfile is in the repo and tests are running
+          # from the root of the repo; maybe add support for external Dockerfiles
+          # with external build dependencies later.
+          if File.exist?(dockerfile)
+            dir = File.expand_path(dockerfile).chomp(dockerfile)
+            image = ::Docker::Image.build_from_dir(
+              dir,
+              { 'dockerfile' => dockerfile,
+                :rm => true,
+                :buildargs => buildargs_for(host)
+              }
+            )
+          else
+            raise "Unable to find dockerfile at #{dockerfile}"
+          end
+        elsif host['use_image_entry_point']
+          install_and_run_ssh = true
+          df = <<-DF
             FROM #{host['image']}
             EXPOSE 22
           DF
 
-            if cmd = host['docker_cmd']
-              df += cmd
-            end
-            image = ::Docker::Image.build(df, {
-              :rm => true, :buildargs => buildargs_for(host)
-            })
+          cmd = host['docker_cmd']
+          df += cmd if cmd
 
-          else
+          image = ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
 
-          image = ::Docker::Image.build(dockerfile_for(host), {
-             :rm => true, :buildargs => buildargs_for(host)
-          })
-          end
+        else
+
+          image = ::Docker::Image.build(dockerfile_for(host),
+                                        { rm: true, buildargs: buildargs_for(host) })
+        end
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
@@ -124,10 +123,12 @@ module Beaker
           end
         end
 
+        container = find_container(host)
+
         # Provisioning - Only provision if:
         # - provisioning was explicitly requested via options, or
         # - the host's container can't be found via its name or ID
-        if @options[:provision] || (container = find_container(host)).nil?
+        if @options[:provision] || container.nil?
           unless host['mount_folders'].nil?
             container_opts['HostConfig'] ||= {}
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
@@ -259,7 +260,8 @@ module Beaker
     def cleanup
       @logger.notify "Cleaning up docker"
       @hosts.each do |host|
-        if (container = find_container(host))
+        container = find_container(host)
+        if container
           @logger.debug("stop container #{container.id}")
           begin
             container.kill
@@ -277,14 +279,16 @@ module Beaker
 
         # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
         unless host['docker_preserve_image']
-          if (id = host['docker_image_id'])
-            @logger.debug("deleting image #{host['docker_image_id']}")
+          image_id = host['docker_image_id']
+
+          if image_id
+            @logger.debug("deleting image #{image_id}")
             begin
-              ::Docker::Image.remove(id)
+              ::Docker::Image.remove(image_id)
             rescue Excon::Errors::ClientError => e
-              @logger.warn("deletion of image #{id} failed: #{e.response.body}")
+              @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
             rescue ::Docker::Error::DockerError => e
-              @logger.warn("deletion of image #{id} caused internal Docker error: #{e.message}")
+              @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
             end
           else
             @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
@@ -449,19 +453,26 @@ module Beaker
     # return the existing container if we're not provisioning
     # and docker_container_name is set
     def find_container(host)
-      if (id = host['docker_container_id'])
+      id = host['docker_container_id']
+      name = host['docker_container_name']
+      return unless id || name
+
+      containers = ::Docker::Container.all
+
+      if id
         @logger.debug("Looking for an existing container with ID #{id}")
-        container = ::Docker::Container.all.select do |container|
-          container.id == id
-        end.first
-        return container unless container.nil?
+        container = containers.select { |c| c.id == id }.first
       end
-      if (name = host['docker_container_name'])
+
+      if name && container.nil?
         @logger.debug("Looking for an existing container with name #{name}")
-        ::Docker::Container.all.select do |container|
-          container.info['Names'].include? "/#{name}"
+        container = containers.select do |c|
+          c.info['Names'].include? "/#{name}"
         end.first
       end
+
+      return container unless container.nil?
+      @logger.debug("Existing container not found")
     end
 
     # return true if we are inside a docker container
