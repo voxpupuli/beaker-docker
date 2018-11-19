@@ -12,7 +12,7 @@ module Beaker
     def initialize(hosts, options)
       require 'docker'
       @options = options
-      @logger = options[:logger]
+      @logger = options[:logger] || Beaker::Logger.new
       @hosts = hosts
 
       # increase the http timeouts as provisioning images can be slow
@@ -52,44 +52,43 @@ module Beaker
 
         container_opts = {}
         @logger.debug("Creating image")
-          if dockerfile = host['dockerfile']
-            install_and_run_ssh = true
-            container_opts['ExposedPorts'] = {'22/tcp' => {} }
-            # assume that the dockerfile is in the repo and tests are running
-            # from the root of the repo; maybe add support for external Dockerfiles
-            # with external build dependencies later.
-            if File.exist?(dockerfile)
-              dir = File.expand_path(dockerfile).chomp(dockerfile)
-              image = ::Docker::Image.build_from_dir(
-                dir,
-                { 'dockerfile' => dockerfile,
-                  :rm => true,
-                  :buildargs => buildargs_for(host)
-                }
-              )
-            else
-              raise "Unable to find dockerfile at #{dockerfile}"
-            end
-          elsif host['use_image_entry_point']
-            install_and_run_ssh = true
-            df = <<-DF
+
+        dockerfile = host['dockerfile']
+        if dockerfile
+          install_and_run_ssh = true
+          container_opts['ExposedPorts'] = {'22/tcp' => {} }
+          # assume that the dockerfile is in the repo and tests are running
+          # from the root of the repo; maybe add support for external Dockerfiles
+          # with external build dependencies later.
+          if File.exist?(dockerfile)
+            dir = File.expand_path(dockerfile).chomp(dockerfile)
+            image = ::Docker::Image.build_from_dir(
+              dir,
+              { 'dockerfile' => dockerfile,
+                :rm => true,
+                :buildargs => buildargs_for(host)
+              }
+            )
+          else
+            raise "Unable to find dockerfile at #{dockerfile}"
+          end
+        elsif host['use_image_entry_point']
+          install_and_run_ssh = true
+          df = <<-DF
             FROM #{host['image']}
             EXPOSE 22
           DF
 
-            if cmd = host['docker_cmd']
-              df += cmd
-            end
-            image = ::Docker::Image.build(df, {
-              :rm => true, :buildargs => buildargs_for(host)
-            })
+          cmd = host['docker_cmd']
+          df += cmd if cmd
 
-          else
+          image = ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
 
-          image = ::Docker::Image.build(dockerfile_for(host), {
-             :rm => true, :buildargs => buildargs_for(host)
-          })
-          end
+        else
+
+          image = ::Docker::Image.build(dockerfile_for(host),
+                                        { rm: true, buildargs: buildargs_for(host) })
+        end
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
@@ -123,10 +122,13 @@ module Beaker
             container_opts[k] = v
           end
         end
+
         container = find_container(host)
 
-        # If the specified container exists, then use it rather creating a new one
-        if container.nil?
+        # Provisioning - Only provision if:
+        # - provisioning was explicitly requested via options, or
+        # - the host's container can't be found via its name or ID
+        if @options[:provision] || container.nil?
           unless host['mount_folders'].nil?
             container_opts['HostConfig'] ||= {}
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
@@ -145,14 +147,12 @@ module Beaker
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
           end
 
-          if @options[:provision]
-            if host['docker_container_name']
-              container_opts['name'] = host['docker_container_name']
-            end
-
-            @logger.debug("Creating container from image #{image_name}")
-            container = ::Docker::Container.create(container_opts)
+          if host['docker_container_name']
+            container_opts['name'] = host['docker_container_name']
           end
+
+          @logger.debug("Creating container from image #{image_name}")
+          container = ::Docker::Container.create(container_opts)
         end
 
         if container.nil?
@@ -203,8 +203,8 @@ module Beaker
         }
 
         @logger.debug("node available as  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
-        host['docker_container'] = container
-        host['docker_image'] = image
+        host['docker_container_id'] = container.id
+        host['docker_image_id'] = image.id
         host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s
 
       end
@@ -260,7 +260,8 @@ module Beaker
     def cleanup
       @logger.notify "Cleaning up docker"
       @hosts.each do |host|
-        if container = host['docker_container']
+        container = find_container(host)
+        if container
           @logger.debug("stop container #{container.id}")
           begin
             container.kill
@@ -276,15 +277,21 @@ module Beaker
           end
         end
 
-        # Do not remove the image if docker_reserve_image is set to true, otherwise remove it
-        if image = (host['docker_preserve_image'] ? nil : host['docker_image'])
-          @logger.debug("delete image #{image.id}")
-          begin
-            image.delete
-          rescue Excon::Errors::ClientError => e
-            @logger.warn("deletion of image #{image.id} failed: #{e.response.body}")
-          rescue ::Docker::Error::DockerError => e
-            @logger.warn("deletion of image #{image.id} caused internal Docker error: #{e.message}")
+        # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
+        unless host['docker_preserve_image']
+          image_id = host['docker_image_id']
+
+          if image_id
+            @logger.debug("deleting image #{image_id}")
+            begin
+              ::Docker::Image.remove(image_id)
+            rescue Excon::Errors::ClientError => e
+              @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
+            rescue ::Docker::Error::DockerError => e
+              @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
+            end
+          else
+            @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
           end
         end
       end
@@ -446,12 +453,26 @@ module Beaker
     # return the existing container if we're not provisioning
     # and docker_container_name is set
     def find_container(host)
-      return nil if host['docker_container_name'].nil? || @options[:provision]
-      @logger.debug("Looking for an existing container called #{host['docker_container_name']}")
+      id = host['docker_container_id']
+      name = host['docker_container_name']
+      return unless id || name
 
-      ::Docker::Container.all.select do |c|
-        c.info['Names'].include? "/#{host['docker_container_name']}"
-      end.first
+      containers = ::Docker::Container.all
+
+      if id
+        @logger.debug("Looking for an existing container with ID #{id}")
+        container = containers.select { |c| c.id == id }.first
+      end
+
+      if name && container.nil?
+        @logger.debug("Looking for an existing container with name #{name}")
+        container = containers.select do |c|
+          c.info['Names'].include? "/#{name}"
+        end.first
+      end
+
+      return container unless container.nil?
+      @logger.debug("Existing container not found")
     end
 
     # return true if we are inside a docker container
