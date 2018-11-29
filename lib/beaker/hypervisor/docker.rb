@@ -90,6 +90,10 @@ module Beaker
                                         { rm: true, buildargs: buildargs_for(host) })
         end
 
+          if host['tag']
+            image.tag({:repo => host['tag']})
+          end
+
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
           ret = ::Docker::Image.search(:term => image_name)

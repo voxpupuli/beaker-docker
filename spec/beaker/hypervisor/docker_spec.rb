@@ -196,6 +196,19 @@ module Beaker
         allow( docker ).to receive(:dockerfile_for)
       end
 
+      context 'when the host has "tag" defined' do
+        before :each do
+          hosts.each do |host|
+            host['tag'] = 'my_tag'
+          end
+        end
+
+        it 'will tag the image with the value of the tag' do
+          expect( image ).to receive(:tag).with({:repo => 'my_tag'}).exactly(3).times
+          docker.provision
+        end
+      end
+
       context 'when the host has "use_image_entry_point" set to true on the host' do
 
         before :each do

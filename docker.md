@@ -86,6 +86,22 @@ Unless the image configuration changes you might want to keep the Docker image f
     CONFIG:
       type: foss
 
+### Tag a built Docker Image ###
+Tag an image after creation; this allows for subsequent hosts to reference that image for multi-stage builds.
+
+    HOSTS:
+      ubuntu-12-10:
+        platform: ubuntu-12.10-x64
+        dockerfile: path/to/file
+        hypervisor: docker
+        tag: build_host
+      mysecondhost:
+        dockerfile: path/to/file # file references build_host
+        platform: alpine-3.8-x86_64
+        hypervisor: docker
+    CONFIG:
+      type: foss
+
 ### Reuse Docker Image ###
 In case you want to rerun the puppet again on the docker container, you can pass BEAKER_provision=no on the command line to set the env. Add this line in you default.ml file
 
