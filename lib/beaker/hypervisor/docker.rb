@@ -231,11 +231,20 @@ module Beaker
         container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
         container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+
+
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         container.exec(%w(yum clean all))
         container.exec(%w(yum install -y sudo openssh-server openssh-clients))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
         container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+
+        # Configure sshd service to allowroot login using password
+        # Also, disable reverse DNS lookups to prevent every. single. ssh
+        # operation taking 30 seconds while the lookup times out.
+        container.exec(%w(sed -ri 's/^#?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config))
+        container.exec(%w(sed -ri 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config))
+        container.exec(%w(sed -ri 's/^#?UseDNS .*/UseDNS no/' /etc/ssh/sshd_config))
       when /opensuse/, /sles/
         container.exec(%w(zypper -n in openssh))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
