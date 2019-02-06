@@ -231,8 +231,6 @@ module Beaker
         container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
         container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
-
-
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         container.exec(%w(yum clean all))
         container.exec(%w(yum install -y sudo openssh-server openssh-clients))
