@@ -444,6 +444,12 @@ module Beaker
       container.exec(['sed','-ri',
                       's/^#?UseDNS .*/UseDNS no/',
                       '/etc/ssh/sshd_config'])
+      # Make sure users with a bunch of SSH keys loaded in their keyring can
+      # still run tests
+      container.exec(['sed','-ri',
+                     's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
+                     '/etc/ssh/sshd_config'])
+
       if host
         if host['platform'] =~ /alpine/
           container.exec(%w(/usr/sbin/sshd))
