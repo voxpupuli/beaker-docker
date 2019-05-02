@@ -243,9 +243,9 @@ module Beaker
           expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
           docker.provision
         end
-      endq
+      end
 
-      it 'should call image create for hosts when use image as is is defined' do
+      it 'should call image create for hosts when use_image_as_is is defined' do
         hosts.each do |host|
           host['use_image_as_is'] = true
           expect( docker ).not_to receive(:install_ssh_components)
@@ -262,7 +262,7 @@ module Beaker
         hosts.each do |host|
           expect( docker ).not_to receive(:install_ssh_components)
           expect( docker ).not_to receive(:fix_ssh)
-          expect( docker ).to receive(:dockerfile_for).with(host).and_return('') unless host = hosts[2]
+          expect( docker ).to receive(:dockerfile_for).with(host).and_return('')
         end
 
         docker.provision
