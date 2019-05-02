@@ -44,55 +44,83 @@ module Beaker
 
     end
 
+    def install_and_run_ssh(host)
+      host['dockerfile'] || host['use_image_entry_point']
+    end
+
+    def get_container_opts(host, image_name)
+      container_opts = {}
+      if host['dockerfile']
+        container_opts['ExposedPorts'] = {'22/tcp' => {} }
+      end
+
+      container_opts.merge! ( {
+        'Image' => image_name,
+        'Hostname' => host.name,
+        'HostConfig' => {
+          'PortBindings' => {
+            '22/tcp' => [{ 'HostPort' => rand.to_s[2..5], 'HostIp' => '0.0.0.0'}]
+          },
+          'PublishAllPorts' => true,
+          'Privileged' => true,
+          'RestartPolicy' => {
+            'Name' => 'always'
+          }
+        }
+      } )
+    end
+
+    def get_container_image(host)
+      @logger.debug("Creating image")
+
+      if host['use_image_as_is']
+        return ::Docker::Image.create('fromImage' => host['image'])
+      end
+
+      dockerfile = host['dockerfile']
+      if dockerfile
+        # assume that the dockerfile is in the repo and tests are running
+        # from the root of the repo; maybe add support for external Dockerfiles
+        # with external build dependencies later.
+        if File.exist?(dockerfile)
+          dir = File.expand_path(dockerfile).chomp(dockerfile)
+          return ::Docker::Image.build_from_dir(
+            dir,
+            { 'dockerfile' => dockerfile,
+              :rm => true,
+              :buildargs => buildargs_for(host)
+            }
+          )
+        else
+          raise "Unable to find dockerfile at #{dockerfile}"
+        end
+      elsif host['use_image_entry_point']
+        df = <<-DF
+          FROM #{host['image']}
+          EXPOSE 22
+        DF
+
+        cmd = host['docker_cmd']
+        df += cmd if cmd
+        return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
+      end
+
+      return ::Docker::Image.build(dockerfile_for(host),
+                  { rm: true, buildargs: buildargs_for(host) })
+    end
+
     def provision
       @logger.notify "Provisioning docker"
 
       @hosts.each do |host|
         @logger.notify "provisioning #{host.name}"
 
-        container_opts = {}
-        @logger.debug("Creating image")
 
-        dockerfile = host['dockerfile']
-        if dockerfile
-          install_and_run_ssh = true
-          container_opts['ExposedPorts'] = {'22/tcp' => {} }
-          # assume that the dockerfile is in the repo and tests are running
-          # from the root of the repo; maybe add support for external Dockerfiles
-          # with external build dependencies later.
-          if File.exist?(dockerfile)
-            dir = File.expand_path(dockerfile).chomp(dockerfile)
-            image = ::Docker::Image.build_from_dir(
-              dir,
-              { 'dockerfile' => dockerfile,
-                :rm => true,
-                :buildargs => buildargs_for(host)
-              }
-            )
-          else
-            raise "Unable to find dockerfile at #{dockerfile}"
-          end
-        elsif host['use_image_entry_point']
-          install_and_run_ssh = true
-          df = <<-DF
-            FROM #{host['image']}
-            EXPOSE 22
-          DF
+        image = get_container_image(host)
 
-          cmd = host['docker_cmd']
-          df += cmd if cmd
-
-          image = ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
-
-        else
-
-          image = ::Docker::Image.build(dockerfile_for(host),
-                                        { rm: true, buildargs: buildargs_for(host) })
+        if host['tag']
+          image.tag({:repo => host['tag']})
         end
-
-          if host['tag']
-            image.tag({:repo => host['tag']})
-          end
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
@@ -106,20 +134,7 @@ module Beaker
           image_name = image.id
         end
 
-        container_opts.merge! ( {
-          'Image' => image_name,
-          'Hostname' => host.name,
-          'HostConfig' => {
-            'PortBindings' => {
-              '22/tcp' => [{ 'HostPort' => rand.to_s[2..5], 'HostIp' => '0.0.0.0'}]
-            },
-            'PublishAllPorts' => true,
-            'Privileged' => true,
-            'RestartPolicy' => {
-              'Name' => 'always'
-            }
-          }
-        } )
+        container_opts = get_container_opts(host, image_name)
         if host['dockeropts'] || @options[:dockeropts]
           dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
           dockeropts.each do |k,v|
@@ -169,7 +184,7 @@ module Beaker
         @logger.debug("Starting container #{container.id}")
         container.start
 
-        if install_and_run_ssh
+        if install_and_run_ssh(host)
           @logger.notify("Installing ssh components and starting ssh daemon in #{host} container")
           install_ssh_components(container, host)
           # run fixssh to configure and start the ssh service
