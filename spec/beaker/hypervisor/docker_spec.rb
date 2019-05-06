@@ -100,6 +100,7 @@ module Beaker
       allow( ::Docker ).to receive(:logger=)
       allow( ::Docker ).to receive(:version).and_return(version)
       allow( ::Docker::Image ).to receive(:build).and_return(image)
+      allow( ::Docker::Image ).to receive(:create).and_return(image)
       allow( ::Docker::Container ).to receive(:create).and_return(container)
       allow_any_instance_of( ::Docker::Container ).to receive(:start)
     end
@@ -242,6 +243,19 @@ module Beaker
           expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
           docker.provision
         end
+      end
+
+      it 'should call image create for hosts when use_image_as_is is defined' do
+        hosts.each do |host|
+          host['use_image_as_is'] = true
+          expect( docker ).not_to receive(:install_ssh_components)
+          expect( docker ).not_to receive(:fix_ssh)
+          expect( ::Docker::Image ).to receive(:create).with('fromImage' => host['image']) #once per host
+          expect( ::Docker::Image ).not_to receive(:build)
+          expect( ::Docker::Image ).not_to receive(:build_from_dir)
+        end
+
+        docker.provision
       end
 
       it 'should call dockerfile_for with all the hosts' do
