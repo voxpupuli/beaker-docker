@@ -175,6 +175,8 @@ module Beaker
 
           @logger.debug("Creating container from image #{image_name}")
           container = ::Docker::Container.create(container_opts)
+        else
+          host['use_existing_container'] = true
         end
 
         if container.nil?
