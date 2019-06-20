@@ -144,10 +144,9 @@ module Beaker
 
         container = find_container(host)
 
-        # Provisioning - Only provision if:
-        # - provisioning was explicitly requested via options, or
-        # - the host's container can't be found via its name or ID
-        if @options[:provision] || container.nil?
+        # Provisioning - Only provision if the host's container can't be found
+        # via its name or ID
+        if container.nil?
           unless host['mount_folders'].nil?
             container_opts['HostConfig'] ||= {}
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
