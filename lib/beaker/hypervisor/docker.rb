@@ -161,6 +161,10 @@ module Beaker
             end
           end
 
+          if host['docker_env']
+            container_opts['Env'] = host['docker_env']
+          end
+
           if host['docker_cap_add']
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
           end
