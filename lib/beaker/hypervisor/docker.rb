@@ -509,6 +509,7 @@ module Beaker
 
       return container unless container.nil?
       @logger.debug("Existing container not found")
+      return nil
     end
 
     # return true if we are inside a docker container
