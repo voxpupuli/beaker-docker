@@ -144,10 +144,9 @@ module Beaker
 
         container = find_container(host)
 
-        # Provisioning - Only provision if:
-        # - provisioning was explicitly requested via options, or
-        # - the host's container can't be found via its name or ID
-        if @options[:provision] || container.nil?
+        # Provisioning - Only provision if the host's container can't be found
+        # via its name or ID
+        if container.nil?
           unless host['mount_folders'].nil?
             container_opts['HostConfig'] ||= {}
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
@@ -162,6 +161,10 @@ module Beaker
             end
           end
 
+          if host['docker_env']
+            container_opts['Env'] = host['docker_env']
+          end
+
           if host['docker_cap_add']
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
           end
@@ -172,6 +175,8 @@ module Beaker
 
           @logger.debug("Creating container from image #{image_name}")
           container = ::Docker::Container.create(container_opts)
+        else
+          host['use_existing_container'] = true
         end
 
         if container.nil?
@@ -279,38 +284,44 @@ module Beaker
     def cleanup
       @logger.notify "Cleaning up docker"
       @hosts.each do |host|
-        container = find_container(host)
-        if container
-          @logger.debug("stop container #{container.id}")
-          begin
-            container.kill
-            sleep 2 # avoid a race condition where the root FS can't unmount
-          rescue Excon::Errors::ClientError => e
-            @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
-          end
-          @logger.debug("delete container #{container.id}")
-          begin
-            container.delete
-          rescue Excon::Errors::ClientError => e
-            @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
-          end
-        end
-
-        # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
-        unless host['docker_preserve_image']
-          image_id = host['docker_image_id']
-
-          if image_id
-            @logger.debug("deleting image #{image_id}")
+        # leave the container running if docker_preserve_container is set
+        # setting docker_preserve_container also implies docker_preserve_image
+        # is set, since you can't delete an image that's the base of a running
+        # container
+        unless host['docker_preserve_container']
+          container = find_container(host)
+          if container
+            @logger.debug("stop container #{container.id}")
             begin
-              ::Docker::Image.remove(image_id)
+              container.kill
+              sleep 2 # avoid a race condition where the root FS can't unmount
             rescue Excon::Errors::ClientError => e
-              @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
-            rescue ::Docker::Error::DockerError => e
-              @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
+              @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
             end
-          else
-            @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
+            @logger.debug("delete container #{container.id}")
+            begin
+              container.delete
+            rescue Excon::Errors::ClientError => e
+              @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
+            end
+          end
+
+          # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
+          unless host['docker_preserve_image']
+            image_id = host['docker_image_id']
+
+            if image_id
+              @logger.debug("deleting image #{image_id}")
+              begin
+                ::Docker::Image.remove(image_id)
+              rescue Excon::Errors::ClientError => e
+                @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
+              rescue ::Docker::Error::DockerError => e
+                @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
+              end
+            else
+              @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
+            end
           end
         end
       end
@@ -498,6 +509,7 @@ module Beaker
 
       return container unless container.nil?
       @logger.debug("Existing container not found")
+      return nil
     end
 
     # return true if we are inside a docker container
