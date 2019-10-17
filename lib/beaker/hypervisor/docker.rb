@@ -375,7 +375,7 @@ module Beaker
           RUN apt-get update
           RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::DEBIAN_PACKAGES.join(' ')}
         EOF
-        when  /cumulus/
+      when  /cumulus/
           dockerfile += <<-EOF
           RUN apt-get update
           RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::CUMULUS_PACKAGES.join(' ')}
@@ -384,6 +384,13 @@ module Beaker
         dockerfile += <<-EOF
           RUN dnf clean all
           RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
+          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
+        EOF
+      when /el-8/
+        dockerfile += <<-EOF
+          RUN yum clean all
+          RUN yum install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::RHEL8_PACKAGES.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
         EOF
