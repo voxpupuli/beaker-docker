@@ -42,3 +42,14 @@ bundle exec rake test:acceptance
 # Contributing
 
 Please refer to puppetlabs/beaker's [contributing](https://github.com/puppetlabs/beaker/blob/master/CONTRIBUTING.md) guide.
+
+# Releasing
+
+To release new versions of beaker-docker, please use this [jenkins job](https://cinext-jenkinsmaster-sre-prod-1.delivery.puppetlabs.net/view/all/job/qe_beaker-docker_init-multijob_master/). This job
+lives on Puppet-internal infrastructure, so you'll need to be a part of the Puppet org to do this.
+
+To run the job, click on `Build with Parameters` in the menu on the left. Make
+sure you check the box next to `PUBLIC` and enter the appropriate version. The
+version should adhere to [semantic version standards](https://semver.org).
+When in doubt, consult the [maintainers of Beaker](https://github.com/puppetlabs/beaker/blob/master/CODEOWNERS)
+for guidance.
