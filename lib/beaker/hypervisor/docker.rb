@@ -224,6 +224,7 @@ module Beaker
           :password => root_password,
           :port => port,
           :forward_agent => forward_ssh_agent,
+          :auth_methods => ['password', 'publickey', 'hostbased', 'keyboard-interactive']
         }
 
         @logger.debug("node available as  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
