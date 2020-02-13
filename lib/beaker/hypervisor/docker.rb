@@ -487,6 +487,8 @@ module Beaker
       if host
         if host['platform'] =~ /alpine/
           container.exec(%w(/usr/sbin/sshd))
+        elsif host['platform'] =~ /centos-[7-8]/
+	  container.exec(%w(systemctl restart sshd.service))
         else
           container.exec(%w(service ssh restart))
         end
