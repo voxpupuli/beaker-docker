@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   else
     s.add_development_dependency 'fakefs', '~> 0.6'
   end
-  s.add_development_dependency 'rake', '~> 10.1'
+  s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'simplecov'
   s.add_development_dependency 'pry', '~> 0.10'
 
