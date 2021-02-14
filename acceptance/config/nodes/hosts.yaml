@@ -1,9 +1,9 @@
 ---
 HOSTS:
-  ubuntu1604-64-1:
-    platform: ubuntu-1604-x86_64 
+  centos8:
+    platform: el-8-x86_64
     hypervisor: docker
-    image: ubuntu:16.04
+    image: centos:8
     roles:
       - master
       - agent
@@ -12,22 +12,24 @@ HOSTS:
       - classifier
       - default
     docker_cmd: '["/sbin/init"]'
+    docker_cap_add:
+      - AUDIT_WRITE
     dockeropts:
       Labels:
         one: '1'
         two: '2'
-  ubuntu1604-64-2:
-    platform: ubuntu-1604-x86_64
+  centos7:
+    platform: el-7-x86_64
     hypervisor: docker
-    image: ubuntu:16.04
+    image: centos:7
     roles:
       - agent
-    docker_cmd: '["/sbin/init"]'
+    docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
+    use_image_entrypoint: true
+    dockeropts:
+      HostConfig:
+        Privileged: true
 CONFIG:
   nfs_server: none
   consoleport: 443
   log_level: verbose
-  dockeropts:
-    Labels:
-      one: '3'
-      two: '4'

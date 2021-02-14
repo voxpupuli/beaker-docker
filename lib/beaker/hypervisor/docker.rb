@@ -19,19 +19,25 @@ module Beaker
       default_docker_options = { :write_timeout => 300, :read_timeout => 300 }.merge(::Docker.options || {})
       # Merge docker options from the entry in hosts file
       ::Docker.options = default_docker_options.merge(@options[:docker_options] || {})
-      # assert that the docker-api gem can talk to your docker
-      # enpoint.  Will raise if there is a version mismatch
+
+      # Ensure that we can correctly communicate with the docker API
       begin
-        ::Docker.validate_version!
+        @docker_version = ::Docker.version
       rescue Excon::Errors::SocketError => e
-        raise "Docker instance not connectable.\nError was: #{e}\nCheck your DOCKER_HOST variable has been set\nIf you are on OSX or Windows, you might not have Docker Machine setup correctly: https://docs.docker.com/machine/\n"
+        raise <<~ERRMSG
+          Docker instance not connectable
+          Error was: #{e}
+          * Check your DOCKER_HOST variable has been set
+          * If you are on OSX or Windows, you might not have Docker Machine setup correctly: https://docs.docker.com/machine/
+          * If you are using rootless podman, you might need to set up your local socket and service
+          ERRMSG
       end
 
       # Pass on all the logging from docker-api to the beaker logger instance
       ::Docker.logger = @logger
 
       # Find out what kind of remote instance we are talking against
-      if ::Docker.version['Version'] =~ /swarm/
+      if @docker_version['Version'] =~ /swarm/
         @docker_type = 'swarm'
         unless ENV['DOCKER_REGISTRY']
           raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
@@ -41,10 +47,21 @@ module Beaker
       else
         @docker_type = 'docker'
       end
-
     end
 
     def install_and_run_ssh(host)
+      def host.enable_root_login(host,opts)
+        logger.debug("Root login already enabled for #{host}")
+      end
+
+      # If the container is running ssh as its init process then this method
+      # will cause issues.
+      if host[:docker_cmd] =~ /sshd/
+        def host.ssh_service_restart
+          self[:docker_container].exec(%w(kill -1 1))
+        end
+      end
+
       host['dockerfile'] || host['use_image_entry_point']
     end
 
@@ -62,7 +79,6 @@ module Beaker
             '22/tcp' => [{ 'HostPort' => rand.to_s[2..5], 'HostIp' => '0.0.0.0'}]
           },
           'PublishAllPorts' => true,
-          'Privileged' => true,
           'RestartPolicy' => {
             'Name' => 'always'
           }
@@ -107,6 +123,45 @@ module Beaker
 
       return ::Docker::Image.build(dockerfile_for(host),
                   { rm: true, buildargs: buildargs_for(host) })
+    end
+
+    # Find out where the ssh port is from the container
+    # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
+    # IP of the swarm slave via the container data
+    # When we are talking to a normal docker instance DOCKER_HOST can point to a remote docker instance.
+    def get_ssh_connection_info(container)
+      ssh_connection_info = {
+        ip: nil,
+        port: nil
+      }
+
+      # Talking against a remote docker host which is a normal docker host
+      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///')
+        ip = URI.parse(ENV['DOCKER_HOST']).host
+      else
+        # Swarm or local docker host
+        if in_container?
+          ip = container.json["NetworkSettings"]["Gateway"]
+        else
+          ip = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostIp"]
+        end
+      end
+
+      network_settings = container.json['NetworkSettings']
+      host_config = container.json['HostConfig']
+
+      port = '22'
+      if host_config['NetworkMode'] == 'bridge' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
+        ssh_connection_info[:ip] = network_settings['IPAddress']
+      else
+        port = network_settings['Ports']['22/tcp'][0]['HostPort']
+
+        # Update host metadata
+        ssh_connection_info[:ip] = (ip == '0.0.0.0') ? '127.0.0.1' : ip
+      end
+
+      ssh_connection_info[:port] = port
+      ssh_connection_info
     end
 
     def provision
@@ -156,7 +211,12 @@ module Beaker
                 host_path = "/" + host_path.gsub(/^.\:/, host_path[/^(.)/].downcase)
               end
               a = [ host_path, mount['container_path'] ]
-              a << mount['opts'] if mount.has_key?('opts')
+              if mount.has_key?('opts')
+                a << mount['opts'] if mount.has_key?('opts')
+              else
+                a << mount['opts'] = 'z'
+              end
+
               a.join(':')
             end
           end
@@ -171,10 +231,28 @@ module Beaker
 
           if host['docker_container_name']
             container_opts['name'] = host['docker_container_name']
+          else
+            container_opts['name'] = ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-')
           end
 
           @logger.debug("Creating container from image #{image_name}")
-          container = ::Docker::Container.create(container_opts)
+
+          ok=false
+          retries=0
+          while(!ok && (retries < 5))
+            container = ::Docker::Container.create(container_opts)
+
+            if (get_ssh_connection_info(container)[:port].to_i < 1024) && (Process.uid != 0)
+              @logger.debug("#{host} was given a port less than 1024 but you are not running as root, retrying")
+
+              container.delete
+
+              retries+=1
+              next
+            end
+
+            ok=true
+          end
         else
           host['use_existing_container'] = true
         end
@@ -189,36 +267,29 @@ module Beaker
         @logger.debug("Starting container #{container.id}")
         container.start
 
+        # Preserve the ability to talk directly to the underlying API
+        #
+        # You can use any method defined by the docker-api gem on this object
+        # https://github.com/swipely/docker-api
+        host[:docker_container] = container
+
+        ssh_connection_info = get_ssh_connection_info(container)
+
+        ip = ssh_connection_info[:ip]
+        port = ssh_connection_info[:port]
+
+        @logger.info("Using container connection at #{ip}:#{port}")
+
         if install_and_run_ssh(host)
           @logger.notify("Installing ssh components and starting ssh daemon in #{host} container")
           install_ssh_components(container, host)
           # run fixssh to configure and start the ssh service
           fix_ssh(container, host)
         end
-        # Find out where the ssh port is from the container
-        # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
-        # IP of the swarm slave via the container data
-        # When we are talking to a normal docker instance DOCKER_HOST can point to a remote docker instance.
-
-        # Talking against a remote docker host which is a normal docker host
-        if @docker_type == 'docker' && ENV['DOCKER_HOST']
-          ip = URI.parse(ENV['DOCKER_HOST']).host
-        else
-          # Swarm or local docker host
-          if in_container?
-            ip = container.json["NetworkSettings"]["Gateway"]
-          else
-            ip = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostIp"]
-          end
-        end
-
-        @logger.info("Using docker server at #{ip}")
-        port = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostPort"]
 
         forward_ssh_agent = @options[:forward_ssh_agent] || false
 
-        # Update host metadata
-        host['ip']  = ip
+        host['ip'] = ip
         host['port'] = port
         host['ssh']  = {
           :password => root_password,
@@ -232,10 +303,12 @@ module Beaker
         host['docker_image_id'] = image.id
         host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s
 
+        def host.reboot
+          @logger.warn("Rebooting containers is ineffective...ignoring")
+        end
       end
 
       hack_etc_hosts @hosts, @options
-
     end
 
     # This sideloads sshd after a container starts
@@ -244,19 +317,23 @@ module Beaker
       when /ubuntu/, /debian/
         container.exec(%w(apt-get update))
         container.exec(%w(apt-get install -y openssh-server openssh-client))
+        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
       when /cumulus/
         container.exec(%w(apt-get update))
         container.exec(%w(apt-get install -y openssh-server openssh-client))
+        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
       when /fedora-(2[2-9])/
         container.exec(%w(dnf clean all))
         container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
         container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         container.exec(%w(yum clean all))
         container.exec(%w(yum install -y sudo openssh-server openssh-clients))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
         container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
       when /opensuse/, /sles/
         container.exec(%w(zypper -n in openssh))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
@@ -372,71 +449,76 @@ module Beaker
       case host['platform']
       when /ubuntu/, /debian/
         service_name = "ssh"
-        dockerfile += <<-EOF
+        dockerfile += <<~EOF
           RUN apt-get update
           RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::DEBIAN_PACKAGES.join(' ')}
-        EOF
+          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+          EOF
       when  /cumulus/
-          dockerfile += <<-EOF
+          dockerfile += <<~EOF
           RUN apt-get update
           RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::CUMULUS_PACKAGES.join(' ')}
-        EOF
+          EOF
       when /fedora-(2[2-9])/
-        dockerfile += <<-EOF
+        dockerfile += <<~EOF
           RUN dnf clean all
           RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-        EOF
+          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+          EOF
       when /el-8/
-        dockerfile += <<-EOF
-          RUN yum clean all
-          RUN yum install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::RHEL8_PACKAGES.join(' ')}
+        dockerfile += <<~EOF
+          RUN dnf clean all
+          RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::RHEL8_PACKAGES.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-        EOF
+          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+          EOF
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
-        dockerfile += <<-EOF
+        dockerfile += <<~EOF
           RUN yum clean all
           RUN yum install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-        EOF
+          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+          EOF
       when /opensuse/, /sles/
-        dockerfile += <<-EOF
+        dockerfile += <<~EOF
           RUN zypper -n in openssh #{Beaker::HostPrebuiltSteps::SLES_PACKAGES.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
           RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
-        EOF
+          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+          EOF
       when /archlinux/
-        dockerfile += <<-EOF
+        dockerfile += <<~EOF
           RUN pacman --noconfirm -Sy archlinux-keyring
           RUN pacman --noconfirm -Syu
           RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
           RUN ssh-keygen -A
           RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
           RUN systemctl enable sshd
-        EOF
+          EOF
       else
         # TODO add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
       end
 
       # Make sshd directory, set root password
-      dockerfile += <<-EOF
+      dockerfile += <<~EOF
         RUN mkdir -p /var/run/sshd
         RUN echo root:#{root_password} | chpasswd
-      EOF
+        EOF
 
       # Configure sshd service to allowroot login using password
       # Also, disable reverse DNS lookups to prevent every. single. ssh
       # operation taking 30 seconds while the lookup times out.
-      dockerfile += <<-EOF
+      dockerfile += <<~EOF
         RUN sed -ri 's/^#?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
         RUN sed -ri 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
         RUN sed -ri 's/^#?UseDNS .*/UseDNS no/' /etc/ssh/sshd_config
-      EOF
+        EOF
 
 
       # Any extra commands specified for the host
