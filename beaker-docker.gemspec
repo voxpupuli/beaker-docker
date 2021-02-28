@@ -5,12 +5,17 @@ require 'beaker-docker/version'
 Gem::Specification.new do |s|
   s.name        = "beaker-docker"
   s.version     = BeakerDocker::VERSION
-  s.authors     = ["Rishi Javia, Kevin Imber, Tony Vu"]
-  s.email       = ["rishi.javia@puppet.com, kevin.imber@puppet.com, tony.vu@puppet.com"]
-  s.homepage    = "https://github.com/puppetlabs/beaker-docker"
+  s.authors     = [
+    "Vox Pupuli",
+    "Rishi Javia",
+    "Kevin Imber",
+    "Tony Vu"
+  ]
+  s.email       = ["voxpupuli@groups.io"]
+  s.homepage    = "https://github.com/voxpupuli/beaker-docker"
   s.summary     = %q{Beaker DSL Extension Helpers!}
   s.description = %q{For use for the Beaker acceptance testing tool}
-  s.license     = 'Apache2'
+  s.license     = 'Apache-2.0'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
@@ -19,10 +24,10 @@ Gem::Specification.new do |s|
 
   # Testing dependencies
   s.add_development_dependency 'rspec', '~> 3.0'
-  s.add_development_dependency 'rspec-its'
+  s.add_development_dependency 'rspec-its', '~> 1.3'
   s.add_development_dependency 'fakefs', '~> 1.3'
   s.add_development_dependency 'rake', '~> 13.0'
-  s.add_development_dependency 'simplecov'
+  s.add_development_dependency 'simplecov', '~> 0.18'
   s.add_development_dependency 'pry', '~> 0.10'
 
   # Run time dependencies

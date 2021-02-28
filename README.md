@@ -2,9 +2,9 @@
 
 Beaker library to use docker hypervisor
 
-# How to use this wizardry
+## How to use this wizardry
 
-This gem that allows you to use hosts with [docker](docker.md) hypervisor with [beaker](https://github.com/puppetlabs/beaker).
+This gem that allows you to use hosts with [docker](docker.md) hypervisor with [beaker](https://github.com/voxpupuli/beaker).
 
 Beaker will automatically load the appropriate hypervisors for any given hosts
 file, so as long as your project dependencies are satisfied there's nothing else
@@ -14,20 +14,20 @@ In order to use a specific hypervisor or DSL extension library in your project,
 you will need to include them alongside Beaker in your Gemfile or
 project.gemspec. E.g.
 
-~~~ruby
+```ruby
 # Gemfile
 gem 'beaker', '~> 4.0'
 gem 'beaker-docker'
 # project.gemspec
 s.add_runtime_dependency 'beaker', '~> 4.0'
 s.add_runtime_dependency 'beaker-docker'
-~~~
+```
 
-## Nodeset Options
+### Nodeset Options
 
 The following is a sample nodeset:
 
-~~~yaml
+```yaml
 HOSTS:
   el8:
     platform: el-8-x86_64
@@ -51,21 +51,21 @@ HOSTS:
 CONFIG:
   docker_cap_add:
     - AUDIT_WRITE
-~~~
+```
 
-## Privileged containers
+### Privileged containers
 
-Containers are **not** run in privileged mode by default for safety.
+Containers are run in privileged mode by default unless capabilities are set.
 
-If you wish to enable privileged mode, simply set the following in your node:
+If you wish to disable privileged mode, simply set the following in your node:
 
-~~~yaml
+```yaml
 dockeropts:
   HostConfig:
-    Privileged: true
-~~~
+    Privileged: false
+```
 
-## Cleaning up after tests
+### Cleaning up after tests
 
 Containers created by this plugin may not be destroyed unless the tests complete
 successfully. Each container created is prefixed by `beaker-` to make filtering
@@ -73,11 +73,11 @@ for clean up easier.
 
 A quick way to clean up all nodes is as follows:
 
-~~~sh
+```sh
 podman rm -f $( podman ps -q -f name="beaker-*" )
-~~~
+```
 
-# Working with `podman`
+## Working with `podman`
 
 If you're using a version of `podman` that has API socket support then you
 should be able to simply set `DOCKER_HOST` to your socket and connect as usual.
@@ -94,14 +94,15 @@ See the
 [HostConfig](https://any-api.com/docker_com/engine/docs/Definitions/HostConfig)
 portion of the docker API for more information.
 
-# Spec tests
+## Spec tests
 
 Spec test live under the `spec` folder. There are the default rake task and therefore can run with a simple command:
+
 ```bash
 bundle exec rake test:spec
 ```
 
-# Acceptance tests
+## Acceptance tests
 
 There is a simple rake task to invoke acceptance test for the library:
 
@@ -109,17 +110,10 @@ There is a simple rake task to invoke acceptance test for the library:
 bundle exec rake test:acceptance
 ```
 
-# Contributing
+## Contributing
 
 Please refer to puppetlabs/beaker's [contributing](https://github.com/puppetlabs/beaker/blob/master/CONTRIBUTING.md) guide.
 
-# Releasing
+## Releasing
 
-To release new versions of beaker-docker, please use this [jenkins job](https://cinext-jenkinsmaster-sre-prod-1.delivery.puppetlabs.net/view/all/job/qe_beaker-docker_init-multijob_master/). This job
-lives on Puppet-internal infrastructure, so you'll need to be a part of the Puppet org to do this.
-
-To run the job, click on `Build with Parameters` in the menu on the left. Make
-sure you check the box next to `PUBLIC` and enter the appropriate version. The
-version should adhere to [semantic version standards](https://semver.org).
-When in doubt, consult the [maintainers of Beaker](https://github.com/puppetlabs/beaker/blob/master/CODEOWNERS)
-for guidance.
+To release new versions of beaker-docker, please use update `lib/beaker-docker/version.rb` with the new version number. The version should adhere to [semantic version standards](https://semver.org). When in doubt, ask in the `#voxpupuli` channel of the Puppet community Slack or in `#voxpupuli` on irc.freenode.net ([Webinterface](https://webchat.freenode.net/?channels=%23voxpupuli)).
