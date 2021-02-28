@@ -303,6 +303,7 @@ module Beaker
                 'PortBindings' => {
                   '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
                 },
+                'Privileged' => true,
                 'PublishAllPorts' => true,
                 'RestartPolicy' => {
                   'Name' => 'always'
@@ -337,6 +338,7 @@ module Beaker
                   '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
                 },
                 'PublishAllPorts' => true,
+                'Privileged' => true,
                 'RestartPolicy' => {
                   'Name' => 'always'
                 }
@@ -367,6 +369,7 @@ module Beaker
                   '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
                 },
                 'PublishAllPorts' => true,
+                'Privileged' => true,
                 'RestartPolicy' => {
                   'Name' => 'always'
                 }
@@ -424,6 +427,7 @@ module Beaker
                   '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
                 },
                 'PublishAllPorts' => true,
+                'Privileged' => true,
                 'RestartPolicy' => {
                   'Name' => 'always'
                 }
