@@ -117,3 +117,5 @@ Please refer to puppetlabs/beaker's [contributing](https://github.com/puppetlabs
 ## Releasing
 
 To release new versions of beaker-docker, please use update `lib/beaker-docker/version.rb` with the new version number. The version should adhere to [semantic version standards](https://semver.org). When in doubt, ask in the `#voxpupuli` channel of the Puppet community Slack or in `#voxpupuli` on irc.freenode.net ([Webinterface](https://webchat.freenode.net/?channels=%23voxpupuli)).
+
+Once the version file has been updated, a contributor can push a new git tag to match and GitHub Actions will do the release to RubyGems.
