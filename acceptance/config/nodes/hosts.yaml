@@ -12,12 +12,6 @@ HOSTS:
       - classifier
       - default
     docker_cmd: '["/sbin/init"]'
-    docker_cap_add:
-      - AUDIT_WRITE
-    dockeropts:
-      Labels:
-        one: '1'
-        two: '2'
   centos7:
     platform: el-7-x86_64
     hypervisor: docker
@@ -26,10 +20,21 @@ HOSTS:
       - agent
     docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
     use_image_entrypoint: true
-    dockeropts:
-      HostConfig:
-        Privileged: true
 CONFIG:
   nfs_server: none
   consoleport: 443
   log_level: verbose
+  # Ubuntu runners need to run with full privileges
+  # RHEL derivitives just need the docker cap AUDIT_WRITE
+  dockeropts:
+    HostConfig:
+      Privileged: true
+  # docker_cap_add:
+  #   - AUDIT_WRITE
+  type: aio
+  ssh:
+    verify_host_key: false
+    user_known_hosts_file: '/dev/null'
+    password: root
+    auth_methods:
+      - password

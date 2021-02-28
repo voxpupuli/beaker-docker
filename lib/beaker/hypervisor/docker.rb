@@ -135,32 +135,35 @@ module Beaker
         port: nil
       }
 
+      container_json = container.json
+      network_settings = container_json['NetworkSettings']
+      host_config = container_json['HostConfig']
+
+      ip = nil
+      port = nil
       # Talking against a remote docker host which is a normal docker host
       if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///')
         ip = URI.parse(ENV['DOCKER_HOST']).host
       else
         # Swarm or local docker host
         if in_container?
-          ip = container.json["NetworkSettings"]["Gateway"]
+          gw = network_settings['Gateway']
+          ip = gw unless (gw.nil? || gw.empty?)
         else
-          ip = container.json["NetworkSettings"]["Ports"]["22/tcp"][0]["HostIp"]
+          port22 = network_settings.dig('Ports','22/tcp')
+          ip = port22[0]["HostIp"] if port22
         end
       end
 
-      network_settings = container.json['NetworkSettings']
-      host_config = container.json['HostConfig']
-
-      port = '22'
-      if host_config['NetworkMode'] == 'bridge' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
-        ssh_connection_info[:ip] = network_settings['IPAddress']
+      if host_config['NetworkMode'] != 'slirp4netns' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
+        ip = network_settings['IPAddress']
       else
-        port = network_settings['Ports']['22/tcp'][0]['HostPort']
-
-        # Update host metadata
-        ssh_connection_info[:ip] = (ip == '0.0.0.0') ? '127.0.0.1' : ip
+        port22 = network_settings.dig('Ports','22/tcp')
+        port = port22[0]['HostPort'] if port22
       end
 
-      ssh_connection_info[:port] = port
+      ssh_connection_info[:ip] = (ip == '0.0.0.0') ? '127.0.0.1' : ip
+      ssh_connection_info[:port] = port || '22'
       ssh_connection_info
     end
 
@@ -242,7 +245,8 @@ module Beaker
           while(!ok && (retries < 5))
             container = ::Docker::Container.create(container_opts)
 
-            if (get_ssh_connection_info(container)[:port].to_i < 1024) && (Process.uid != 0)
+            ssh_info = get_ssh_connection_info(container)
+            if ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024) && (Process.uid != 0)
               @logger.debug("#{host} was given a port less than 1024 but you are not running as root, retrying")
 
               container.delete
@@ -267,18 +271,18 @@ module Beaker
         @logger.debug("Starting container #{container.id}")
         container.start
 
+        begin
+          container.stats
+        rescue StandardError => e
+          container.delete
+          raise "Container '#{container.id}' in a bad state: #{e}"
+        end
+
         # Preserve the ability to talk directly to the underlying API
         #
         # You can use any method defined by the docker-api gem on this object
         # https://github.com/swipely/docker-api
         host[:docker_container] = container
-
-        ssh_connection_info = get_ssh_connection_info(container)
-
-        ip = ssh_connection_info[:ip]
-        port = ssh_connection_info[:port]
-
-        @logger.info("Using container connection at #{ip}:#{port}")
 
         if install_and_run_ssh(host)
           @logger.notify("Installing ssh components and starting ssh daemon in #{host} container")
@@ -286,6 +290,13 @@ module Beaker
           # run fixssh to configure and start the ssh service
           fix_ssh(container, host)
         end
+
+        ssh_connection_info = get_ssh_connection_info(container)
+
+        ip = ssh_connection_info[:ip]
+        port = ssh_connection_info[:port]
+
+        @logger.info("Using container connection at #{ip}:#{port}")
 
         forward_ssh_agent = @options[:forward_ssh_agent] || false
 
@@ -298,7 +309,7 @@ module Beaker
           :auth_methods => ['password', 'publickey', 'hostbased', 'keyboard-interactive']
         }
 
-        @logger.debug("node available as  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
+        @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
         host['docker_container_id'] = container.id
         host['docker_image_id'] = image.id
         host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s

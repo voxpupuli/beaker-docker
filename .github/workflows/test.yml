@@ -1,13 +1,19 @@
 name: Test
 
 on:
-  - pull_request
+  push:
+    branches:
+      - test_me_github
+  pull_request:
+    branches:
+      - main
+      - master
 
 jobs:
-  test:
+  rspec:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         ruby:
           - "2.4"
@@ -16,7 +22,7 @@ jobs:
           - "2.7"
     env:
       BUNDLE_WITHOUT: release
-    name: Ruby ${{ matrix.ruby }}
+    name: RSpec - Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Ruby ${{ matrix.ruby }}
@@ -24,9 +30,76 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Run spec tests
+      - name: install bundler
+        run: |
+          gem install bundler -v '~> 1.17.3'
+          bundle update
+      - name: spec tests
         run: bundle exec rake test:spec
-      # It seems some additonal setup of Docker may be needed for
-      # the acceptance tests to work.
-      # - name: Run acceptance tests
-      #   run: bundle exec rake test:acceptance
+
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        ruby:
+          - "2.6"
+    env:
+      BUNDLE_WITHOUT: release
+    name: Docker - Ruby ${{ matrix.ruby }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Ruby ${{ matrix.ruby }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: install bundler
+        run: |
+          gem install bundler -v '~> 1.17.3'
+          bundle update
+      - name: install container runtime
+        run: |
+          sudo apt-get remove -y docker docker-engine docker.io containerd runc ||:
+          sudo apt-get update -y
+          sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+          sudo apt-get update -y
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo systemctl start docker
+      - name: Run acceptance tests
+        run: bundle exec rake test:acceptance
+
+  podman:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        ruby:
+          - "2.6"
+    env:
+      BUNDLE_WITHOUT: release
+    name: Podman - Ruby ${{ matrix.ruby }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Ruby ${{ matrix.ruby }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: install bundler
+        run: |
+          gem install bundler -v '~> 1.17.3'
+          bundle update
+      # We need the latest version of podman for this to work
+      - name: install container runtime
+        run: |
+          . /etc/os-release
+          curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add -
+          echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/podman.list > /dev/null
+          sudo apt-get update
+          sudo apt-get -y install podman
+          sudo systemctl start podman
+      - name: Run acceptance tests
+        run: bundle exec rake test:acceptance

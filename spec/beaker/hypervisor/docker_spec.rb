@@ -88,6 +88,7 @@ module Beaker
       container = double('Docker::Container')
       allow( container ).to receive(:id).and_return('abcdef')
       allow( container ).to receive(:start)
+      allow( container ).to receive(:stats)
       allow( container ).to receive(:info).and_return(
         *(0..2).map { |index| { 'Names' => ["/spec-container-#{index}"] } }
       )
