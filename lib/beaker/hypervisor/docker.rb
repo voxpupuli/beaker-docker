@@ -192,6 +192,8 @@ module Beaker
           image_name = image.id
         end
 
+        ### BEGIN CONTAINER OPTIONS MANGLING ###
+
         container_opts = get_container_opts(host, image_name)
         if host['dockeropts'] || @options[:dockeropts]
           dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
@@ -228,8 +230,17 @@ module Beaker
             container_opts['Env'] = host['docker_env']
           end
 
+          # Fixup privileges
+          #
+          # If the user has specified CAPs, then we cannot be privileged
+          #
+          # If the user has not specified CAPs, we will default to privileged for
+          # compatibility with worst practice
           if host['docker_cap_add']
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
+            container_opts['HostConfig'].delete('Privileged')
+          else
+            container_opts['HostConfig']['Privileged'] = container_opts['HostConfig']['Privileged'].nil? ? true : container_opts['HostConfig']['Privileged']
           end
 
           if host['docker_container_name']
@@ -237,6 +248,8 @@ module Beaker
           else
             container_opts['name'] = ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-')
           end
+
+          ### END CONTAINER OPTIONS MANGLING ###
 
           @logger.debug("Creating container from image #{image_name}")
 
