@@ -1,5 +1,5 @@
 group :acceptance_testing do
   # Needed for podman testing
-  gem "docker-api", :git => 'https://github.com/trevor-vaughan/docker-api', :branch => 'podman-compat'
+  gem "docker-api", '~> 2.1'
   gem "beaker-rspec"
 end
