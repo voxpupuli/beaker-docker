@@ -1,4 +1,3 @@
 group :acceptance_testing do
-  # Needed for podman testing
   gem "beaker-rspec"
 end
