@@ -259,10 +259,11 @@ module Beaker
             container = ::Docker::Container.create(container_opts)
 
             ssh_info = get_ssh_connection_info(container)
-            if ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024) && (Process.uid != 0)
-              @logger.debug("#{host} was given a port less than 1024 but you are not running as root, retrying")
+            if ::Docker.rootless? && ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024)
+              @logger.debug("#{host} was given a port less than 1024 but you are connecting to a rootless instance, retrying")
 
               container.delete
+              container = nil
 
               retries+=1
               next
