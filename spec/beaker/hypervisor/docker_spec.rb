@@ -105,6 +105,10 @@ module Beaker
 
     let (:version) { {"ApiVersion"=>"1.18", "Arch"=>"amd64", "GitCommit"=>"4749651", "GoVersion"=>"go1.4.2", "KernelVersion"=>"3.16.0-37-generic", "Os"=>"linux", "Version"=>"1.6.0"} }
 
+    before :each do
+      allow(::Docker).to receive(:rootless?).and_return(true)
+    end
+
     context 'with connection failure' do
       describe '#initialize' do
         before :each do
