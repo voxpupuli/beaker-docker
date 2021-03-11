@@ -536,8 +536,8 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
-              expect( hosts[0]['port'] ).to be ===  '22'
+              expect( hosts[0]['ip'] ).to be === '127.0.1.1'
+              expect( hosts[0]['port'] ).to be ===  8022
             end
           end
 
