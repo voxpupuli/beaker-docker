@@ -263,7 +263,7 @@ module Beaker
             if ::Docker.rootless? && ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024)
               @logger.debug("#{host} was given a port less than 1024 but you are connecting to a rootless instance, retrying")
 
-              container.delete
+              container.delete(force: true)
               container = nil
 
               retries+=1
@@ -289,7 +289,7 @@ module Beaker
         begin
           container.stats
         rescue StandardError => e
-          container.delete
+          container.delete(force: true)
           raise "Container '#{container.id}' in a bad state: #{e}"
         end
 
@@ -404,7 +404,7 @@ module Beaker
             end
             @logger.debug("delete container #{container.id}")
             begin
-              container.delete
+              container.delete(force: true)
             rescue Excon::Errors::ClientError => e
               @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
             end
