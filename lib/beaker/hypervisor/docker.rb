@@ -44,6 +44,8 @@ module Beaker
         else
           @registry = ENV['DOCKER_REGISTRY']
         end
+      elsif ::Docker.respond_to?(:podman?) && ::Docker.podman?
+        @docker_type = 'podman'
       else
         @docker_type = 'docker'
       end
@@ -150,9 +152,41 @@ module Beaker
           gw = network_settings['Gateway']
           ip = gw unless (gw.nil? || gw.empty?)
         else
-          port22 = network_settings.dig('Ports','22/tcp')
-          ip = port22[0]["HostIp"] if port22
+          # The many faces of container networking
+
+          # Host to Container
+          port22 = network_settings.dig('PortBindings','22/tcp')
+          ip = port22[0]['HostIp'] if port22
           port = port22[0]['HostPort'] if port22
+
+          # Container to container
+          unless ip && port
+            ip = nil
+            port = nil
+
+            ip = network_settings['IPAddress']
+            port = 22 if ip && !ip.empty?
+          end
+
+          # Container through gateway
+          unless ip && port
+            ip = nil
+            port = nil
+
+            ip = network_settings['Gateway']
+
+            if ip && !ip.empty?
+              port22 = network_settings.dig('PortBindings','22/tcp')
+              port = port22[0]['HostPort'] if port22
+            end
+          end
+
+          # Legacy fallback
+          unless ip && port
+            port22 = network_settings.dig('Ports','22/tcp')
+            ip = port22[0]["HostIp"] if port22
+            port = port22[0]['HostPort'] if port22
+          end
         end
       end
 

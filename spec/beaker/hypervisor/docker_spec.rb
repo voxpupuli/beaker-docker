@@ -134,6 +134,7 @@ module Beaker
         allow( ::Docker ).to receive(:options).and_return(docker_options)
         allow( ::Docker ).to receive(:options=)
         allow( ::Docker ).to receive(:logger=)
+        allow( ::Docker ).to receive(:podman?).and_return(false)
         allow( ::Docker ).to receive(:version).and_return(version)
         allow( ::Docker::Image ).to receive(:build).and_return(image)
         allow( ::Docker::Image ).to receive(:create).and_return(image)
@@ -490,7 +491,7 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '127.0.1.1'
+              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
               expect( hosts[0]['port'] ).to be ===  8022
             end
 
@@ -506,7 +507,7 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '127.0.1.1'
+              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
               expect( hosts[0]['port'] ).to be === 8022
               expect( hosts[0]['ssh'][:password] ).to be ===  'root'
               expect( hosts[0]['ssh'][:port] ).to be ===  8022
@@ -536,8 +537,8 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '127.0.1.1'
-              expect( hosts[0]['port'] ).to be ===  8022
+              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
+              expect( hosts[0]['port'] ).to be ===  22
             end
           end
 
