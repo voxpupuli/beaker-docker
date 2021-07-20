@@ -697,7 +697,7 @@ module Beaker
           expect( dockerfile ).to be =~ /RUN zypper -n in openssh/
         end
 
-        (22..29).to_a.each do | fedora_release |
+        (22..39).to_a.each do | fedora_release |
           it "should use dnf on fedora #{fedora_release}" do
             FakeFS.deactivate!
             dockerfile = docker.send(:dockerfile_for, {
