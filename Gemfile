@@ -1,4 +1,4 @@
-source ENV['GEM_SOURCE'] || "https://rubygems.org"
+source ENV['GEM_SOURCE'] || 'https://rubygems.org'
 
 gemspec
 
@@ -16,10 +16,19 @@ end
 # We don't put beaker in as a test dependency because we
 # don't want to create a transitive dependency
 group :acceptance_testing do
-  gem "beaker", *location_for(ENV['BEAKER_VERSION'] || '~> 4.0')
+  gem "beaker", *location_for(ENV['BEAKER_VERSION'] || '>= 4.30')
 end
 
 
 if File.exists? "#{__FILE__}.local"
   eval(File.read("#{__FILE__}.local"), binding)
+end
+
+group :coverage, optional: ENV['COVERAGE']!='yes' do
+  gem 'simplecov-console', :require => false
+  gem 'codecov', :require => false
+end
+
+group :release do
+  gem 'github_changelog_generator', require: false
 end
