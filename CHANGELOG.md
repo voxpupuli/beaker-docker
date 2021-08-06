@@ -1,31 +1,197 @@
-# Change Log
+# Changelog
 
-All notable changes to this project will be documented in this file.
+## [1.0.0](https://github.com/voxpupuli/beaker-docker/tree/1.0.0) (2021-08-06)
 
-The format is based on
-[Keep a Changelog](http://keepachangelog.com)
-& makes a strong effort to adhere to
-[Semantic Versioning](http://semver.org).
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.8.4...1.0.0)
 
-Tracking in this Changelog began for this project in version 0.8.4.
-If you're looking for changes from before this, refer to the project's
-git logs & PR history.
+**Implemented enhancements:**
 
-The headers used in [Keep a Changelog](http://keepachangelog.com) are:
+- Implement codecov reporting [\#49](https://github.com/voxpupuli/beaker-docker/pull/49) ([bastelfreak](https://github.com/bastelfreak))
 
-- Added - for new features.
-- Changed - for changes in existing functionality.
-- Deprecated - for soon-to-be removed features.
-- Removed - for now removed features.
-- Fixed - for any bug fixes.
-- Security - in case of vulnerabilities.
+**Fixed bugs:**
 
-# [0.8.4](https://github.com/voxpupuli/beaker/compare/0.8.3...0.8.4) - 03-15-2021
+- Treat Fedora 22+ and EL8 the same [\#48](https://github.com/voxpupuli/beaker-docker/pull/48) ([ekohl](https://github.com/ekohl))
+- Be more aggressive about picking a connection [\#47](https://github.com/voxpupuli/beaker-docker/pull/47) ([trevor-vaughan](https://github.com/trevor-vaughan))
 
-### Fixed
+## [0.8.4](https://github.com/voxpupuli/beaker-docker/tree/0.8.4) (2021-03-15)
 
-- Use the `docker-api` function `::Docker.rootless?` to see if the container
-  ecosystem is running in `rootless` mode. This reduces false positive
-  failures across the board.
-- Ensure that the correct port and IP is used for local docker connections
-- Added the `force` option to ensure container removal on error
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.8.3...0.8.4)
+
+**Fixed bugs:**
+
+- Force Container Removal [\#45](https://github.com/voxpupuli/beaker-docker/pull/45) ([trevor-vaughan](https://github.com/trevor-vaughan))
+
+**Closed issues:**
+
+- Wrong SSH port getting used [\#43](https://github.com/voxpupuli/beaker-docker/issues/43)
+- Beaker complains about host unreachable - Ubuntu 18 and 20 [\#39](https://github.com/voxpupuli/beaker-docker/issues/39)
+
+**Merged pull requests:**
+
+- Fix docker usage to use correct port and IP address on local docker [\#44](https://github.com/voxpupuli/beaker-docker/pull/44) ([treydock](https://github.com/treydock))
+- Update to Check Rootless [\#41](https://github.com/voxpupuli/beaker-docker/pull/41) ([trevor-vaughan](https://github.com/trevor-vaughan))
+- Change from my personal fork to docker-api 2.1+ [\#40](https://github.com/voxpupuli/beaker-docker/pull/40) ([trevor-vaughan](https://github.com/trevor-vaughan))
+
+## [0.8.3](https://github.com/voxpupuli/beaker-docker/tree/0.8.3) (2021-02-28)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.8.2...0.8.3)
+
+**Merged pull requests:**
+
+- Cleanup docs and gemspec [\#37](https://github.com/voxpupuli/beaker-docker/pull/37) ([genebean](https://github.com/genebean))
+
+## [0.8.2](https://github.com/voxpupuli/beaker-docker/tree/0.8.2) (2021-02-28)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.8.1...0.8.2)
+
+**Merged pull requests:**
+
+- Deconflict Privileged and CAPs [\#34](https://github.com/voxpupuli/beaker-docker/pull/34) ([trevor-vaughan](https://github.com/trevor-vaughan))
+
+## [0.8.1](https://github.com/voxpupuli/beaker-docker/tree/0.8.1) (2021-02-28)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.8.0...0.8.1)
+
+**Merged pull requests:**
+
+- Fix docker support and update github actions [\#32](https://github.com/voxpupuli/beaker-docker/pull/32) ([trevor-vaughan](https://github.com/trevor-vaughan))
+- Add GH Action for releases [\#31](https://github.com/voxpupuli/beaker-docker/pull/31) ([genebean](https://github.com/genebean))
+
+## [0.8.0](https://github.com/voxpupuli/beaker-docker/tree/0.8.0) (2021-02-26)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.7.1...0.8.0)
+
+**Merged pull requests:**
+
+- Move testing to GH Actions [\#30](https://github.com/voxpupuli/beaker-docker/pull/30) ([genebean](https://github.com/genebean))
+- Add Podman Support [\#29](https://github.com/voxpupuli/beaker-docker/pull/29) ([trevor-vaughan](https://github.com/trevor-vaughan))
+
+## [0.7.1](https://github.com/voxpupuli/beaker-docker/tree/0.7.1) (2020-09-11)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.7.0...0.7.1)
+
+**Merged pull requests:**
+
+- Fix: docker-api gem dependency [\#26](https://github.com/voxpupuli/beaker-docker/pull/26) ([msalway](https://github.com/msalway))
+- Add Dependabot to keep thins up to date [\#23](https://github.com/voxpupuli/beaker-docker/pull/23) ([genebean](https://github.com/genebean))
+
+## [0.7.0](https://github.com/voxpupuli/beaker-docker/tree/0.7.0) (2020-01-23)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.6.0...0.7.0)
+
+**Merged pull requests:**
+
+- Fix: Too many authentication failures [\#21](https://github.com/voxpupuli/beaker-docker/pull/21) ([b4ldr](https://github.com/b4ldr))
+- \(MAINT\) add release section to README [\#20](https://github.com/voxpupuli/beaker-docker/pull/20) ([kevpl](https://github.com/kevpl))
+
+## [0.6.0](https://github.com/voxpupuli/beaker-docker/tree/0.6.0) (2019-11-12)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.5.4...0.6.0)
+
+**Merged pull requests:**
+
+- \(BKR-1613\) add CentOS8 support [\#19](https://github.com/voxpupuli/beaker-docker/pull/19) ([ciprianbadescu](https://github.com/ciprianbadescu))
+
+## [0.5.4](https://github.com/voxpupuli/beaker-docker/tree/0.5.4) (2019-07-15)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.5.3...0.5.4)
+
+**Merged pull requests:**
+
+- \(maint\) A number of fixes for rerunning tests on docker containers [\#18](https://github.com/voxpupuli/beaker-docker/pull/18) ([underscorgan](https://github.com/underscorgan))
+
+## [0.5.3](https://github.com/voxpupuli/beaker-docker/tree/0.5.3) (2019-05-06)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.5.2...0.5.3)
+
+**Merged pull requests:**
+
+- BKR-1586 - allow an 'as-is' container to be used rather than rebuilding every time [\#17](https://github.com/voxpupuli/beaker-docker/pull/17) ([oldNoakes](https://github.com/oldNoakes))
+
+## [0.5.2](https://github.com/voxpupuli/beaker-docker/tree/0.5.2) (2019-02-11)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.5.1...0.5.2)
+
+**Merged pull requests:**
+
+- Allow users with large keyrings to run test [\#16](https://github.com/voxpupuli/beaker-docker/pull/16) ([trevor-vaughan](https://github.com/trevor-vaughan))
+
+## [0.5.1](https://github.com/voxpupuli/beaker-docker/tree/0.5.1) (2018-11-29)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.5.0...0.5.1)
+
+**Merged pull requests:**
+
+- \(SERVER-2380\) add image tagging ability [\#14](https://github.com/voxpupuli/beaker-docker/pull/14) ([tvpartytonight](https://github.com/tvpartytonight))
+
+## [0.5.0](https://github.com/voxpupuli/beaker-docker/tree/0.5.0) (2018-11-19)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.4.0...0.5.0)
+
+**Merged pull requests:**
+
+- \(BKR-1551\) Updates for Beaker 4 [\#13](https://github.com/voxpupuli/beaker-docker/pull/13) ([caseywilliams](https://github.com/caseywilliams))
+
+## [0.4.0](https://github.com/voxpupuli/beaker-docker/tree/0.4.0) (2018-10-26)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.3.3...0.4.0)
+
+**Merged pull requests:**
+
+- \(PUP-9212\) Allow for building containers with context [\#12](https://github.com/voxpupuli/beaker-docker/pull/12) ([tvpartytonight](https://github.com/tvpartytonight))
+- \(PUP-9212\) Allow for image entry point CMDs [\#11](https://github.com/voxpupuli/beaker-docker/pull/11) ([tvpartytonight](https://github.com/tvpartytonight))
+- \(BKR-1509\) Hypervisor usage instructions for Beaker 4..0 [\#9](https://github.com/voxpupuli/beaker-docker/pull/9) ([Dakta](https://github.com/Dakta))
+
+## [0.3.3](https://github.com/voxpupuli/beaker-docker/tree/0.3.3) (2018-04-16)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.3.2...0.3.3)
+
+**Merged pull requests:**
+
+- \(BKR-305\) Support custom docker options [\#8](https://github.com/voxpupuli/beaker-docker/pull/8) ([double16](https://github.com/double16))
+
+## [0.3.2](https://github.com/voxpupuli/beaker-docker/tree/0.3.2) (2018-04-09)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.3.1...0.3.2)
+
+**Merged pull requests:**
+
+- \(MAINT\) fix paths when using DOCKER\_TOOLBOX on windows [\#7](https://github.com/voxpupuli/beaker-docker/pull/7) ([tabakhase](https://github.com/tabakhase))
+
+## [0.3.1](https://github.com/voxpupuli/beaker-docker/tree/0.3.1) (2018-02-22)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.3.0...0.3.1)
+
+**Merged pull requests:**
+
+- Fix Archlinux support [\#6](https://github.com/voxpupuli/beaker-docker/pull/6) ([bastelfreak](https://github.com/bastelfreak))
+
+## [0.3.0](https://github.com/voxpupuli/beaker-docker/tree/0.3.0) (2018-01-29)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.2.0...0.3.0)
+
+**Merged pull requests:**
+
+- \[BKR-1021\] Archlinux support [\#5](https://github.com/voxpupuli/beaker-docker/pull/5) ([jantman](https://github.com/jantman))
+- Don't set container name to node hostname [\#4](https://github.com/voxpupuli/beaker-docker/pull/4) ([jovrum](https://github.com/jovrum))
+
+## [0.2.0](https://github.com/voxpupuli/beaker-docker/tree/0.2.0) (2017-08-11)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.1.0...0.2.0)
+
+**Merged pull requests:**
+
+- \(BKR-1189\) Fix port mapping [\#3](https://github.com/voxpupuli/beaker-docker/pull/3) ([rishijavia](https://github.com/rishijavia))
+- Make beaker-docker work in a docker container [\#2](https://github.com/voxpupuli/beaker-docker/pull/2) ([hedinasr](https://github.com/hedinasr))
+
+## [0.1.0](https://github.com/voxpupuli/beaker-docker/tree/0.1.0) (2017-08-01)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/7f6a78541f30385016478e810ecb0c14f3936e20...0.1.0)
+
+**Merged pull requests:**
+
+- \(MAINT\) Add docker-api dependency as its removed from beaker [\#1](https://github.com/voxpupuli/beaker-docker/pull/1) ([rishijavia](https://github.com/rishijavia))
+
+
+
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
