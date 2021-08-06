@@ -1,13 +1,11 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - test_me_github
-  pull_request:
-    branches:
-      - main
-      - master
+  - pull_request
+  - push
+
+env:
+  BUNDLE_WITHOUT: release
 
 jobs:
   rspec:
@@ -15,13 +13,15 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        ruby:
-          - "2.4"
-          - "2.5"
-          - "2.6"
-          - "2.7"
+        include:
+          - ruby: "2.4"
+          - ruby: "2.5"
+          - ruby: "2.6"
+          - ruby: "2.7"
+          - ruby: "3.0"
+            coverage: "yes"
     env:
-      BUNDLE_WITHOUT: release
+      COVERAGE: ${{ matrix.coverage }}
     name: RSpec - Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v2
@@ -30,12 +30,10 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: install bundler
-        run: |
-          gem install bundler -v '~> 1.17.3'
-          bundle update
       - name: spec tests
         run: bundle exec rake test:spec
+      - name: Build gem
+        run: gem build *.gemspec
 
   docker:
     runs-on: ubuntu-latest
@@ -44,8 +42,6 @@ jobs:
       matrix:
         ruby:
           - "2.6"
-    env:
-      BUNDLE_WITHOUT: release
     name: Docker - Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v2
@@ -78,8 +74,6 @@ jobs:
       matrix:
         ruby:
           - "2.6"
-    env:
-      BUNDLE_WITHOUT: release
     name: Podman - Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v2
