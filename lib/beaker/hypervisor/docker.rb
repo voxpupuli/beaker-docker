@@ -144,11 +144,11 @@ module Beaker
       ip = nil
       port = nil
       # Talking against a remote docker host which is a normal docker host
-      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///')
+      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///') && !ENV['DOCKER_IN_DOCKER']
         ip = URI.parse(ENV['DOCKER_HOST']).host
       else
         # Swarm or local docker host
-        if in_container?
+        if in_container? && !ENV['DOCKER_IN_DOCKER']
           gw = network_settings['Gateway']
           ip = gw unless (gw.nil? || gw.empty?)
         else
