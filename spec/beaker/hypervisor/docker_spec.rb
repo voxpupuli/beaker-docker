@@ -68,7 +68,7 @@ module Beaker
           'Ports' => {
             '22/tcp' => [
               {
-                'HostIp' => '127.0.1.1',
+                'HostIp' => '0.0.0.0',
                 'HostPort' => 8022,
               },
             ],
@@ -491,7 +491,7 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
+              expect( hosts[0]['ip'] ).to be === '127.0.0.1'
               expect( hosts[0]['port'] ).to be ===  8022
             end
 
@@ -507,7 +507,7 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
+              expect( hosts[0]['ip'] ).to be === '127.0.0.1'
               expect( hosts[0]['port'] ).to be === 8022
               expect( hosts[0]['ssh'][:password] ).to be ===  'root'
               expect( hosts[0]['ssh'][:port] ).to be ===  8022
@@ -537,8 +537,8 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '192.0.2.1'
-              expect( hosts[0]['port'] ).to be ===  22
+              expect( hosts[0]['ip'] ).to be === '127.0.0.1'
+              expect( hosts[0]['port'] ).to be ===  8022
             end
           end
 
