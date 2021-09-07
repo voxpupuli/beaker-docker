@@ -188,3 +188,7 @@ node available as  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=
 ```
 
 The tests should then run as normal from there.
+
+
+### Docker-in-Docker (dind) ###
+If you are using docker in docker, set the environment variable DOCKER_IN_DOCKER=true. Beaker-docker will then not try to use the DOCKER_HOST address for the ssh connection to the containers.
