@@ -476,6 +476,40 @@ module Beaker
           docker.provision
         end
 
+        it 'should create a container with port bindings' do
+          hosts.each_with_index do |host, index|
+            host['docker_port_bindings'] = {
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}]
+            }
+
+            expect( ::Docker::Container ).to receive(:create).with({
+              'ExposedPorts' => {
+                '8080/tcp' => {},
+              },
+              'Image' => image.id,
+              'Hostname' => host.name,
+              'HostConfig' => {
+                'PortBindings' => {
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
+                  '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}]
+                },
+                'PublishAllPorts' => true,
+                'Privileged' => true,
+                'RestartPolicy' => {
+                  'Name' => 'always'
+                },
+              },
+              'Labels' => {
+                'one' => (index == 2 ? 3 : 1),
+                'two' => (index == 2 ? 4 : 2),
+              },
+              'name' => /\Abeaker-/
+            })
+          end
+
+          docker.provision
+        end
+
         it 'should start the container' do
           expect( container ).to receive(:start)
 

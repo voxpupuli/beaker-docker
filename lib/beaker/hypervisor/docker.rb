@@ -284,6 +284,14 @@ module Beaker
             container_opts['name'] = ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-')
           end
 
+          if host['docker_port_bindings']
+            container_opts['ExposedPorts'] = {} if container_opts['ExposedPorts'].nil?
+            host['docker_port_bindings'].each_pair do |port, bind|
+              container_opts['ExposedPorts'][port.to_s] = {}
+              container_opts['HostConfig']['PortBindings'][port.to_s] = bind
+            end
+          end
+
           ### END CONTAINER OPTIONS MANGLING ###
 
           @logger.debug("Creating container from image #{image_name}")
