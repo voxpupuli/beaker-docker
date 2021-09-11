@@ -127,6 +127,11 @@ module Beaker
                   { rm: true, buildargs: buildargs_for(host) })
     end
 
+    # Nested Docker scenarios
+    def nested_docker?
+      ENV['DOCKER_IN_DOCKER'] || ENV['WSLENV']
+    end
+
     # Find out where the ssh port is from the container
     # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
     # IP of the swarm slave via the container data
@@ -144,11 +149,11 @@ module Beaker
       ip = nil
       port = nil
       # Talking against a remote docker host which is a normal docker host
-      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///') && !ENV['DOCKER_IN_DOCKER']
+      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///') && !nested_docker?
         ip = URI.parse(ENV['DOCKER_HOST']).host
       else
         # Swarm or local docker host
-        if in_container? && !ENV['DOCKER_IN_DOCKER']
+        if in_container? && !nested_docker?
           gw = network_settings['Gateway']
           ip = gw unless (gw.nil? || gw.empty?)
         else
