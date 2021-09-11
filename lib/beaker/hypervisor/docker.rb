@@ -393,7 +393,7 @@ module Beaker
         container.exec(%w(apt-get update))
         container.exec(%w(apt-get install -y openssh-server openssh-client))
         container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
-      when /el-8/, /fedora-(2[2-9]|3[0-9])/
+      when /el-[89]/, /fedora-(2[2-9]|3[0-9])/
         container.exec(%w(dnf clean all))
         container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
         container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
@@ -530,7 +530,7 @@ module Beaker
           RUN apt-get update
           RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::CUMULUS_PACKAGES.join(' ')}
           EOF
-      when /el-8/, /fedora-(2[2-9]|3)/
+      when /el-[89]/, /fedora-(2[2-9]|3)/
         dockerfile += <<~EOF
           RUN dnf clean all
           RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::RHEL8_PACKAGES.join(' ')}
