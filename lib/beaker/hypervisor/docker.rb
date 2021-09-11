@@ -156,6 +156,9 @@ module Beaker
 
           # Host to Container
           port22 = network_settings.dig('PortBindings','22/tcp')
+          if port22.nil? && network_settings.key?('Ports')
+            port22 = network_settings.dig('Ports','22/tcp')
+          end
           ip = port22[0]['HostIp'] if port22
           port = port22[0]['HostPort'] if port22
 
