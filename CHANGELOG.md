@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.1](https://github.com/voxpupuli/beaker-docker/tree/1.0.1) (2021-09-13)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.0.0...1.0.1)
+
+**Implemented enhancements:**
+
+- Initial EL9 support [\#55](https://github.com/voxpupuli/beaker-docker/pull/55) ([ekohl](https://github.com/ekohl))
+- Add support for additional Docker port bindings [\#54](https://github.com/voxpupuli/beaker-docker/pull/54) ([treydock](https://github.com/treydock))
+
+**Fixed bugs:**
+
+- Fix IP detection in WSL2 environments [\#56](https://github.com/voxpupuli/beaker-docker/pull/56) ([trevor-vaughan](https://github.com/trevor-vaughan))
+- Fix SSH port binding [\#53](https://github.com/voxpupuli/beaker-docker/pull/53) ([treydock](https://github.com/treydock))
+- Added ENV DOCKER\_IN\_DOCKER to fix SSH conn info [\#51](https://github.com/voxpupuli/beaker-docker/pull/51) ([QueerCodingGirl](https://github.com/QueerCodingGirl))
+
+**Closed issues:**
+
+- Regression with 1.0.0 WRT SSH port usage [\#52](https://github.com/voxpupuli/beaker-docker/issues/52)
+
 ## [1.0.0](https://github.com/voxpupuli/beaker-docker/tree/1.0.0) (2021-08-06)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/0.8.4...1.0.0)
