@@ -562,9 +562,9 @@ module Beaker
           EOF
       when /archlinux/
         dockerfile += <<~EOF
-          RUN pacman --noconfirm -Sy archlinux-keyring
-          RUN pacman --noconfirm -Syu
-          RUN pacman -S --noconfirm openssh #{additional_packages.join(' ')}
+          RUN pacman --sync --refresh --noconfirm archlinux-keyring
+          RUN pacman --sync --refresh --noconfirm --sysupgrade
+          RUN pacman --sync --noconfirm #{additional_packages.join(' ')}
           RUN ssh-keygen -A
           RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
           RUN systemctl enable sshd
