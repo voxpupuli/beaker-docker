@@ -522,23 +522,24 @@ module Beaker
 
       # add platform-specific actions
       service_name = "sshd"
+      additional_packages = host_packages(host)
       case host['platform']
       when /ubuntu/, /debian/
         service_name = "ssh"
         dockerfile += <<~EOF
           RUN apt-get update
-          RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::DEBIAN_PACKAGES.join(' ')}
+          RUN apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
           RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
           EOF
       when  /cumulus/
           dockerfile += <<~EOF
           RUN apt-get update
-          RUN apt-get install -y openssh-server openssh-client #{Beaker::HostPrebuiltSteps::CUMULUS_PACKAGES.join(' ')}
+          RUN apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
           EOF
       when /el-[89]/, /fedora-(2[2-9]|3)/
         dockerfile += <<~EOF
           RUN dnf clean all
-          RUN dnf install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::RHEL8_PACKAGES.join(' ')}
+          RUN dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
           RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
@@ -546,14 +547,14 @@ module Beaker
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         dockerfile += <<~EOF
           RUN yum clean all
-          RUN yum install -y sudo openssh-server openssh-clients #{Beaker::HostPrebuiltSteps::UNIX_PACKAGES.join(' ')}
+          RUN yum install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
           RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
           EOF
       when /opensuse/, /sles/
         dockerfile += <<~EOF
-          RUN zypper -n in openssh #{Beaker::HostPrebuiltSteps::SLES_PACKAGES.join(' ')}
+          RUN zypper -n in openssh #{additional_packages.join(' ')}
           RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
           RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
           RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
@@ -563,7 +564,7 @@ module Beaker
         dockerfile += <<~EOF
           RUN pacman --noconfirm -Sy archlinux-keyring
           RUN pacman --noconfirm -Syu
-          RUN pacman -S --noconfirm openssh #{Beaker::HostPrebuiltSteps::ARCHLINUX_PACKAGES.join(' ')}
+          RUN pacman -S --noconfirm openssh #{additional_packages.join(' ')}
           RUN ssh-keygen -A
           RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
           RUN systemctl enable sshd
