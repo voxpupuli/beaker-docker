@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/voxpupuli/beaker-docker/tree/1.1.0) (2022-01-27)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.0.1...1.1.0)
+
+**Implemented enhancements:**
+
+- Use host\_packages helper to reuse logic from beaker [\#59](https://github.com/voxpupuli/beaker-docker/pull/59) ([ekohl](https://github.com/ekohl))
+
 ## [1.0.1](https://github.com/voxpupuli/beaker-docker/tree/1.0.1) (2021-09-13)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.0.0...1.0.1)
