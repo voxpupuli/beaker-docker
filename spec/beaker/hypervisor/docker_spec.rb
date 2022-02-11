@@ -751,7 +751,9 @@ module Beaker
             'image' => 'foobar',
           })
 
-          expect( dockerfile ).to be =~ /RUN pacman -S --noconfirm openssh/
+          expect( dockerfile ).to match(/RUN pacman --sync --refresh --noconfirm archlinux-keyring/)
+          expect( dockerfile ).to match(/RUN pacman --sync --refresh --noconfirm --sysupgrade/)
+          expect( dockerfile ).to match(/RUN pacman --sync --noconfirm curl ntp net-tools openssh/)
         end
       end
     end
