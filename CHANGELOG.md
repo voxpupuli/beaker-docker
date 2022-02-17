@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/voxpupuli/beaker-docker/tree/1.1.1) (2022-02-11)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.1.0...1.1.1)
+
+**Fixed bugs:**
+
+- Arch Linux: do not install openssh twice [\#58](https://github.com/voxpupuli/beaker-docker/pull/58) ([bastelfreak](https://github.com/bastelfreak))
+
+**Merged pull requests:**
+
+- Remove beaker from Gemfile [\#62](https://github.com/voxpupuli/beaker-docker/pull/62) ([bastelfreak](https://github.com/bastelfreak))
+- CI: Switch centos:8 to centos:stream8 image [\#61](https://github.com/voxpupuli/beaker-docker/pull/61) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [1.1.0](https://github.com/voxpupuli/beaker-docker/tree/1.1.0) (2022-01-27)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.0.1...1.1.0)
@@ -7,6 +20,10 @@
 **Implemented enhancements:**
 
 - Use host\_packages helper to reuse logic from beaker [\#59](https://github.com/voxpupuli/beaker-docker/pull/59) ([ekohl](https://github.com/ekohl))
+
+**Merged pull requests:**
+
+- Release 1.1.0 [\#60](https://github.com/voxpupuli/beaker-docker/pull/60) ([ekohl](https://github.com/ekohl))
 
 ## [1.0.1](https://github.com/voxpupuli/beaker-docker/tree/1.0.1) (2021-09-13)
 
