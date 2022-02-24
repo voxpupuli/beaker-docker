@@ -159,21 +159,23 @@ module Beaker
         else
           # The many faces of container networking
 
-          # Host to Container
-          port22 = network_settings.dig('PortBindings','22/tcp')
-          if port22.nil? && network_settings.key?('Ports')
-            port22 = network_settings.dig('Ports','22/tcp')
-          end
-          ip = port22[0]['HostIp'] if port22
-          port = port22[0]['HostPort'] if port22
-
           # Container to container
+          if nested_docker?
+            ip = network_settings['IPAddress']
+            port = 22 if ip && !ip.empty?
+          end
+
+          # Host to Container
           unless ip && port
             ip = nil
             port = nil
 
-            ip = network_settings['IPAddress']
-            port = 22 if ip && !ip.empty?
+            port22 = network_settings.dig('PortBindings','22/tcp')
+            if port22.nil? && network_settings.key?('Ports')
+              port22 = network_settings.dig('Ports','22/tcp')
+            end
+            ip = port22[0]['HostIp'] if port22
+            port = port22[0]['HostPort'] if port22
           end
 
           # Container through gateway
