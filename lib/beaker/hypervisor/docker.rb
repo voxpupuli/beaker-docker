@@ -401,8 +401,7 @@ module Beaker
       when /el-[89]/, /fedora-(2[2-9]|3[0-9])/
         container.exec(%w(dnf clean all))
         container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
-        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
-        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
+        container.exec(%w(ssh-keygen -A))
         container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         container.exec(%w(yum clean all))
