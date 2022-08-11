@@ -1,6 +1,15 @@
 # Changelog
 
-## [1.1.1](https://github.com/voxpupuli/beaker-docker/tree/1.1.1) (2022-02-11)
+## [1.2.0](https://github.com/voxpupuli/beaker-docker/tree/1.2.0) (2022-08-11)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.1.1...1.2.0)
+
+**Implemented enhancements:**
+
+- Use ssh-keygen -A on modern Enterprise Linux [\#66](https://github.com/voxpupuli/beaker-docker/pull/66) ([ekohl](https://github.com/ekohl))
+- Add Docker hostfile parameter docker\_image\_first\_commands [\#65](https://github.com/voxpupuli/beaker-docker/pull/65) ([Rathios](https://github.com/Rathios))
+
+## [1.1.1](https://github.com/voxpupuli/beaker-docker/tree/1.1.1) (2022-02-17)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.1.0...1.1.1)
 
@@ -20,10 +29,6 @@
 **Implemented enhancements:**
 
 - Use host\_packages helper to reuse logic from beaker [\#59](https://github.com/voxpupuli/beaker-docker/pull/59) ([ekohl](https://github.com/ekohl))
-
-**Merged pull requests:**
-
-- Release 1.1.0 [\#60](https://github.com/voxpupuli/beaker-docker/pull/60) ([ekohl](https://github.com/ekohl))
 
 ## [1.0.1](https://github.com/voxpupuli/beaker-docker/tree/1.0.1) (2021-09-13)
 
