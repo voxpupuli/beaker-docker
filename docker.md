@@ -23,13 +23,22 @@ The base image to use for the container is named by the image key.
       type: foss
 
 ### Docker hosts file, with image modification ###
-You can specify extra commands to be executed in order to modify the image with the `docker_image_commands` key.
+You can specify extra commands to be executed in order to modify the image with the keys `docker_image_commands` and
+`docker_image_first_commands`.
+
+`docker_image_commands` is executed after initial setup. `docker_image_first_commands` is executed before any other
+commands and can be used eg. to configure a proxy.
 
     HOSTS:
       ubuntu-12-10:
         platform: ubuntu-12.10-x64
         image: ubuntu:12.10
         hypervisor: docker
+        docker_image_first_commands:
+          - echo 'Acquire::http::Proxy "http://proxy.example.com:3128";'> /etc/apt/apt.conf.d/01proxy
+          - echo "export http_proxy=http://proxy.example.com:3128"> /etc/profile.d/proxy.sh
+          - echo "export https_proxy=http://proxy.example.com:3128">> /etc/profile.d/proxy.sh
+          - echo "export no_proxy=127.0.0.1,::1">> /etc/profile.d/proxy.sh
         docker_image_commands:
           - 'apt-get install -y myapp'
           - 'myapp --setup'
@@ -53,7 +62,7 @@ Instead of using ssh as the CMD for a container, beaker will use the entrypoint 
 
     HOSTS:
       puppetserver:
-        platform: ubuntu-1604-x86_64 
+        platform: ubuntu-1604-x86_64
         hypervisor: docker
         image: puppet/puppetserver-standalone:6.0.1
         use_image_entry_point: true

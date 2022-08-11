@@ -692,6 +692,23 @@ module Beaker
           end
         end
 
+        it 'should add docker_image_first_commands as RUN statements' do
+          FakeFS.deactivate!
+          platforms.each do |platform|
+            dockerfile = docker.send(:dockerfile_for, {
+              'platform' => platform,
+              'image' => 'foobar',
+              'docker_image_first_commands' => [
+                'special one',
+                'special two',
+                'special three',
+              ]
+            })
+
+            expect( dockerfile ).to be =~ /RUN special one\nRUN special two\nRUN special three/
+          end
+        end
+
         it 'should add docker_image_commands as RUN statements' do
           FakeFS.deactivate!
           platforms.each do |platform|

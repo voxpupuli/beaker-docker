@@ -516,6 +516,11 @@ module Beaker
         ENV container docker
       EOF
 
+      # Commands before any other commands. Can be used for eg. proxy configuration
+      dockerfile += (host['docker_image_first_commands'] || []).map { |command|
+        "RUN #{command}\n"
+      }.join('')
+
       # additional options to specify to the sshd
       # may vary by platform
       sshd_options = ''
