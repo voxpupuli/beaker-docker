@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/voxpupuli/beaker-docker/tree/1.3.0) (2022-12-18)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.2.0...1.3.0)
+
+**Implemented enhancements:**
+
+- Generate a ssh port from 1025..9999 range [\#68](https://github.com/voxpupuli/beaker-docker/pull/68) ([jay7x](https://github.com/jay7x))
+
 ## [1.2.0](https://github.com/voxpupuli/beaker-docker/tree/1.2.0) (2022-08-11)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.1.1...1.2.0)
