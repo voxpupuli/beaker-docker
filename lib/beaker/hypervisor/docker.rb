@@ -78,7 +78,7 @@ module Beaker
         'Hostname' => host.name,
         'HostConfig' => {
           'PortBindings' => {
-            '22/tcp' => [{ 'HostPort' => rand.to_s[2..5], 'HostIp' => '0.0.0.0'}]
+            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0'}]
           },
           'PublishAllPorts' => true,
           'RestartPolicy' => {
