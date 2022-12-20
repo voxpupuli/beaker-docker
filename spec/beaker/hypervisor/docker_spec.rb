@@ -746,7 +746,7 @@ module Beaker
             'image' => 'foobar',
           })
 
-          expect( dockerfile ).to be =~ /RUN zypper -n in openssh/
+          expect( dockerfile ).to be =~ /zypper -n in openssh/
         end
 
         (22..39).to_a.each do | fedora_release |
@@ -757,7 +757,7 @@ module Beaker
               'image' => 'foobar',
             })
 
-            expect( dockerfile ).to be =~ /RUN dnf install -y sudo/
+            expect( dockerfile ).to be =~ /dnf install -y sudo/
           end
         end
 
@@ -768,9 +768,48 @@ module Beaker
             'image' => 'foobar',
           })
 
-          expect( dockerfile ).to match(/RUN pacman --sync --refresh --noconfirm archlinux-keyring/)
-          expect( dockerfile ).to match(/RUN pacman --sync --refresh --noconfirm --sysupgrade/)
-          expect( dockerfile ).to match(/RUN pacman --sync --noconfirm curl ntp net-tools openssh/)
+          expect( dockerfile ).to match(/pacman --sync --refresh --noconfirm archlinux-keyring/)
+          expect( dockerfile ).to match(/pacman --sync --refresh --noconfirm --sysupgrade/)
+          expect( dockerfile ).to match(/pacman --sync --noconfirm curl ntp net-tools openssh/)
+        end
+      end
+
+      describe '#fix_ssh' do
+        let(:test_container) { double('container') }
+        let(:host) { hosts[0] }
+        before :each do
+          expect(test_container).to receive(:id).and_return('abcdef')
+        end
+
+        it 'should call exec once when called without host' do
+          expect(test_container).to receive(:exec).once.with(
+            include(/PermitRootLogin/) &&
+            include(/PasswordAuthentication/) &&
+            include(/UseDNS/) &&
+            include(/MaxAuthTries/)
+          )
+          docker.send(:fix_ssh, test_container)
+        end
+
+        it 'should exec sshd on alpine' do
+          host['platform'] = 'alpine-3.8-x86_64'
+          expect(test_container).to receive(:exec).with(array_including('sed'))
+          expect(test_container).to receive(:exec).with(%w[/usr/sbin/sshd])
+          docker.send(:fix_ssh, test_container, host)
+        end
+
+        it 'should restart ssh service on ubuntu' do
+          host['platform'] = 'ubuntu-20.04-x86_64'
+          expect(test_container).to receive(:exec).with(array_including('sed'))
+          expect(test_container).to receive(:exec).with(%w[service ssh restart])
+          docker.send(:fix_ssh, test_container, host)
+        end
+
+        it 'should restart sshd service otherwise' do
+          host['platform'] = 'boogeyman-2000-x86_64'
+          expect(test_container).to receive(:exec).with(array_including('sed'))
+          expect(test_container).to receive(:exec).with(%w[service sshd restart])
+          docker.send(:fix_ssh, test_container, host)
         end
       end
     end
