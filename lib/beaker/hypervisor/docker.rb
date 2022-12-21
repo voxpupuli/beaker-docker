@@ -30,7 +30,7 @@ module Beaker
           * Check your DOCKER_HOST variable has been set
           * If you are on OSX or Windows, you might not have Docker Machine setup correctly: https://docs.docker.com/machine/
           * If you are using rootless podman, you might need to set up your local socket and service
-          ERRMSG
+        ERRMSG
       end
 
       # Pass on all the logging from docker-api to the beaker logger instance
@@ -215,7 +215,6 @@ module Beaker
 
       @hosts.each do |host|
         @logger.notify "provisioning #{host.name}"
-
 
         image = get_container_image(host)
 
@@ -510,144 +509,131 @@ module Beaker
 
     def dockerfile_for(host)
       # specify base image
-      dockerfile = <<-EOF
+      dockerfile = <<~DF
         FROM #{host['image']}
         ENV container docker
-      EOF
+      DF
 
       # Commands before any other commands. Can be used for eg. proxy configuration
-      dockerfile += (host['docker_image_first_commands'] || []).map { |command|
-        "RUN #{command}\n"
-      }.join('')
-
-      # additional options to specify to the sshd
-      # may vary by platform
-      sshd_options = ''
+      dockerfile += (host['docker_image_first_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join('')
 
       # add platform-specific actions
-      service_name = "sshd"
+      service_name = 'sshd'
       additional_packages = host_packages(host)
       case host['platform']
       when /ubuntu/, /debian/
-        service_name = "ssh"
-        dockerfile += <<~EOF
-          RUN apt-get update
-          RUN apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
-          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
-          EOF
-      when  /cumulus/
-          dockerfile += <<~EOF
-          RUN apt-get update
-          RUN apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
-          EOF
+        service_name = 'ssh'
+        dockerfile += <<~DF
+          RUN apt-get update \
+          && apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')} \
+          && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+        DF
+      when /cumulus/
+        dockerfile += <<~DF
+          RUN apt-get update \
+          && apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
+        DF
       when /el-[89]/, /fedora-(2[2-9]|3)/
-        dockerfile += <<~EOF
-          RUN dnf clean all
-          RUN dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')}
-          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
-          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
-          EOF
+        dockerfile += <<~DF
+          RUN dnf clean all \
+          && dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
+          && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
+          && ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key \
+          && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+        DF
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
-        dockerfile += <<~EOF
-          RUN yum clean all
-          RUN yum install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')}
-          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
-          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
-          EOF
+        dockerfile += <<~DF
+          RUN yum clean all \
+          && yum install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
+          && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
+          && ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key \
+          && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+        DF
       when /opensuse/, /sles/
-        dockerfile += <<~EOF
-          RUN zypper -n in openssh #{additional_packages.join(' ')}
-          RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
-          RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
-          RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
-          RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
-          EOF
+        dockerfile += <<~DF
+          RUN zypper -n in openssh #{additional_packages.join(' ')} \
+          && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
+          && ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key \
+          && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config \
+          && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+        DF
       when /archlinux/
-        dockerfile += <<~EOF
-          RUN pacman --sync --refresh --noconfirm archlinux-keyring
-          RUN pacman --sync --refresh --noconfirm --sysupgrade
-          RUN pacman --sync --noconfirm #{additional_packages.join(' ')}
-          RUN ssh-keygen -A
-          RUN sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
-          RUN systemctl enable sshd
-          EOF
+        dockerfile += <<~DF
+          RUN pacman --sync --refresh --noconfirm archlinux-keyring \
+          && pacman --sync --refresh --noconfirm --sysupgrade \
+          && pacman --sync --noconfirm #{additional_packages.join(' ')} \
+          && ssh-keygen -A \
+          && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config \
+          && systemctl enable sshd
+        DF
       else
-        # TODO add more platform steps here
+        # TODO: add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
       end
 
       # Make sshd directory, set root password
-      dockerfile += <<~EOF
-        RUN mkdir -p /var/run/sshd
-        RUN echo root:#{root_password} | chpasswd
-        EOF
+      dockerfile += <<~DF
+        RUN mkdir -p /var/run/sshd \
+        && echo root:#{root_password} | chpasswd
+      DF
 
       # Configure sshd service to allowroot login using password
       # Also, disable reverse DNS lookups to prevent every. single. ssh
       # operation taking 30 seconds while the lookup times out.
-      dockerfile += <<~EOF
-        RUN sed -ri 's/^#?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
-        RUN sed -ri 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-        RUN sed -ri 's/^#?UseDNS .*/UseDNS no/' /etc/ssh/sshd_config
-        EOF
-
+      # Also unbreak users with a bunch of SSH keys loaded in their keyring.
+      dockerfile += <<~DF
+        RUN sed -ri \
+        -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
+        -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
+        -e 's/^#?UseDNS .*/UseDNS no/' \
+        -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' \
+        /etc/ssh/sshd_config
+      DF
 
       # Any extra commands specified for the host
-      dockerfile += (host['docker_image_commands'] || []).map { |command|
-        "RUN #{command}\n"
-      }.join('')
+      dockerfile += (host['docker_image_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join('')
 
       # Override image entrypoint
-      if host['docker_image_entrypoint']
-        dockerfile += "ENTRYPOINT #{host['docker_image_entrypoint']}\n"
-      end
+      dockerfile += "ENTRYPOINT #{host['docker_image_entrypoint']}\n" if host['docker_image_entrypoint']
 
       # How to start a sshd on port 22.  May be an init for more supervision
       # Ensure that the ssh server can be restarted (done from set_env) and container keeps running
-      cmd = host['docker_cmd'] || ["sh","-c","service #{service_name} start ; tail -f /dev/null"]
-      dockerfile += <<-EOF
+      cmd = host['docker_cmd'] || ['sh', '-c', "service #{service_name} start; tail -f /dev/null"]
+      dockerfile += <<~DF
         EXPOSE 22
         CMD #{cmd}
-      EOF
-
-    # end
+      DF
 
       @logger.debug("Dockerfile is #{dockerfile}")
-      return dockerfile
+
+      dockerfile
     end
 
     # a puppet run may have changed the ssh config which would
     # keep us out of the container.  This is a best effort to fix it.
     # Optionally pass in a host object to to determine which ssh
     # restart command we should try.
-    def fix_ssh(container, host=nil)
+    def fix_ssh(container, host = nil)
       @logger.debug("Fixing ssh on container #{container.id}")
-      container.exec(['sed','-ri',
-                      's/^#?PermitRootLogin .*/PermitRootLogin yes/',
+      container.exec(['sed', '-ri',
+                      '-e', 's/^#?PermitRootLogin .*/PermitRootLogin yes/',
+                      '-e', 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/',
+                      '-e', 's/^#?UseDNS .*/UseDNS no/',
+                      # Unbreak users with a bunch of SSH keys loaded in their keyring.
+                      '-e', 's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
                       '/etc/ssh/sshd_config'])
-      container.exec(['sed','-ri',
-                      's/^#?PasswordAuthentication .*/PasswordAuthentication yes/',
-                      '/etc/ssh/sshd_config'])
-      container.exec(['sed','-ri',
-                      's/^#?UseDNS .*/UseDNS no/',
-                      '/etc/ssh/sshd_config'])
-      # Make sure users with a bunch of SSH keys loaded in their keyring can
-      # still run tests
-      container.exec(['sed','-ri',
-                     's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
-                     '/etc/ssh/sshd_config'])
 
-      if host
-        if host['platform'] =~ /alpine/
-          container.exec(%w(/usr/sbin/sshd))
-        else
-          container.exec(%w(service ssh restart))
-        end
+      return unless host
+
+      case host['platform']
+      when /alpine/
+        container.exec(%w[/usr/sbin/sshd])
+      when /ubuntu/, /debian/
+        container.exec(%w[service ssh restart])
+      else
+        container.exec(%w[service sshd restart])
       end
     end
-
 
     # return the existing container if we're not provisioning
     # and docker_container_name is set
@@ -679,6 +665,5 @@ module Beaker
     def in_container?
       return File.file?('/.dockerenv')
     end
-
   end
 end
