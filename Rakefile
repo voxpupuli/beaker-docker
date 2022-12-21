@@ -1,9 +1,17 @@
 require 'rspec/core/rake_task'
 
+namespace :lint do
+  require 'rubocop/rake_task'
+  RuboCop::RakeTask.new(:rubocop) do |task|
+    # Use Rubocop's Github Actions formatter
+    if ENV['GITHUB_ACTIONS'] == 'true'
+      task.formatters << 'github'
+    end
+  end
+end
+
 namespace :test do
-
   namespace :spec do
-
     desc "Run spec tests"
     RSpec::Core::RakeTask.new(:run) do |t|
       t.rspec_opts = ['--color', '--format documentation']
@@ -16,11 +24,9 @@ namespace :test do
       t.rspec_opts = ['--color', '--format documentation']
       t.pattern = 'spec/'
     end
-
   end
 
   namespace :acceptance do
-
     desc <<-EOS
 A quick acceptance test, named because it has no pre-suites to run
     EOS
@@ -43,9 +49,7 @@ A quick acceptance test, named because it has no pre-suites to run
          "--log-level", "debug",
          "--debug")
     end
-
   end
-
 end
 
 # namespace-named default tasks.
@@ -55,6 +59,7 @@ task 'test:spec' => 'test:spec:run'
 task 'test:acceptance' => 'test:acceptance:quick'
 
 # global defaults
+task :lint => %i[lint:rubocop]
 task :test => 'test:spec'
 task :default => :test
 
@@ -90,7 +95,6 @@ task :docs => 'docs:clear' do
 end
 
 namespace :docs do
-
   desc 'Clear the generated documentation cache'
   task :clear do
     original_dir = Dir.pwd
