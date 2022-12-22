@@ -8,6 +8,24 @@ env:
   BUNDLE_WITHOUT: release
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - ruby: "2.7"
+    name: Lint - Ruby ${{ matrix.ruby }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Ruby ${{ matrix.ruby }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: lint
+        run: bundle exec rake lint
+
   rspec:
     runs-on: ubuntu-latest
     strategy:
@@ -24,7 +42,7 @@ jobs:
       COVERAGE: ${{ matrix.coverage }}
     name: RSpec - Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
@@ -44,7 +62,7 @@ jobs:
           - "2.6"
     name: Docker - Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
@@ -76,7 +94,7 @@ jobs:
           - "2.6"
     name: Podman - Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
