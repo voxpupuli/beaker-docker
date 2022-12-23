@@ -282,17 +282,6 @@ RSpec/ContextWording:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 1
-# Configuration parameters: IgnoredMetadata.
-RSpec/DescribeClass:
-  Exclude:
-    - 'acceptance/tests/00_default_spec.rb'
-
-# Offense count: 1
-RSpec/EmptyExampleGroup:
-  Exclude:
-    - 'acceptance/tests/00_default_spec.rb'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 RSpec/EmptyLineAfterFinalLet:
@@ -423,7 +412,6 @@ Style/Documentation:
 # SupportedStyles: always, always_true, never
 Style/FrozenStringLiteralComment:
   Exclude:
-    - 'acceptance/tests/00_default_spec.rb'
     - 'bin/beaker-docker'
     - 'lib/beaker-docker/version.rb'
     - 'lib/beaker/hypervisor/docker.rb'

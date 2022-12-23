@@ -1,10 +1,11 @@
-require 'beaker'
-require 'beaker-rspec'
+# frozen_string_literal: true
 
-RSpec.describe 'it can connect' do
+require 'beaker'
+
+test_name 'Ensure docker container is accessible' do
   hosts.each do |host|
-    context "on #{host}" do
-      on(host, 'ls /tmp')
+    step "on #{host}" do
+      on(host, 'true')
     end
   end
 end
