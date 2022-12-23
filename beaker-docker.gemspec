@@ -1,26 +1,27 @@
-# -*- encoding: utf-8 -*-
-$LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
+# frozen_string_literal: true
+
+$LOAD_PATH.unshift File.expand_path('lib', __dir__)
 require 'beaker-docker/version'
 
 Gem::Specification.new do |s|
-  s.name        = "beaker-docker"
+  s.name        = 'beaker-docker'
   s.version     = BeakerDocker::VERSION
   s.authors     = [
-    "Vox Pupuli",
-    "Rishi Javia",
-    "Kevin Imber",
-    "Tony Vu",
+    'Vox Pupuli',
+    'Rishi Javia',
+    'Kevin Imber',
+    'Tony Vu',
   ]
-  s.email       = ["voxpupuli@groups.io"]
-  s.homepage    = "https://github.com/voxpupuli/beaker-docker"
-  s.summary     = %q{Beaker DSL Extension Helpers!}
-  s.description = %q{For use for the Beaker acceptance testing tool}
+  s.email       = ['voxpupuli@groups.io']
+  s.homepage    = 'https://github.com/voxpupuli/beaker-docker'
+  s.summary     = 'Docker hypervisor for Beaker acceptance testing framework'
+  s.description = 'Allows running Beaker tests using Docker'
   s.license     = 'Apache-2.0'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.require_paths = ["lib"]
+  s.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
+  s.require_paths = ['lib']
 
   s.required_ruby_version = '>= 2.4', '< 4'
 

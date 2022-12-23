@@ -47,12 +47,6 @@ Layout/EmptyLineAfterGuardClause:
     - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Layout/EmptyLineAfterMagicComment:
-  Exclude:
-    - 'beaker-docker.gemspec'
-
 # Offense count: 5
 # Cop supports --auto-correct.
 Layout/EmptyLines:
@@ -155,7 +149,6 @@ Layout/SpaceAroundOperators:
 # SupportedStylesForEmptyBraces: space, no_space
 Layout/SpaceBeforeBlockBraces:
   Exclude:
-    - 'beaker-docker.gemspec'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 2
@@ -472,18 +465,6 @@ Style/Documentation:
     - 'test/**/*'
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/Encoding:
-  Exclude:
-    - 'beaker-docker.gemspec'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/ExpandPathArguments:
-  Exclude:
-    - 'beaker-docker.gemspec'
-
 # Offense count: 10
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
@@ -493,7 +474,6 @@ Style/FrozenStringLiteralComment:
     - '.simplecov'
     - 'Rakefile'
     - 'acceptance/tests/00_default_spec.rb'
-    - 'beaker-docker.gemspec'
     - 'bin/beaker-docker'
     - 'lib/beaker-docker/version.rb'
     - 'lib/beaker/hypervisor/docker.rb'
@@ -573,7 +553,6 @@ Style/ParenthesesAroundCondition:
 Style/PercentLiteralDelimiters:
   Exclude:
     - 'Rakefile'
-    - 'beaker-docker.gemspec'
     - 'lib/beaker/hypervisor/docker.rb'
 
 # Offense count: 2
@@ -603,12 +582,6 @@ Style/RedundantCondition:
 Style/RedundantException:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-Style/RedundantPercentQ:
-  Exclude:
-    - 'beaker-docker.gemspec'
 
 # Offense count: 2
 # Cop supports --auto-correct.
@@ -654,7 +627,6 @@ Style/StringConcatenation:
 Style/StringLiterals:
   Exclude:
     - 'Rakefile'
-    - 'beaker-docker.gemspec'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
