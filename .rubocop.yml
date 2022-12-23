@@ -25,6 +25,15 @@ AllCops:
   Exclude:
   - vendor/**/*
 
-# Disable temporarily
+Naming/FileName:
+  Description: Gemfile.local is well-known file name
+  Exclude:
+  - Gemfile.local
 Style/HashSyntax:
+  Description: Disable temporarily (FIXME)
+  EnforcedStyle: ruby19
   Enabled: false
+
+# Style enforcements
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma

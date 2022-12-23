@@ -198,12 +198,6 @@ Layout/SpaceInsideParens:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 1
-# Cop supports --auto-correct.
-Lint/DeprecatedClassMethods:
-  Exclude:
-    - 'Gemfile'
-
-# Offense count: 1
 # Configuration parameters: IgnoreLiteralBranches, IgnoreConstantBranches.
 Lint/DuplicateBranch:
   Exclude:
@@ -430,11 +424,6 @@ Rake/Desc:
   Exclude:
     - 'Rakefile'
 
-# Offense count: 1
-Security/Eval:
-  Exclude:
-    - 'Gemfile'
-
 # Offense count: 3
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, ProceduralMethods, FunctionalMethods, IgnoredMethods, AllowBracesOnProceduralOneLiners, BracesRequiredMethods.
@@ -502,7 +491,6 @@ Style/ExpandPathArguments:
 Style/FrozenStringLiteralComment:
   Exclude:
     - '.simplecov'
-    - 'Gemfile'
     - 'Rakefile'
     - 'acceptance/tests/00_default_spec.rb'
     - 'beaker-docker.gemspec'
@@ -529,7 +517,6 @@ Style/IfInsideElse:
 # Cop supports --auto-correct.
 Style/IfUnlessModifier:
   Exclude:
-    - 'Gemfile'
     - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'

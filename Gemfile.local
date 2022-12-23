@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 group :acceptance_testing do
-  gem "beaker-rspec"
+  gem 'beaker-rspec'
 end

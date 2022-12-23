@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
     "Vox Pupuli",
     "Rishi Javia",
     "Kevin Imber",
-    "Tony Vu"
+    "Tony Vu",
   ]
   s.email       = ["voxpupuli@groups.io"]
   s.homepage    = "https://github.com/voxpupuli/beaker-docker"
