@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'beaker'
 
 begin
@@ -5,17 +7,17 @@ begin
   require 'simplecov-console'
   require 'codecov'
 rescue LoadError
+  # Do nothing if no required gem installed
 else
   SimpleCov.start do
     track_files 'lib/**/*.rb'
 
     add_filter '/spec'
-
-    enable_coverage :branch
-
     # do not track vendored files
     add_filter '/vendor'
     add_filter '/.vendor'
+
+    enable_coverage :branch
   end
 
   SimpleCov.formatters = [
@@ -24,7 +26,7 @@ else
   ]
 end
 
-Dir.glob(Dir.pwd + '/lib/beaker/hypervisor/*.rb') {|file| require file}
+Dir['./lib/beaker/hypervisor/*.rb'].sort.each { |file| require file }
 
 # setup & require beaker's spec_helper.rb
 beaker_gem_spec = Gem::Specification.find_by_name('beaker')

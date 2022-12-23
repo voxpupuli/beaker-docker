@@ -154,7 +154,6 @@ Layout/SpaceInsideArrayLiteralBrackets:
 Layout/SpaceInsideBlockBraces:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
-    - 'spec/spec_helper.rb'
 
 # Offense count: 25
 # Cop supports --auto-correct.
@@ -191,12 +190,6 @@ Lint/EmptyBlock:
 Lint/MissingSuper:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-Lint/NonDeterministicRequireOrder:
-  Exclude:
-    - 'spec/spec_helper.rb'
 
 # Offense count: 3
 # Cop supports --auto-correct.
@@ -436,7 +429,6 @@ Style/FrozenStringLiteralComment:
     - 'lib/beaker-docker/version.rb'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'
-    - 'spec/spec_helper.rb'
 
 # Offense count: 2
 # Configuration parameters: MinBodyLength.
@@ -555,7 +547,6 @@ Style/RegexpLiteral:
 Style/StringConcatenation:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
-    - 'spec/spec_helper.rb'
 
 # Offense count: 64
 # Cop supports --auto-correct.
@@ -581,7 +572,6 @@ Style/TernaryParentheses:
 Style/TrailingCommaInArrayLiteral:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
-    - 'spec/spec_helper.rb'
 
 # Offense count: 25
 # Cop supports --auto-correct.
