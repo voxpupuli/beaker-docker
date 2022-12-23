@@ -423,7 +423,6 @@ Style/Documentation:
 # SupportedStyles: always, always_true, never
 Style/FrozenStringLiteralComment:
   Exclude:
-    - '.simplecov'
     - 'acceptance/tests/00_default_spec.rb'
     - 'bin/beaker-docker'
     - 'lib/beaker-docker/version.rb'
