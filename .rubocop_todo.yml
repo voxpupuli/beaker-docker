@@ -21,13 +21,6 @@ Layout/ArgumentAlignment:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: IndentationWidth.
-Layout/AssignmentIndentation:
-  Exclude:
-    - 'bin/beaker-docker'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 Layout/BlockEndNewline:
@@ -44,7 +37,6 @@ Layout/EmptyLineAfterGuardClause:
 # Cop supports --auto-correct.
 Layout/EmptyLines:
   Exclude:
-    - 'bin/beaker-docker'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 5
@@ -412,7 +404,6 @@ Style/Documentation:
 # SupportedStyles: always, always_true, never
 Style/FrozenStringLiteralComment:
   Exclude:
-    - 'bin/beaker-docker'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
@@ -441,14 +432,6 @@ Style/IfUnlessModifier:
 Style/LineEndConcatenation:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 4
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: literals, strict
-Style/MutableConstant:
-  Exclude:
-    - 'bin/beaker-docker'
 
 # Offense count: 1
 # Cop supports --auto-correct.
