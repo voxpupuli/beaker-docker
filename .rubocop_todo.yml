@@ -34,17 +34,10 @@ Layout/BlockEndNewline:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Layout/CommentIndentation:
-  Exclude:
-    - 'Rakefile'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 Layout/EmptyLineAfterGuardClause:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
 
 # Offense count: 5
@@ -60,7 +53,6 @@ Layout/EmptyLines:
 # SupportedStyles: empty_lines, no_empty_lines
 Layout/EmptyLinesAroundBlockBody:
   Exclude:
-    - 'Rakefile'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 1
@@ -84,12 +76,6 @@ Layout/ExtraSpacing:
 # SupportedStyles: special_inside_parentheses, consistent, align_braces
 Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
-
-# Offense count: 1
-# Cop supports --auto-correct.
-Layout/HeredocIndentation:
-  Exclude:
-    - 'Rakefile'
 
 # Offense count: 5
 # Cop supports --auto-correct.
@@ -186,7 +172,6 @@ Layout/SpaceInsideHashLiteralBraces:
 # SupportedStyles: space, no_space
 Layout/SpaceInsideParens:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
@@ -221,12 +206,6 @@ Lint/ParenthesesAsGroupedExpression:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 1
-# Configuration parameters: AllowComments, AllowNil.
-Lint/SuppressedException:
-  Exclude:
-    - 'Rakefile'
-
-# Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: AllowUnusedKeywordArguments, IgnoreEmptyMethods, IgnoreNotImplementedMethods.
 Lint/UnusedMethodArgument:
@@ -236,7 +215,6 @@ Lint/UnusedMethodArgument:
 # Offense count: 6
 Lint/UselessAssignment:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
 
 # Offense count: 8
@@ -279,13 +257,6 @@ Metrics/ModuleLength:
 # Configuration parameters: IgnoredMethods.
 Metrics/PerceivedComplexity:
   Max: 39
-
-# Offense count: 1
-# Configuration parameters: ForbiddenDelimiters.
-# ForbiddenDelimiters: (?-mix:(^|\s)(EO[A-Z]{1}|END)(\s|$))
-Naming/HeredocDelimiterNaming:
-  Exclude:
-    - 'Rakefile'
 
 # Offense count: 2
 # Cop supports --auto-correct.
@@ -411,12 +382,6 @@ RSpec/VerifiedDoubles:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 4
-# Cop supports --auto-correct.
-Rake/Desc:
-  Exclude:
-    - 'Rakefile'
-
 # Offense count: 3
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, ProceduralMethods, FunctionalMethods, IgnoredMethods, AllowBracesOnProceduralOneLiners, BracesRequiredMethods.
@@ -451,12 +416,6 @@ Style/ConditionalAssignment:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 4
-# Cop supports --auto-correct.
-Style/Dir:
-  Exclude:
-    - 'Rakefile'
-
 # Offense count: 1
 # Configuration parameters: AllowedConstants.
 Style/Documentation:
@@ -472,7 +431,6 @@ Style/Documentation:
 Style/FrozenStringLiteralComment:
   Exclude:
     - '.simplecov'
-    - 'Rakefile'
     - 'acceptance/tests/00_default_spec.rb'
     - 'bin/beaker-docker'
     - 'lib/beaker-docker/version.rb'
@@ -497,17 +455,8 @@ Style/IfInsideElse:
 # Cop supports --auto-correct.
 Style/IfUnlessModifier:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: AllowedMethods.
-# AllowedMethods: nonzero?
-Style/IfWithBooleanLiteralBranches:
-  Exclude:
-    - 'Rakefile'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -521,7 +470,6 @@ Style/LineEndConcatenation:
 # SupportedStyles: literals, strict
 Style/MutableConstant:
   Exclude:
-    - 'Rakefile'
     - 'bin/beaker-docker'
     - 'lib/beaker-docker/version.rb'
 
@@ -552,7 +500,6 @@ Style/ParenthesesAroundCondition:
 # Configuration parameters: PreferredDelimiters.
 Style/PercentLiteralDelimiters:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
 
 # Offense count: 2
@@ -568,7 +515,6 @@ Style/PreferredHashMethods:
 # Configuration parameters: Methods.
 Style/RedundantArgument:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
 
 # Offense count: 1
@@ -594,7 +540,6 @@ Style/RedundantRegexpEscape:
 # Configuration parameters: AllowMultipleReturnValues.
 Style/RedundantReturn:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
 
 # Offense count: 1
@@ -604,14 +549,6 @@ Style/RedundantReturn:
 Style/RegexpLiteral:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: only_raise, only_fail, semantic
-Style/SignalException:
-  Exclude:
-    - 'Rakefile'
 
 # Offense count: 2
 # Cop supports --auto-correct.
@@ -626,7 +563,6 @@ Style/StringConcatenation:
 # SupportedStyles: single_quotes, double_quotes
 Style/StringLiterals:
   Exclude:
-    - 'Rakefile'
     - 'lib/beaker/hypervisor/docker.rb'
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
