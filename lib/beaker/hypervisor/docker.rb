@@ -615,7 +615,7 @@ module Beaker
                       '-e', 's/^#?UseDNS .*/UseDNS no/',
                       # Unbreak users with a bunch of SSH keys loaded in their keyring.
                       '-e', 's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
-                      '/etc/ssh/sshd_config'])
+                      '/etc/ssh/sshd_config',])
 
       return unless host
 

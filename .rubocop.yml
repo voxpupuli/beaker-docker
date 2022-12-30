@@ -41,4 +41,4 @@ Naming/FileName:
 
 # Style enforcements
 Style/TrailingCommaInArrayLiteral:
-  EnforcedStyleForMultiline: comma
+  EnforcedStyleForMultiline: consistent_comma
