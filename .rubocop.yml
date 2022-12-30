@@ -25,6 +25,10 @@ AllCops:
   Exclude:
   - vendor/**/*
 
+Metrics:
+  Description: Metrics cops are rarely useful
+  Enabled: false
+
 Naming/FileName:
   Description: Gemfile.local is well-known file name
   Exclude:
@@ -42,3 +46,7 @@ Naming/FileName:
 # Style enforcements
 Style/TrailingCommaInArrayLiteral:
   EnforcedStyleForMultiline: consistent_comma
+Style/IfUnlessModifier:
+  Enabled: false
+Style/StringLiterals:
+  Enabled: false
