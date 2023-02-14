@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   # Testing dependencies
   s.add_development_dependency 'rspec', '~> 3.0'
   s.add_development_dependency 'rspec-its', '~> 1.3'
-  s.add_development_dependency 'fakefs', '~> 1.3'
+  s.add_development_dependency 'fakefs', '~> 2.4'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'rubocop', '~> 1.12.0'
   s.add_development_dependency 'rubocop-performance', '~> 1.10'
