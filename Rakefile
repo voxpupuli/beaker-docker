@@ -167,6 +167,7 @@ namespace :docs do
   end
 end
 
+
 begin
   require 'rubygems'
   require 'github_changelog_generator/task'
