@@ -38,9 +38,8 @@ A quick acceptance test, named because it has no pre-suites to run
       beaker_test_base_dir = File.join(beaker_gem_dir, 'acceptance/tests/base')
       load_path_option = File.join(beaker_gem_dir, 'acceptance/lib')
 
-      ENV['BEAKER_setfile'] = 'acceptance/config/nodes/hosts.yaml'
+      ENV['BEAKER_setfile'] = 'acceptance/config/nodes/hosts.yaml' unless ENV.key?('BEAKER_setfile')
       sh("beaker",
-         "--hosts", "acceptance/config/nodes/hosts.yaml",
           # We can't run these tests until the rsync support in the main
           # beaker/host.rb is updated to work with passwords.
           # "--tests", beaker_test_base_dir,

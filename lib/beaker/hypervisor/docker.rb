@@ -142,9 +142,9 @@ module Beaker
         port: nil
       }
 
-      container_json = container.json
+      container_json   = container.json
       network_settings = container_json['NetworkSettings']
-      host_config = container_json['HostConfig']
+      host_config      = container_json['HostConfig']
 
       ip = nil
       port = nil
@@ -161,9 +161,10 @@ module Beaker
 
           # Host to Container
           port22 = network_settings.dig('PortBindings','22/tcp')
-          if port22.nil? && network_settings.key?('Ports')
+          if port22.nil? && network_settings.key?('Ports') && !nested_docker?
             port22 = network_settings.dig('Ports','22/tcp')
           end
+
           ip = port22[0]['HostIp'] if port22
           port = port22[0]['HostPort'] if port22
 
