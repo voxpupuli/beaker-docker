@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.4.0](https://github.com/voxpupuli/beaker-docker/tree/1.4.0) (2023-03-09)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.3.0...1.4.0)
+
+**Implemented enhancements:**
+
+- Enable Rubocop [\#72](https://github.com/voxpupuli/beaker-docker/pull/72) ([jay7x](https://github.com/jay7x))
+- Refactor built-in Dockerfile and fix\_ssh\(\) [\#71](https://github.com/voxpupuli/beaker-docker/pull/71) ([jay7x](https://github.com/jay7x))
+
+**Fixed bugs:**
+
+- set flag for container to container communication [\#84](https://github.com/voxpupuli/beaker-docker/pull/84) ([rwaffen](https://github.com/rwaffen))
+
+**Merged pull requests:**
+
+- Bump actions/checkout from 2 to 3 [\#90](https://github.com/voxpupuli/beaker-docker/pull/90) ([dependabot[bot]](https://github.com/apps/dependabot))
+- dependabot: check for github actions as well [\#89](https://github.com/voxpupuli/beaker-docker/pull/89) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [1.3.0](https://github.com/voxpupuli/beaker-docker/tree/1.3.0) (2022-12-18)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.2.0...1.3.0)
