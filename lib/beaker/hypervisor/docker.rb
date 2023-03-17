@@ -58,7 +58,7 @@ module Beaker
 
       # If the container is running ssh as its init process then this method
       # will cause issues.
-      if host[:docker_cmd] =~ /sshd/
+      if Array(host[:docker_cmd]).first =~ /sshd/
         def host.ssh_service_restart
           self[:docker_container].exec(%w(kill -1 1))
         end
