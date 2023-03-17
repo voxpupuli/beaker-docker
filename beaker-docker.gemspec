@@ -23,17 +23,17 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   # Testing dependencies
-  s.add_development_dependency 'rspec', '~> 3.0'
-  s.add_development_dependency 'rspec-its', '~> 1.3'
   s.add_development_dependency 'fakefs', '~> 1.3'
   s.add_development_dependency 'rake', '~> 13.0'
+  s.add_development_dependency 'rspec', '~> 3.0'
+  s.add_development_dependency 'rspec-its', '~> 1.3'
   s.add_development_dependency 'rubocop', '~> 1.12.0'
   s.add_development_dependency 'rubocop-performance', '~> 1.10'
   s.add_development_dependency 'rubocop-rake', '~> 0.2'
   s.add_development_dependency 'rubocop-rspec', '>= 1.44'
 
   # Run time dependencies
-  s.add_runtime_dependency 'stringify-hash', '~> 0.0.0'
-  s.add_runtime_dependency 'docker-api', '~> 2.1'
   s.add_runtime_dependency 'beaker', '>= 4.34'
+  s.add_runtime_dependency 'docker-api', '~> 2.1'
+  s.add_runtime_dependency 'stringify-hash', '~> 0.0.0'
 end
