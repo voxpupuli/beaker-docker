@@ -7,8 +7,8 @@ if File.exists? "#{__FILE__}.local"
 end
 
 group :coverage, optional: ENV['COVERAGE'] != 'yes' do
-  gem 'simplecov-console', require: false
   gem 'codecov', require: false
+  gem 'simplecov-console', require: false
 end
 
 group :release do
