@@ -109,7 +109,7 @@ namespace :docs do
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
     output = `bundle exec yard doc`
     puts output
-    if output =~ /\[warn\]|\[error\]/
+    if /\[warn\]|\[error\]/.match?(output)
       fail "Errors/Warnings during yard documentation generation"
     end
     Dir.chdir( original_dir )

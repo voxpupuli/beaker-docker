@@ -37,7 +37,7 @@ module Beaker
       ::Docker.logger = @logger
 
       # Find out what kind of remote instance we are talking against
-      if @docker_version['Version'] =~ /swarm/
+      if /swarm/.match?(@docker_version['Version'])
         @docker_type = 'swarm'
         unless ENV['DOCKER_REGISTRY']
           raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
@@ -58,7 +58,7 @@ module Beaker
 
       # If the container is running ssh as its init process then this method
       # will cause issues.
-      if Array(host[:docker_cmd]).first =~ /sshd/
+      if /sshd/.match?(Array(host[:docker_cmd]).first)
         def host.ssh_service_restart
           self[:docker_container].exec(%w(kill -1 1))
         end
