@@ -688,7 +688,7 @@ module Beaker
               'platform' => platform,
               'image' => 'foobar',
             })
-            expect( dockerfile ).to be =~ /ENV container docker/
+            expect( dockerfile ).to match(/ENV container docker/)
           end
         end
 
@@ -705,7 +705,7 @@ module Beaker
               ]
             })
 
-            expect( dockerfile ).to be =~ /RUN special one\nRUN special two\nRUN special three/
+            expect( dockerfile ).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
         end
 
@@ -722,7 +722,7 @@ module Beaker
               ]
             })
 
-            expect( dockerfile ).to be =~ /RUN special one\nRUN special two\nRUN special three/
+            expect( dockerfile ).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
         end
 
@@ -735,7 +735,7 @@ module Beaker
               'docker_image_entrypoint' => '/bin/bash'
             })
 
-            expect( dockerfile ).to be =~ %r{ENTRYPOINT /bin/bash}
+            expect( dockerfile ).to match(%r{ENTRYPOINT /bin/bash})
           end
         end
 
@@ -746,7 +746,7 @@ module Beaker
             'image' => 'foobar',
           })
 
-          expect( dockerfile ).to be =~ /zypper -n in openssh/
+          expect( dockerfile ).to match(/zypper -n in openssh/)
         end
 
         (22..39).to_a.each do | fedora_release |
@@ -757,7 +757,7 @@ module Beaker
               'image' => 'foobar',
             })
 
-            expect( dockerfile ).to be =~ /dnf install -y sudo/
+            expect( dockerfile ).to match(/dnf install -y sudo/)
           end
         end
 

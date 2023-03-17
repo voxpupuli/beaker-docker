@@ -328,13 +328,6 @@ Performance/RedundantSplitRegexpArgument:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-Performance/RegexpMatch:
-  Exclude:
-    - 'Rakefile'
-    - 'lib/beaker/hypervisor/docker.rb'
-
 # Offense count: 8
 # Cop supports --auto-correct.
 Performance/StringInclude:
