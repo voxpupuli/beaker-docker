@@ -538,23 +538,20 @@ module Beaker
         dockerfile += <<~DF
           RUN dnf clean all \
           && dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
-          && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
-          && ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key \
+          && ssh-keygen -A \
           && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
         DF
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         dockerfile += <<~DF
           RUN yum clean all \
           && yum install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
-          && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
-          && ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key \
+          && ssh-keygen -A \
           && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
         DF
       when /opensuse/, /sles/
         dockerfile += <<~DF
           RUN zypper -n in openssh #{additional_packages.join(' ')} \
-          && ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
-          && ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key \
+          && ssh-keygen -A \
           && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config \
           && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
         DF
