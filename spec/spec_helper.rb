@@ -1,4 +1,3 @@
-require 'rspec/its'
 require 'beaker'
 
 begin
