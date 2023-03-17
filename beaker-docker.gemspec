@@ -26,7 +26,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'fakefs', '>= 1.3', '< 3.0'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'rspec', '~> 3.0'
-  s.add_development_dependency 'rspec-its', '~> 1.3'
   s.add_development_dependency 'rubocop', '~> 1.12.0'
   s.add_development_dependency 'rubocop-performance', '~> 1.10'
   s.add_development_dependency 'rubocop-rake', '~> 0.2'
