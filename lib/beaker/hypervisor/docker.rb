@@ -170,23 +170,19 @@ module Beaker
 
           # Container to container
           unless ip && port
-            ip = nil
-            port = nil
-
             ip = network_settings['IPAddress']
-            port = 22 if ip && !ip.empty?
+            port = ip && !ip.empty? ? 22 : nil
           end
 
           # Container through gateway
           unless ip && port
-            ip = nil
-            port = nil
-
             ip = network_settings['Gateway']
 
             if ip && !ip.empty?
               port22 = network_settings.dig('PortBindings','22/tcp')
               port = port22[0]['HostPort'] if port22
+            else
+              port = nil
             end
           end
 
