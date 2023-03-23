@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'rubygems' unless defined?(Gem)
 require 'beaker-docker'
 
-VERSION_STRING =
-"
+VERSION_STRING = <<'VER'
                                  _ .--.
                                 ( `    )
         beaker-docker         .-'      `--,
@@ -14,19 +14,17 @@ VERSION_STRING =
               ;|  _|  _|  _|  '-'__,--'`--'
               | _|  _|  _|  _| |
           _   ||  _|  _|  _|  _| %s
-        _( `--.\\_|  _|  _|  _|/
+        _( `--.\_|  _|  _|  _|/
      .-'       )--,|  _|  _|.`
     (__, (_      ) )_|  _| /
-      `-.__.\\ _,--'\\|__|__/
+      `-.__.\ _,--'\|__|__/
                     ;____;
-                     \\YT/
+                     \YT/
                       ||
-                     |\"\"|
+                     |""|
                      '=='
-"
+VER
 
-
-
-puts BeakerDocker::VERSION
+puts VERSION_STRING % BeakerDocker::VERSION
 
 exit 0

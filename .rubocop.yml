@@ -25,6 +25,28 @@ AllCops:
   Exclude:
   - vendor/**/*
 
-# Disable temporarily
+Metrics:
+  Description: Metrics cops are rarely useful
+  Enabled: false
+
+Naming/FileName:
+  Description: Gemfile.local is well-known file name
+  Exclude:
+  - Gemfile.local
 Style/HashSyntax:
+  Description: Disable temporarily (FIXME)
+  EnforcedStyle: ruby19
+  Enabled: false
+
+Naming/FileName:
+  Description: Some files violates the snake_case convention
+  Exclude:
+    - 'lib/beaker-docker.rb'
+
+# Style enforcements
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+Style/IfUnlessModifier:
+  Enabled: false
+Style/StringLiterals:
   Enabled: false
