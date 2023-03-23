@@ -29,10 +29,6 @@ Metrics:
   Description: Metrics cops are rarely useful
   Enabled: false
 
-Naming/FileName:
-  Description: Gemfile.local is well-known file name
-  Exclude:
-  - Gemfile.local
 Style/HashSyntax:
   Description: Disable temporarily (FIXME)
   EnforcedStyle: ruby19
@@ -42,6 +38,7 @@ Naming/FileName:
   Description: Some files violates the snake_case convention
   Exclude:
     - 'lib/beaker-docker.rb'
+    - Gemfile.local
 
 # Style enforcements
 Style/TrailingCommaInArrayLiteral:
