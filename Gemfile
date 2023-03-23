@@ -4,8 +4,8 @@ source ENV['GEM_SOURCE'] || 'https://rubygems.org'
 
 gemspec
 
-if File.exist? "#{__FILE__}.local"
-  eval(File.read("#{__FILE__}.local"), binding) # rubocop:disable Security/Eval
+group :acceptance_testing do
+  gem 'beaker-rspec'
 end
 
 group :coverage, optional: ENV['COVERAGE'] != 'yes' do

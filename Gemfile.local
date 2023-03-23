@@ -1,5 +1,0 @@
-# frozen_string_literal: true
-
-group :acceptance_testing do
-  gem 'beaker-rspec'
-end
