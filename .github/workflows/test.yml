@@ -1,30 +1,26 @@
 name: Test
 
 on:
-  - pull_request
-  - push
+  pull_request: {}
+  push:
+    branches:
+      - master
 
 env:
   BUNDLE_WITHOUT: release
 
 jobs:
-  lint:
+  rubocop:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ruby: "3.2"
-    name: Lint - Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v3
-      - name: Install Ruby ${{ matrix.ruby }}
+      - name: Install Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: "3.2"
           bundler-cache: true
-      - name: lint
-        run: bundle exec rake lint
+      - name: Run Rubocop
+        run: bundle exec rake rubocop
 
   rspec:
     runs-on: ubuntu-latest
@@ -57,18 +53,13 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        ruby:
-          - "2.6"
-    name: Docker - Ruby ${{ matrix.ruby }}
+    name: Docker
     steps:
       - uses: actions/checkout@v3
-      - name: Install Ruby ${{ matrix.ruby }}
+      - name: Install Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: "3.2"
           bundler-cache: true
       - name: Run acceptance tests
         run: bundle exec rake test:acceptance
@@ -93,18 +84,25 @@ jobs:
 
   podman:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        ruby:
-          - "2.6"
-    name: Podman - Ruby ${{ matrix.ruby }}
+    name: Podman
     steps:
       - uses: actions/checkout@v3
-      - name: Install Ruby ${{ matrix.ruby }}
+      - name: Install Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: "3.2"
           bundler-cache: true
       - name: Run acceptance tests
         run: bundle exec rake test:acceptance
+
+  tests:
+    needs:
+      - docker
+      - beaker_in_container
+      - podman
+      - rubocop
+      - rspec
+    runs-on: ubuntu-latest
+    name: Test suite
+    steps:
+      - run: echo Test suite completed
