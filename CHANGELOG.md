@@ -1,6 +1,35 @@
 # Changelog
 
-## [1.4.0](https://github.com/voxpupuli/beaker-docker/tree/1.4.0) (2023-03-09)
+## [1.5.0](https://github.com/voxpupuli/beaker-docker/tree/1.5.0) (2023-03-24)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.4.0...1.5.0)
+
+**Implemented enhancements:**
+
+- Ruby 3.2 compatibility [\#100](https://github.com/voxpupuli/beaker-docker/pull/100) ([ekohl](https://github.com/ekohl))
+- Set required Ruby version to 2.4+ [\#99](https://github.com/voxpupuli/beaker-docker/pull/99) ([ekohl](https://github.com/ekohl))
+- Simplify port detection code [\#95](https://github.com/voxpupuli/beaker-docker/pull/95) ([ekohl](https://github.com/ekohl))
+- Add Ruby 3.1 to CI matrix [\#87](https://github.com/voxpupuli/beaker-docker/pull/87) ([bastelfreak](https://github.com/bastelfreak))
+- Use ssh-keygen -A on Red Hat-based distros & SuSE/SLES [\#73](https://github.com/voxpupuli/beaker-docker/pull/73) ([ekohl](https://github.com/ekohl))
+
+**Fixed bugs:**
+
+- Deal with docker\_cmd being an array and remove use of =~ [\#93](https://github.com/voxpupuli/beaker-docker/pull/93) ([ekohl](https://github.com/ekohl))
+
+**Merged pull requests:**
+
+- Remove Gemfile.local from git [\#104](https://github.com/voxpupuli/beaker-docker/pull/104) ([ekohl](https://github.com/ekohl))
+- Fix rubocop Naming/FileName [\#103](https://github.com/voxpupuli/beaker-docker/pull/103) ([jay7x](https://github.com/jay7x))
+- cleanup GitHub actions [\#102](https://github.com/voxpupuli/beaker-docker/pull/102) ([bastelfreak](https://github.com/bastelfreak))
+- Remove unused rspec-its dependency [\#98](https://github.com/voxpupuli/beaker-docker/pull/98) ([ekohl](https://github.com/ekohl))
+- Allow fakefs 2.x [\#97](https://github.com/voxpupuli/beaker-docker/pull/97) ([ekohl](https://github.com/ekohl))
+- Remove yard rake tasks [\#96](https://github.com/voxpupuli/beaker-docker/pull/96) ([ekohl](https://github.com/ekohl))
+- rubocop: fix dependency ordering [\#94](https://github.com/voxpupuli/beaker-docker/pull/94) ([bastelfreak](https://github.com/bastelfreak))
+- GHA: Use builtin podman [\#86](https://github.com/voxpupuli/beaker-docker/pull/86) ([bastelfreak](https://github.com/bastelfreak))
+- GHA: Use builtin docker [\#85](https://github.com/voxpupuli/beaker-docker/pull/85) ([bastelfreak](https://github.com/bastelfreak))
+- Fix rubocop-related issues \(part 1\) [\#75](https://github.com/voxpupuli/beaker-docker/pull/75) ([jay7x](https://github.com/jay7x))
+
+## [1.4.0](https://github.com/voxpupuli/beaker-docker/tree/1.4.0) (2023-03-10)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.3.0...1.4.0)
 
