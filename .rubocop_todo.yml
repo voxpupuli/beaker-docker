@@ -533,22 +533,6 @@ Style/TernaryParentheses:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 5
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInArrayLiteral:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 25
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInHashLiteral:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 Style/UnlessElse:

@@ -78,13 +78,13 @@ module Beaker
         'Hostname' => host.name,
         'HostConfig' => {
           'PortBindings' => {
-            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0'}]
+            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0'}],
           },
           'PublishAllPorts' => true,
           'RestartPolicy' => {
-            'Name' => 'always'
-          }
-        }
+            'Name' => 'always',
+          },
+        },
       } )
     end
 
@@ -106,8 +106,8 @@ module Beaker
             dir,
             { 'dockerfile' => dockerfile,
               :rm => true,
-              :buildargs => buildargs_for(host)
-            }
+              :buildargs => buildargs_for(host),
+            },
           )
         else
           raise "Unable to find dockerfile at #{dockerfile}"
@@ -139,7 +139,7 @@ module Beaker
     def get_ssh_connection_info(container)
       ssh_connection_info = {
         ip: nil,
-        port: nil
+        port: nil,
       }
 
       container_json   = container.json
@@ -367,7 +367,7 @@ module Beaker
           :password => root_password,
           :port => port,
           :forward_agent => forward_ssh_agent,
-          :auth_methods => ['password', 'publickey', 'hostbased', 'keyboard-interactive']
+          :auth_methods => ['password', 'publickey', 'hostbased', 'keyboard-interactive'],
         }
 
         @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")

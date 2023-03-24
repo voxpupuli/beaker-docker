@@ -8,7 +8,7 @@ module Beaker
     "fedora-22-x86_64",
     "centos-7-x86_64",
     "sles-12-x86_64",
-    "archlinux-2017.12.27-x86_64"
+    "archlinux-2017.12.27-x86_64",
   ]
 
   describe Docker do
@@ -61,7 +61,7 @@ module Beaker
     let(:container_config) do
       conf = {
         'HostConfig' => {
-          'NetworkMode' => 'slirp4netns'
+          'NetworkMode' => 'slirp4netns',
         },
         'NetworkSettings' => {
           'IPAddress' => '192.0.2.1',
@@ -73,8 +73,8 @@ module Beaker
               },
             ],
           },
-          'Gateway' => '192.0.2.254'
-        }
+          'Gateway' => '192.0.2.254',
+        },
       }
 
       unless container_mode == 'rootless'
@@ -90,7 +90,7 @@ module Beaker
       allow( container ).to receive(:start)
       allow( container ).to receive(:stats)
       allow( container ).to receive(:info).and_return(
-        *(0..2).map { |index| { 'Names' => ["/spec-container-#{index}"] } }
+        *(0..2).map { |index| { 'Names' => ["/spec-container-#{index}"] } },
       )
       allow( container ).to receive(:json).and_return(container_config)
       allow( container ).to receive(:kill)
@@ -306,19 +306,19 @@ module Beaker
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
                 },
                 'Privileged' => true,
                 'PublishAllPorts' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -340,19 +340,19 @@ module Beaker
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -371,13 +371,13 @@ module Beaker
               'name' => container_name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
@@ -414,7 +414,7 @@ module Beaker
               'mount5' => {
                 'host_path' => 'local_folder',
                 'container_path' => '/another_relative_mount',
-              }
+              },
             }
 
             expect( ::Docker::Container ).to receive(:create).with({
@@ -429,19 +429,19 @@ module Beaker
                   "#{File.expand_path('local_folder')}:/another_relative_mount:z",
                 ],
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -457,19 +457,19 @@ module Beaker
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
                 },
                 'PublishAllPorts' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
+                  'Name' => 'always',
                 },
-                'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN']
+                'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -479,7 +479,7 @@ module Beaker
         it 'should create a container with port bindings' do
           hosts.each_with_index do |host, index|
             host['docker_port_bindings'] = {
-              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}]
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}],
             }
 
             expect( ::Docker::Container ).to receive(:create).with({
@@ -491,19 +491,19 @@ module Beaker
               'HostConfig' => {
                 'PortBindings' => {
                   '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
-                  '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}]
+                  '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
+                  'Name' => 'always',
                 },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -599,7 +599,7 @@ module Beaker
           let(:options) {{
             :logger => logger,
             :forward_ssh_agent => true,
-            :provision => false
+            :provision => false,
           }}
 
 
@@ -702,7 +702,7 @@ module Beaker
                 'special one',
                 'special two',
                 'special three',
-              ]
+              ],
             })
 
             expect( dockerfile ).to match(/RUN special one\nRUN special two\nRUN special three/)
@@ -719,7 +719,7 @@ module Beaker
                 'special one',
                 'special two',
                 'special three',
-              ]
+              ],
             })
 
             expect( dockerfile ).to match(/RUN special one\nRUN special two\nRUN special three/)
@@ -732,7 +732,7 @@ module Beaker
             dockerfile = docker.send(:dockerfile_for, {
               'platform' => platform,
               'image' => 'foobar',
-              'docker_image_entrypoint' => '/bin/bash'
+              'docker_image_entrypoint' => '/bin/bash',
             })
 
             expect( dockerfile ).to match(%r{ENTRYPOINT /bin/bash})
@@ -786,7 +786,7 @@ module Beaker
             include(/PermitRootLogin/) &&
             include(/PasswordAuthentication/) &&
             include(/UseDNS/) &&
-            include(/MaxAuthTries/)
+            include(/MaxAuthTries/),
           )
           docker.send(:fix_ssh, test_container)
         end
