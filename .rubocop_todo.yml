@@ -55,26 +55,12 @@ Layout/EmptyLinesAroundClassBody:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 4
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment, AllowBeforeTrailingComments, ForceEqualSignAlignment.
-Layout/ExtraSpacing:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 26
 # Cop supports --auto-correct.
 # Configuration parameters: IndentationWidth.
 # SupportedStyles: special_inside_parentheses, consistent, align_braces
 Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
-
-# Offense count: 5
-# Cop supports --auto-correct.
-# Configuration parameters: AllowDoxygenCommentStyle, AllowGemfileRubyComment.
-Layout/LeadingCommentSpace:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 2
 # Cop supports --auto-correct.
@@ -89,82 +75,6 @@ Layout/MultilineBlockLayout:
 Layout/MultilineHashBraceLayout:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 11
-# Cop supports --auto-correct.
-Layout/SpaceAfterComma:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleInsidePipes.
-# SupportedStylesInsidePipes: space, no_space
-Layout/SpaceAroundBlockParameters:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-Layout/SpaceAroundKeyword:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 19
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment, EnforcedStyleForExponentOperator.
-# SupportedStylesForExponentOperator: space, no_space
-Layout/SpaceAroundOperators:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceBeforeBlockBraces:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBrackets: space, no_space
-Layout/SpaceInsideArrayLiteralBrackets:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 11
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SpaceBeforeBlockParameters.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideBlockBraces:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 25
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideHashLiteralBraces:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 280
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceInsideParens:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-    - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 1
 # Configuration parameters: IgnoreLiteralBranches, IgnoreConstantBranches.

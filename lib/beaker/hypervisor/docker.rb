@@ -52,7 +52,7 @@ module Beaker
     end
 
     def install_and_run_ssh(host)
-      def host.enable_root_login(host,opts)
+      def host.enable_root_login(host, opts)
         logger.debug("Root login already enabled for #{host}")
       end
 
@@ -70,7 +70,7 @@ module Beaker
     def get_container_opts(host, image_name)
       container_opts = {}
       if host['dockerfile']
-        container_opts['ExposedPorts'] = {'22/tcp' => {} }
+        container_opts['ExposedPorts'] = { '22/tcp' => {} }
       end
 
       container_opts.merge! ( {
@@ -78,14 +78,14 @@ module Beaker
         'Hostname' => host.name,
         'HostConfig' => {
           'PortBindings' => {
-            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0'}],
+            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0' }],
           },
           'PublishAllPorts' => true,
           'RestartPolicy' => {
             'Name' => 'always',
           },
         },
-      } )
+      })
     end
 
     def get_container_image(host)
@@ -149,7 +149,7 @@ module Beaker
       ip = nil
       port = nil
       # Talking against a remote docker host which is a normal docker host
-      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST','').include?(':///') && !nested_docker?
+      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
         ip = URI.parse(ENV['DOCKER_HOST']).host
       else
         # Swarm or local docker host
@@ -160,9 +160,9 @@ module Beaker
           # The many faces of container networking
 
           # Host to Container
-          port22 = network_settings.dig('PortBindings','22/tcp')
+          port22 = network_settings.dig('PortBindings', '22/tcp')
           if port22.nil? && network_settings.key?('Ports') && !nested_docker?
-            port22 = network_settings.dig('Ports','22/tcp')
+            port22 = network_settings.dig('Ports', '22/tcp')
           end
 
           ip = port22[0]['HostIp'] if port22
@@ -179,7 +179,7 @@ module Beaker
             ip = network_settings['Gateway']
 
             if ip && !ip.empty?
-              port22 = network_settings.dig('PortBindings','22/tcp')
+              port22 = network_settings.dig('PortBindings', '22/tcp')
               port = port22[0]['HostPort'] if port22
             else
               port = nil
@@ -188,7 +188,7 @@ module Beaker
 
           # Legacy fallback
           unless ip && port
-            port22 = network_settings.dig('Ports','22/tcp')
+            port22 = network_settings.dig('Ports', '22/tcp')
             ip = port22[0]["HostIp"] if port22
             port = port22[0]['HostPort'] if port22
           end
@@ -198,7 +198,7 @@ module Beaker
       if host_config['NetworkMode'] != 'slirp4netns' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
         ip = network_settings['IPAddress'] if ip.nil?
       else
-        port22 = network_settings.dig('Ports','22/tcp')
+        port22 = network_settings.dig('Ports', '22/tcp')
         port = port22[0]['HostPort'] if port22
       end
 
@@ -216,7 +216,7 @@ module Beaker
         image = get_container_image(host)
 
         if host['tag']
-          image.tag({:repo => host['tag']})
+          image.tag({ :repo => host['tag'] })
         end
 
         if @docker_type == 'swarm'
@@ -224,7 +224,7 @@ module Beaker
           ret = ::Docker::Image.search(:term => image_name)
           if ret.first.nil?
             @logger.debug("Image does not exist on registry. Pushing.")
-            image.tag({:repo => image_name, :force => true})
+            image.tag({ :repo => image_name, :force => true })
             image.push
           end
         else
@@ -236,7 +236,7 @@ module Beaker
         container_opts = get_container_opts(host, image_name)
         if host['dockeropts'] || @options[:dockeropts]
           dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
-          dockeropts.each do |k,v|
+          dockeropts.each do |k, v|
             container_opts[k] = v
           end
         end
@@ -254,7 +254,7 @@ module Beaker
               if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ /^.\:\//
                 host_path = "/" + host_path.gsub(/^.\:/, host_path[/^(.)/].downcase)
               end
-              a = [ host_path, mount['container_path'] ]
+              a = [host_path, mount['container_path']]
               if mount.has_key?('opts')
                 a << mount['opts'] if mount.has_key?('opts')
               else
@@ -300,9 +300,9 @@ module Beaker
 
           @logger.debug("Creating container from image #{image_name}")
 
-          ok=false
-          retries=0
-          while(!ok && (retries < 5))
+          ok = false
+          retries = 0
+          while (!ok && (retries < 5))
             container = ::Docker::Container.create(container_opts)
 
             ssh_info = get_ssh_connection_info(container)
@@ -312,11 +312,11 @@ module Beaker
               container.delete(force: true)
               container = nil
 
-              retries+=1
+              retries += 1
               next
             end
 
-            ok=true
+            ok = true
           end
         else
           host['use_existing_container'] = true
@@ -487,11 +487,11 @@ module Beaker
       docker_buildargs_env = ENV['DOCKER_BUILDARGS']
       if docker_buildargs_env != nil
         docker_buildargs_env.split(/ +|\t+/).each do |arg|
-          key,value=arg.split(/=/)
+          key, value = arg.split(/=/)
           if key
-            docker_buildargs[key]=value
+            docker_buildargs[key] = value
           else
-            @logger.warn("DOCKER_BUILDARGS environment variable appears invalid, no key found for value #{value}" )
+            @logger.warn("DOCKER_BUILDARGS environment variable appears invalid, no key found for value #{value}")
           end
         end
       end
