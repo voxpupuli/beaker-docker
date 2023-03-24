@@ -1,6 +1,5 @@
 module Beaker
   class Docker < Beaker::Hypervisor
-
     # Docker hypvervisor initializtion
     # Env variables supported:
     # DOCKER_REGISTRY: Docker registry URL
@@ -651,6 +650,7 @@ module Beaker
       end
 
       return container unless container.nil?
+
       @logger.debug("Existing container not found")
       return nil
     end

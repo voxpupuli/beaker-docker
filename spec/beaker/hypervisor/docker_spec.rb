@@ -125,7 +125,6 @@ module Beaker
       end
     end
 
-
     context 'with a working connection' do
       before :each do
         # Stub out all of the docker-api gem. we should never really call it
@@ -227,7 +226,6 @@ module Beaker
         end
 
         context 'when the host has "use_image_entry_point" set to true on the host' do
-
           before :each do
             hosts.each do |host|
               host['use_image_entry_point'] = true
@@ -243,7 +241,6 @@ module Beaker
         end
 
         context 'when the host has a "dockerfile" for the host' do
-
           before :each do
             allow(docker).to receive(:buildargs_for).and_return('buildargs')
             hosts.each do |host|
@@ -388,7 +385,6 @@ module Beaker
 
           docker.provision
         end
-
 
         it 'should create a container with volumes bound' do
           hosts.each_with_index do |host, index|
@@ -575,7 +571,6 @@ module Beaker
               expect(hosts[0]['port']).to be === 8022
             end
           end
-
         end
 
         it "should generate a new /etc/hosts file referencing each host" do
@@ -601,7 +596,6 @@ module Beaker
             :forward_ssh_agent => true,
             :provision => false,
           }}
-
 
           it 'should fix ssh' do
             hosts.each_with_index do |host, index|
@@ -672,7 +666,6 @@ module Beaker
           expect(::Docker::Image).to receive(:remove).with(image.id)
           docker.cleanup
         end
-
       end
 
       describe '#dockerfile_for' do
