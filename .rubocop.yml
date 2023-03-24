@@ -38,7 +38,6 @@ Naming/FileName:
   Description: Some files violates the snake_case convention
   Exclude:
     - 'lib/beaker-docker.rb'
-    - Gemfile.local
 
 # Style enforcements
 Style/TrailingCommaInArrayLiteral:
