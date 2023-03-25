@@ -72,7 +72,7 @@ module Beaker
         container_opts['ExposedPorts'] = { '22/tcp' => {} }
       end
 
-      container_opts.merge! ( {
+      container_opts.merge!({
         'Image' => image_name,
         'Hostname' => host.name,
         'HostConfig' => {

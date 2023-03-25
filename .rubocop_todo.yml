@@ -24,13 +24,6 @@ Lint/MissingSuper:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-Lint/ParenthesesAsGroupedExpression:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: AllowUnusedKeywordArguments, IgnoreEmptyMethods, IgnoreNotImplementedMethods.
@@ -118,7 +111,7 @@ RSpec/MultipleExpectations:
 # Offense count: 18
 # Configuration parameters: AllowSubject.
 RSpec/MultipleMemoizedHelpers:
-  Max: 11
+  Max: 12
 
 # Offense count: 1
 # Cop supports --auto-correct.
