@@ -385,11 +385,7 @@ module Beaker
     # This sideloads sshd after a container starts
     def install_ssh_components(container, host)
       case host['platform']
-      when /ubuntu/, /debian/
-        container.exec(%w(apt-get update))
-        container.exec(%w(apt-get install -y openssh-server openssh-client))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
-      when /cumulus/
+      when /ubuntu/, /debian/, /cumulus/
         container.exec(%w(apt-get update))
         container.exec(%w(apt-get install -y openssh-server openssh-client))
         container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))

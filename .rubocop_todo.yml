@@ -14,12 +14,6 @@ Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
 # Offense count: 1
-# Configuration parameters: IgnoreLiteralBranches, IgnoreConstantBranches.
-Lint/DuplicateBranch:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 1
 # Configuration parameters: AllowComments, AllowEmptyLambdas.
 Lint/EmptyBlock:
   Exclude:
