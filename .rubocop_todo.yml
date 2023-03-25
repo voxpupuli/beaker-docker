@@ -50,12 +50,6 @@ RSpec/AnyInstance:
 
 # Offense count: 2
 # Cop supports --auto-correct.
-RSpec/EmptyLineAfterFinalLet:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
 RSpec/EmptyLineAfterHook:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'

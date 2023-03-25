@@ -185,6 +185,7 @@ module Beaker
       describe '#install_ssh_components' do
         let(:test_container) { double('container') }
         let(:host) { hosts[0] }
+
         before :each do
           allow(docker).to receive(:dockerfile_for)
         end
@@ -774,6 +775,7 @@ module Beaker
       describe '#fix_ssh' do
         let(:test_container) { double('container') }
         let(:host) { hosts[0] }
+
         before :each do
           expect(test_container).to receive(:id).and_return('abcdef')
         end
