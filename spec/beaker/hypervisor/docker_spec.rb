@@ -610,7 +610,7 @@ module Beaker
               host['docker_container_name'] = container_name
 
               expect(::Docker::Container).to receive(:all).and_return([container])
-              expect(docker).to receive(:fix_ssh).exactly(1).times
+              expect(docker).to receive(:fix_ssh).once
             end
             docker.provision
           end
