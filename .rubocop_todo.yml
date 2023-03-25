@@ -90,14 +90,6 @@ RSpec/MultipleMemoizedHelpers:
 
 # Offense count: 1
 # Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: not_to, to_not
-RSpec/NotToNot:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
 RSpec/ReceiveCounts:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'

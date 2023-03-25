@@ -661,7 +661,7 @@ module Beaker
           hosts.each do |host|
             host['docker_preserve_image'] = true
           end
-          expect(::Docker::Image).to_not receive(:remove)
+          expect(::Docker::Image).not_to receive(:remove)
           docker.cleanup
         end
 
