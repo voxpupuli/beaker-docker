@@ -509,7 +509,7 @@ module Beaker
       DF
 
       # Commands before any other commands. Can be used for eg. proxy configuration
-      dockerfile += (host['docker_image_first_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join('')
+      dockerfile += (host['docker_image_first_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join
 
       # add platform-specific actions
       service_name = 'sshd'
@@ -582,7 +582,7 @@ module Beaker
       DF
 
       # Any extra commands specified for the host
-      dockerfile += (host['docker_image_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join('')
+      dockerfile += (host['docker_image_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join
 
       # Override image entrypoint
       dockerfile += "ENTRYPOINT #{host['docker_image_entrypoint']}\n" if host['docker_image_entrypoint']
