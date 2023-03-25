@@ -253,7 +253,7 @@ module Beaker
               host_path = File.expand_path(mount['host_path'])
               # When using docker_toolbox and getting a "(Driveletter):/" path, convert windows path to VM mount
               if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ %r{^.:/}
-                host_path = "/" + host_path.gsub(/^.:/, host_path[/^(.)/].downcase)
+                host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}"
               end
               a = [host_path, mount['container_path']]
               if mount.has_key?('opts')
