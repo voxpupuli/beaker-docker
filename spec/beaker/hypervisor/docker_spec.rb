@@ -14,7 +14,7 @@ module Beaker
   describe Docker do
     require 'docker'
 
-    let(:hosts) {
+    let(:hosts) do
       the_hosts = make_hosts
       the_hosts[2]['dockeropts'] = {
         'Labels' => {
@@ -23,7 +23,7 @@ module Beaker
         },
       }
       the_hosts
-    }
+    end
 
     let(:logger) do
       logger = double('logger')
