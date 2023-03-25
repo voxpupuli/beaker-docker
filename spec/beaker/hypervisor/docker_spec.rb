@@ -35,17 +35,19 @@ module Beaker
       logger
     end
 
-    let(:options) { {
-      :logger => logger,
-      :forward_ssh_agent => true,
-      :provision => true,
-      :dockeropts => {
-        'Labels' => {
-          'one' => 1,
-          'two' => 2,
+    let(:options) do
+      {
+        :logger => logger,
+        :forward_ssh_agent => true,
+        :provision => true,
+        :dockeropts => {
+          'Labels' => {
+            'one' => 1,
+            'two' => 2,
+          },
         },
-      },
-    }}
+      }
+    end
 
     let(:image) do
       image = double('Docker::Image')
@@ -591,11 +593,13 @@ module Beaker
         end
 
         context 'provision=false' do
-          let(:options) { {
-            :logger => logger,
-            :forward_ssh_agent => true,
-            :provision => false,
-          }}
+          let(:options) do
+            {
+              :logger => logger,
+              :forward_ssh_agent => true,
+              :provision => false,
+            }
+          end
 
           it 'should fix ssh' do
             hosts.each_with_index do |host, index|
