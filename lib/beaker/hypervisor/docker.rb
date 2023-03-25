@@ -40,10 +40,10 @@ module Beaker
       # Find out what kind of remote instance we are talking against
       if /swarm/.match?(@docker_version['Version'])
         @docker_type = 'swarm'
-        unless ENV['DOCKER_REGISTRY']
-          raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
-        else
+        if ENV['DOCKER_REGISTRY']
           @registry = ENV['DOCKER_REGISTRY']
+        else
+          raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
         end
       elsif ::Docker.respond_to?(:podman?) && ::Docker.podman?
         @docker_type = 'podman'
