@@ -514,8 +514,8 @@ module Beaker
           docker.provision
         end
 
-        context "connecting to ssh" do
-          context "rootless" do
+        context "when connecting to ssh" do
+          context "when rootless" do
             before { @docker_host = ENV['DOCKER_HOST'] }
             after { ENV['DOCKER_HOST'] = @docker_host }
 
@@ -557,7 +557,7 @@ module Beaker
             end
           end
 
-          context 'rootful' do
+          context 'when rootful' do
             before { @docker_host = ENV['DOCKER_HOST'] }
             after { ENV['DOCKER_HOST'] = @docker_host }
 
@@ -592,7 +592,7 @@ module Beaker
           expect(hosts[0]['docker_container_id']).to be === container.id
         end
 
-        context 'provision=false' do
+        context 'when provision=false' do
           let(:options) do
             {
               :logger => logger,

@@ -48,13 +48,6 @@ RSpec/AnyInstance:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 4
-# Configuration parameters: Prefixes.
-# Prefixes: when, with, without
-RSpec/ContextWording:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 RSpec/EmptyLineAfterFinalLet:
