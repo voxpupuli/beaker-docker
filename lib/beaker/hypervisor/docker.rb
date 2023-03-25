@@ -122,8 +122,7 @@ module Beaker
         return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
       end
 
-      return ::Docker::Image.build(dockerfile_for(host),
-                  { rm: true, buildargs: buildargs_for(host) })
+      return ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
     end
 
     # Nested Docker scenarios
