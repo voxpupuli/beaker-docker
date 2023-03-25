@@ -416,7 +416,7 @@ module Beaker
         container.exec(%w(apk add --update openssh))
         container.exec(%w(ssh-keygen -A))
       else
-        # TODO add more platform steps here
+        # TODO: add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
       end
 
