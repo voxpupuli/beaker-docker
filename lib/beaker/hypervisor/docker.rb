@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Beaker
   class Docker < Beaker::Hypervisor
     # Docker hypvervisor initializtion
