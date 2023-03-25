@@ -236,7 +236,7 @@ module Beaker
 
         container_opts = get_container_opts(host, image_name)
         if host['dockeropts'] || @options[:dockeropts]
-          dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
+          dockeropts = host['dockeropts'] || @options[:dockeropts]
           dockeropts.each do |k, v|
             container_opts[k] = v
           end
