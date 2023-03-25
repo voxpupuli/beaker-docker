@@ -14,14 +14,6 @@ Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
 # Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineHashBraceLayout:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 1
 # Configuration parameters: IgnoreLiteralBranches, IgnoreConstantBranches.
 Lint/DuplicateBranch:
   Exclude:

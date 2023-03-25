@@ -103,7 +103,8 @@ module Beaker
           dir = File.expand_path(dockerfile).chomp(dockerfile)
           return ::Docker::Image.build_from_dir(
             dir,
-            { 'dockerfile' => dockerfile,
+            {
+              'dockerfile' => dockerfile,
               :rm => true,
               :buildargs => buildargs_for(host),
             },
