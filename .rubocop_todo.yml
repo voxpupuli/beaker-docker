@@ -177,12 +177,6 @@ Style/PreferredHashMethods:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/RedundantException:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 Style/RedundantRegexpEscape:
