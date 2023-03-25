@@ -324,7 +324,7 @@ module Beaker
         end
 
         if container.nil?
-          raise RuntimeError, 'Cannot continue because no existing container ' +
+          raise RuntimeError, 'Cannot continue because no existing container ' \
                               'could be found and provisioning is disabled.'
         end
 

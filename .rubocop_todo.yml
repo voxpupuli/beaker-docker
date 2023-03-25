@@ -142,12 +142,6 @@ Style/IfInsideElse:
 
 # Offense count: 1
 # Cop supports --auto-correct.
-Style/LineEndConcatenation:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, MinBodyLength.
 # SupportedStyles: skip_modifier_ifs, always
 Style/Next:
