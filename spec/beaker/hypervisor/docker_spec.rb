@@ -518,6 +518,7 @@ module Beaker
         context "when connecting to ssh" do
           context "when rootless" do
             before { @docker_host = ENV['DOCKER_HOST'] }
+
             after { ENV['DOCKER_HOST'] = @docker_host }
 
             it 'should expose port 22 to beaker' do
@@ -560,6 +561,7 @@ module Beaker
 
           context 'when rootful' do
             before { @docker_host = ENV['DOCKER_HOST'] }
+
             after { ENV['DOCKER_HOST'] = @docker_host }
 
             let(:container_mode) do
