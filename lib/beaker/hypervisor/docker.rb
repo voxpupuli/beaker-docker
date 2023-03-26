@@ -426,41 +426,41 @@ module Beaker
         # setting docker_preserve_container also implies docker_preserve_image
         # is set, since you can't delete an image that's the base of a running
         # container
-        unless host['docker_preserve_container']
-          container = find_container(host)
-          if container
-            @logger.debug("stop container #{container.id}")
-            begin
-              container.kill
-              sleep 2 # avoid a race condition where the root FS can't unmount
-            rescue Excon::Errors::ClientError => e
-              @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
-            end
-            @logger.debug("delete container #{container.id}")
-            begin
-              container.delete(force: true)
-            rescue Excon::Errors::ClientError => e
-              @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
-            end
-          end
+        next if host['docker_preserve_container']
 
-          # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
-          unless host['docker_preserve_image']
-            image_id = host['docker_image_id']
-
-            if image_id
-              @logger.debug("deleting image #{image_id}")
-              begin
-                ::Docker::Image.remove(image_id)
-              rescue Excon::Errors::ClientError => e
-                @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
-              rescue ::Docker::Error::DockerError => e
-                @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
-              end
-            else
-              @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
-            end
+        container = find_container(host)
+        if container
+          @logger.debug("stop container #{container.id}")
+          begin
+            container.kill
+            sleep 2 # avoid a race condition where the root FS can't unmount
+          rescue Excon::Errors::ClientError => e
+            @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
           end
+          @logger.debug("delete container #{container.id}")
+          begin
+            container.delete(force: true)
+          rescue Excon::Errors::ClientError => e
+            @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
+          end
+        end
+
+        # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
+        next if host['docker_preserve_image']
+
+        image_id = host['docker_image_id']
+
+        if image_id
+          @logger.debug("deleting image #{image_id}")
+          begin
+            ::Docker::Image.remove(image_id)
+          rescue Excon::Errors::ClientError => e
+            @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
+          rescue ::Docker::Error::DockerError => e
+            @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
+          end
+        else
+          @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
         end
       end
     end
