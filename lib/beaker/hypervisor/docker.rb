@@ -75,18 +75,18 @@ module Beaker
       end
 
       container_opts.merge!({
-        'Image' => image_name,
-        'Hostname' => host.name,
-        'HostConfig' => {
-          'PortBindings' => {
-            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0' }],
-          },
-          'PublishAllPorts' => true,
-          'RestartPolicy' => {
-            'Name' => 'always',
-          },
-        },
-      })
+                              'Image' => image_name,
+                              'Hostname' => host.name,
+                              'HostConfig' => {
+                                'PortBindings' => {
+                                  '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0' }],
+                                },
+                                'PublishAllPorts' => true,
+                                'RestartPolicy' => {
+                                  'Name' => 'always',
+                                },
+                              },
+                            })
     end
 
     def get_container_image(host)

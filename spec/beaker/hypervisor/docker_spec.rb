@@ -304,24 +304,24 @@ module Beaker
         it 'should create a container based on the Image (identified by image.id)' do
           hosts.each_with_index do |host, index|
             expect(::Docker::Container).to receive(:create).with({
-              'Image' => image.id,
-              'Hostname' => host.name,
-              'HostConfig' => {
-                'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                },
-                'Privileged' => true,
-                'PublishAllPorts' => true,
-                'RestartPolicy' => {
-                  'Name' => 'always',
-                },
-              },
-              'Labels' => {
-                'one' => (index == 2 ? 3 : 1),
-                'two' => (index == 2 ? 4 : 2),
-              },
-              'name' => /\Abeaker-/,
-            })
+                                                                   'Image' => image.id,
+                                                                   'Hostname' => host.name,
+                                                                   'HostConfig' => {
+                                                                     'PortBindings' => {
+                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                                                                     },
+                                                                     'Privileged' => true,
+                                                                     'PublishAllPorts' => true,
+                                                                     'RestartPolicy' => {
+                                                                       'Name' => 'always',
+                                                                     },
+                                                                   },
+                                                                   'Labels' => {
+                                                                     'one' => (index == 2 ? 3 : 1),
+                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                   },
+                                                                   'name' => /\Abeaker-/,
+                                                                 })
           end
 
           docker.provision
@@ -338,24 +338,24 @@ module Beaker
         it 'should create a container based on the Image (identified by image.id)' do
           hosts.each_with_index do |host, index|
             expect(::Docker::Container).to receive(:create).with({
-              'Image' => image.id,
-              'Hostname' => host.name,
-              'HostConfig' => {
-                'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                },
-                'PublishAllPorts' => true,
-                'Privileged' => true,
-                'RestartPolicy' => {
-                  'Name' => 'always',
-                },
-              },
-              'Labels' => {
-                'one' => (index == 2 ? 3 : 1),
-                'two' => (index == 2 ? 4 : 2),
-              },
-              'name' => /\Abeaker-/,
-            })
+                                                                   'Image' => image.id,
+                                                                   'Hostname' => host.name,
+                                                                   'HostConfig' => {
+                                                                     'PortBindings' => {
+                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                                                                     },
+                                                                     'PublishAllPorts' => true,
+                                                                     'Privileged' => true,
+                                                                     'RestartPolicy' => {
+                                                                       'Name' => 'always',
+                                                                     },
+                                                                   },
+                                                                   'Labels' => {
+                                                                     'one' => (index == 2 ? 3 : 1),
+                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                   },
+                                                                   'name' => /\Abeaker-/,
+                                                                 })
           end
 
           docker.provision
@@ -368,24 +368,24 @@ module Beaker
 
             allow(::Docker::Container).to receive(:all).and_return([])
             expect(::Docker::Container).to receive(:create).with({
-              'Image' => image.id,
-              'Hostname' => host.name,
-              'name' => container_name,
-              'HostConfig' => {
-                'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                },
-                'PublishAllPorts' => true,
-                'Privileged' => true,
-                'RestartPolicy' => {
-                  'Name' => 'always',
-                },
-              },
-              'Labels' => {
-                'one' => (index == 2 ? 3 : 1),
-                'two' => (index == 2 ? 4 : 2),
-              },
-            })
+                                                                   'Image' => image.id,
+                                                                   'Hostname' => host.name,
+                                                                   'name' => container_name,
+                                                                   'HostConfig' => {
+                                                                     'PortBindings' => {
+                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                                                                     },
+                                                                     'PublishAllPorts' => true,
+                                                                     'Privileged' => true,
+                                                                     'RestartPolicy' => {
+                                                                       'Name' => 'always',
+                                                                     },
+                                                                   },
+                                                                   'Labels' => {
+                                                                     'one' => (index == 2 ? 3 : 1),
+                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                   },
+                                                                 })
           end
 
           docker.provision
@@ -419,31 +419,31 @@ module Beaker
             }
 
             expect(::Docker::Container).to receive(:create).with({
-              'Image' => image.id,
-              'Hostname' => host.name,
-              'HostConfig' => {
-                'Binds' => [
-                  '/source_folder:/mount_point:z',
-                  '/another_folder:/another_mount:ro',
-                  '/different_folder:/different_mount:rw',
-                  "#{File.expand_path('./')}:/relative_mount:z",
-                  "#{File.expand_path('local_folder')}:/another_relative_mount:z",
-                ],
-                'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                },
-                'PublishAllPorts' => true,
-                'Privileged' => true,
-                'RestartPolicy' => {
-                  'Name' => 'always',
-                },
-              },
-              'Labels' => {
-                'one' => (index == 2 ? 3 : 1),
-                'two' => (index == 2 ? 4 : 2),
-              },
-              'name' => /\Abeaker-/,
-            })
+                                                                   'Image' => image.id,
+                                                                   'Hostname' => host.name,
+                                                                   'HostConfig' => {
+                                                                     'Binds' => [
+                                                                       '/source_folder:/mount_point:z',
+                                                                       '/another_folder:/another_mount:ro',
+                                                                       '/different_folder:/different_mount:rw',
+                                                                       "#{File.expand_path('./')}:/relative_mount:z",
+                                                                       "#{File.expand_path('local_folder')}:/another_relative_mount:z",
+                                                                     ],
+                                                                     'PortBindings' => {
+                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                                                                     },
+                                                                     'PublishAllPorts' => true,
+                                                                     'Privileged' => true,
+                                                                     'RestartPolicy' => {
+                                                                       'Name' => 'always',
+                                                                     },
+                                                                   },
+                                                                   'Labels' => {
+                                                                     'one' => (index == 2 ? 3 : 1),
+                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                   },
+                                                                   'name' => /\Abeaker-/,
+                                                                 })
           end
 
           docker.provision
@@ -454,24 +454,24 @@ module Beaker
             host['docker_cap_add'] = ['NET_ADMIN', 'SYS_ADMIN']
 
             expect(::Docker::Container).to receive(:create).with({
-              'Image' => image.id,
-              'Hostname' => host.name,
-              'HostConfig' => {
-                'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                },
-                'PublishAllPorts' => true,
-                'RestartPolicy' => {
-                  'Name' => 'always',
-                },
-                'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
-              },
-              'Labels' => {
-                'one' => (index == 2 ? 3 : 1),
-                'two' => (index == 2 ? 4 : 2),
-              },
-              'name' => /\Abeaker-/,
-            })
+                                                                   'Image' => image.id,
+                                                                   'Hostname' => host.name,
+                                                                   'HostConfig' => {
+                                                                     'PortBindings' => {
+                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                                                                     },
+                                                                     'PublishAllPorts' => true,
+                                                                     'RestartPolicy' => {
+                                                                       'Name' => 'always',
+                                                                     },
+                                                                     'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
+                                                                   },
+                                                                   'Labels' => {
+                                                                     'one' => (index == 2 ? 3 : 1),
+                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                   },
+                                                                   'name' => /\Abeaker-/,
+                                                                 })
           end
 
           docker.provision
@@ -484,28 +484,28 @@ module Beaker
             }
 
             expect(::Docker::Container).to receive(:create).with({
-              'ExposedPorts' => {
-                '8080/tcp' => {},
-              },
-              'Image' => image.id,
-              'Hostname' => host.name,
-              'HostConfig' => {
-                'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                  '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
-                },
-                'PublishAllPorts' => true,
-                'Privileged' => true,
-                'RestartPolicy' => {
-                  'Name' => 'always',
-                },
-              },
-              'Labels' => {
-                'one' => (index == 2 ? 3 : 1),
-                'two' => (index == 2 ? 4 : 2),
-              },
-              'name' => /\Abeaker-/,
-            })
+                                                                   'ExposedPorts' => {
+                                                                     '8080/tcp' => {},
+                                                                   },
+                                                                   'Image' => image.id,
+                                                                   'Hostname' => host.name,
+                                                                   'HostConfig' => {
+                                                                     'PortBindings' => {
+                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                                                                       '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+                                                                     },
+                                                                     'PublishAllPorts' => true,
+                                                                     'Privileged' => true,
+                                                                     'RestartPolicy' => {
+                                                                       'Name' => 'always',
+                                                                     },
+                                                                   },
+                                                                   'Labels' => {
+                                                                     'one' => (index == 2 ? 3 : 1),
+                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                   },
+                                                                   'name' => /\Abeaker-/,
+                                                                 })
           end
 
           docker.provision
@@ -687,9 +687,9 @@ module Beaker
           FakeFS.deactivate!
           platforms.each do |platform|
             dockerfile = docker.send(:dockerfile_for, {
-              'platform' => platform,
-              'image' => 'foobar',
-            })
+                                       'platform' => platform,
+                                       'image' => 'foobar',
+                                     })
             expect(dockerfile).to match(/ENV container docker/)
           end
         end
@@ -698,14 +698,14 @@ module Beaker
           FakeFS.deactivate!
           platforms.each do |platform|
             dockerfile = docker.send(:dockerfile_for, {
-              'platform' => platform,
-              'image' => 'foobar',
-              'docker_image_first_commands' => [
-                'special one',
-                'special two',
-                'special three',
-              ],
-            })
+                                       'platform' => platform,
+                                       'image' => 'foobar',
+                                       'docker_image_first_commands' => [
+                                         'special one',
+                                         'special two',
+                                         'special three',
+                                       ],
+                                     })
 
             expect(dockerfile).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
@@ -715,14 +715,14 @@ module Beaker
           FakeFS.deactivate!
           platforms.each do |platform|
             dockerfile = docker.send(:dockerfile_for, {
-              'platform' => platform,
-              'image' => 'foobar',
-              'docker_image_commands' => [
-                'special one',
-                'special two',
-                'special three',
-              ],
-            })
+                                       'platform' => platform,
+                                       'image' => 'foobar',
+                                       'docker_image_commands' => [
+                                         'special one',
+                                         'special two',
+                                         'special three',
+                                       ],
+                                     })
 
             expect(dockerfile).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
@@ -732,10 +732,10 @@ module Beaker
           FakeFS.deactivate!
           platforms.each do |platform|
             dockerfile = docker.send(:dockerfile_for, {
-              'platform' => platform,
-              'image' => 'foobar',
-              'docker_image_entrypoint' => '/bin/bash',
-            })
+                                       'platform' => platform,
+                                       'image' => 'foobar',
+                                       'docker_image_entrypoint' => '/bin/bash',
+                                     })
 
             expect(dockerfile).to match(%r{ENTRYPOINT /bin/bash})
           end
@@ -744,9 +744,9 @@ module Beaker
         it 'should use zypper on sles' do
           FakeFS.deactivate!
           dockerfile = docker.send(:dockerfile_for, {
-            'platform' => 'sles-12-x86_64',
-            'image' => 'foobar',
-          })
+                                     'platform' => 'sles-12-x86_64',
+                                     'image' => 'foobar',
+                                   })
 
           expect(dockerfile).to match(/zypper -n in openssh/)
         end
@@ -755,9 +755,9 @@ module Beaker
           it "should use dnf on fedora #{fedora_release}" do
             FakeFS.deactivate!
             dockerfile = docker.send(:dockerfile_for, {
-              'platform' => "fedora-#{fedora_release}-x86_64",
-              'image' => 'foobar',
-            })
+                                       'platform' => "fedora-#{fedora_release}-x86_64",
+                                       'image' => 'foobar',
+                                     })
 
             expect(dockerfile).to match(/dnf install -y sudo/)
           end
@@ -766,9 +766,9 @@ module Beaker
         it 'should use pacman on archlinux' do
           FakeFS.deactivate!
           dockerfile = docker.send(:dockerfile_for, {
-            'platform' => 'archlinux-current-x86_64',
-            'image' => 'foobar',
-          })
+                                     'platform' => 'archlinux-current-x86_64',
+                                     'image' => 'foobar',
+                                   })
 
           expect(dockerfile).to match(/pacman --sync --refresh --noconfirm archlinux-keyring/)
           expect(dockerfile).to match(/pacman --sync --refresh --noconfirm --sysupgrade/)
