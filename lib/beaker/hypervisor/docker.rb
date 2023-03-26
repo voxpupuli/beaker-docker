@@ -130,7 +130,7 @@ module Beaker
 
     # Nested Docker scenarios
     def nested_docker?
-      ENV['DOCKER_IN_DOCKER'] || ENV['WSLENV']
+      ENV['DOCKER_IN_DOCKER'] || ENV.fetch('WSLENV', nil)
     end
 
     # Find out where the ssh port is from the container
@@ -150,8 +150,8 @@ module Beaker
       ip = nil
       port = nil
       # Talking against a remote docker host which is a normal docker host
-      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
-        ip = URI.parse(ENV['DOCKER_HOST']).host
+      if @docker_type == 'docker' && ENV.fetch('DOCKER_HOST', nil) && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
+        ip = URI.parse(ENV.fetch('DOCKER_HOST', nil)).host
       else
         # Swarm or local docker host
         if in_container? && !nested_docker?
@@ -325,7 +325,7 @@ module Beaker
 
         if container.nil?
           raise 'Cannot continue because no existing container ' \
-                              'could be found and provisioning is disabled.'
+                'could be found and provisioning is disabled.'
         end
 
         fix_ssh(container) if @options[:provision] == false
@@ -481,7 +481,7 @@ module Beaker
 
     def buildargs_for(host)
       docker_buildargs = {}
-      docker_buildargs_env = ENV['DOCKER_BUILDARGS']
+      docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
       if docker_buildargs_env != nil
         docker_buildargs_env.split(/ +|\t+/).each do |arg|
           key, value = arg.split('=')

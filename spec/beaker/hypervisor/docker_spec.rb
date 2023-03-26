@@ -519,7 +519,7 @@ module Beaker
 
         context "when connecting to ssh" do
           context "when rootless" do
-            before { @docker_host = ENV['DOCKER_HOST'] }
+            before { @docker_host = ENV.fetch('DOCKER_HOST', nil) }
 
             after { ENV['DOCKER_HOST'] = @docker_host }
 
@@ -562,7 +562,7 @@ module Beaker
           end
 
           context 'when rootful' do
-            before { @docker_host = ENV['DOCKER_HOST'] }
+            before { @docker_host = ENV.fetch('DOCKER_HOST', nil) }
 
             after { ENV['DOCKER_HOST'] = @docker_host }
 

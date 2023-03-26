@@ -25,6 +25,9 @@ AllCops:
   Exclude:
   - vendor/**/*
 
+Gemspec/RequireMFA:
+  Enabled: false
+
 Style/TrailingCommaInHashLiteral:
   Enabled: True
   EnforcedStyleForMultiline: consistent_comma
