@@ -89,14 +89,6 @@ Style/CaseEquality:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, SingleLineConditionsOnly, IncludeTernaryExpressions.
-# SupportedStyles: assign_to_condition, assign_inside_condition
-Style/ConditionalAssignment:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
 # Offense count: 1
 # Configuration parameters: AllowedConstants.
 Style/Documentation:

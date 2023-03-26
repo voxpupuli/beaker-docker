@@ -283,11 +283,7 @@ module Beaker
             container_opts['HostConfig']['Privileged'] = container_opts['HostConfig']['Privileged'].nil? ? true : container_opts['HostConfig']['Privileged']
           end
 
-          if host['docker_container_name']
-            container_opts['name'] = host['docker_container_name']
-          else
-            container_opts['name'] = ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-')
-          end
+          container_opts['name'] = (host['docker_container_name'] || ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-'))
 
           if host['docker_port_bindings']
             container_opts['ExposedPorts'] = {} if container_opts['ExposedPorts'].nil?
@@ -492,11 +488,11 @@ module Beaker
           end
         end
       end
-      if docker_buildargs.empty?
-        buildargs = host['docker_buildargs'] || {}
-      else
-        buildargs = docker_buildargs
-      end
+      buildargs = if docker_buildargs.empty?
+                    host['docker_buildargs'] || {}
+                  else
+                    docker_buildargs
+                  end
       @logger.debug("Docker build buildargs: #{buildargs}")
       JSON.generate(buildargs)
     end
