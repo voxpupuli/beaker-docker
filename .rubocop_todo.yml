@@ -97,13 +97,6 @@ Style/Documentation:
     - 'test/**/*'
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: MinBodyLength, AllowConsecutiveConditionals.
-Style/GuardClause:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
 # Offense count: 1
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: AllowIfModifier.

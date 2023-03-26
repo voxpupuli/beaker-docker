@@ -40,11 +40,10 @@ module Beaker
       # Find out what kind of remote instance we are talking against
       if /swarm/.match?(@docker_version['Version'])
         @docker_type = 'swarm'
-        if ENV['DOCKER_REGISTRY']
-          @registry = ENV['DOCKER_REGISTRY']
-        else
-          raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
-        end
+        raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var" unless ENV['DOCKER_REGISTRY']
+
+        @registry = ENV.fetch('DOCKER_REGISTRY', nil)
+
       elsif ::Docker.respond_to?(:podman?) && ::Docker.podman?
         @docker_type = 'podman'
       else
@@ -101,19 +100,18 @@ module Beaker
         # assume that the dockerfile is in the repo and tests are running
         # from the root of the repo; maybe add support for external Dockerfiles
         # with external build dependencies later.
-        if File.exist?(dockerfile)
-          dir = File.expand_path(dockerfile).chomp(dockerfile)
-          return ::Docker::Image.build_from_dir(
-            dir,
-            {
-              'dockerfile' => dockerfile,
-              :rm => true,
-              :buildargs => buildargs_for(host),
-            },
-          )
-        else
-          raise "Unable to find dockerfile at #{dockerfile}"
-        end
+        raise "Unable to find dockerfile at #{dockerfile}" unless File.exist?(dockerfile)
+
+        dir = File.expand_path(dockerfile).chomp(dockerfile)
+        return ::Docker::Image.build_from_dir(
+          dir,
+          {
+            'dockerfile' => dockerfile,
+            :rm => true,
+            :buildargs => buildargs_for(host),
+          },
+        )
+
       elsif host['use_image_entry_point']
         df = <<-DF
           FROM #{host['image']}
