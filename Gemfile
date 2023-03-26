@@ -4,10 +4,6 @@ source ENV['GEM_SOURCE'] || 'https://rubygems.org'
 
 gemspec
 
-group :acceptance_testing do
-  gem 'beaker-rspec'
-end
-
 group :coverage, optional: ENV['COVERAGE'] != 'yes' do
   gem 'codecov', require: false
   gem 'simplecov-console', require: false
