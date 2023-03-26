@@ -109,13 +109,13 @@ module Beaker
 
     let(:version) { { "ApiVersion" => "1.18", "Arch" => "amd64", "GitCommit" => "4749651", "GoVersion" => "go1.4.2", "KernelVersion" => "3.16.0-37-generic", "Os" => "linux", "Version" => "1.6.0" } }
 
-    before :each do
+    before do
       allow(::Docker).to receive(:rootless?).and_return(true)
     end
 
     context 'with connection failure' do
       describe '#initialize' do
-        before :each do
+        before do
           require 'excon'
           expect(::Docker).to receive(:version).and_raise(Excon::Errors::SocketError.new(StandardError.new('oops'))).exactly(4).times
         end
@@ -130,7 +130,7 @@ module Beaker
     end
 
     context 'with a working connection' do
-      before :each do
+      before do
         # Stub out all of the docker-api gem. we should never really call it
         # from these tests
         allow_any_instance_of(::Beaker::Docker).to receive(:require).with('docker')
@@ -188,7 +188,7 @@ module Beaker
         let(:test_container) { double('container') }
         let(:host) { hosts[0] }
 
-        before :each do
+        before do
           allow(docker).to receive(:dockerfile_for)
         end
 
@@ -213,12 +213,12 @@ module Beaker
       end
 
       describe '#provision' do
-        before :each do
+        before do
           allow(docker).to receive(:dockerfile_for)
         end
 
         context 'when the host has "tag" defined' do
-          before :each do
+          before do
             hosts.each do |host|
               host['tag'] = 'my_tag'
             end
@@ -231,7 +231,7 @@ module Beaker
         end
 
         context 'when the host has "use_image_entry_point" set to true on the host' do
-          before :each do
+          before do
             hosts.each do |host|
               host['use_image_entry_point'] = true
             end
@@ -246,7 +246,7 @@ module Beaker
         end
 
         context 'when the host has a "dockerfile" for the host' do
-          before :each do
+          before do
             allow(docker).to receive(:buildargs_for).and_return('buildargs')
             hosts.each do |host|
               host['dockerfile'] = 'mydockerfile'
@@ -632,7 +632,7 @@ module Beaker
       end
 
       describe '#cleanup' do
-        before :each do
+        before do
           # get into a state where there's something to clean
           allow(::Docker::Container).to receive(:all).and_return([container])
           allow(::Docker::Image).to receive(:remove).with(image.id)
@@ -780,7 +780,7 @@ module Beaker
         let(:test_container) { double('container') }
         let(:host) { hosts[0] }
 
-        before :each do
+        before do
           expect(test_container).to receive(:id).and_return('abcdef')
         end
 
