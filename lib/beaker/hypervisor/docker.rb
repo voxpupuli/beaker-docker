@@ -474,7 +474,7 @@ module Beaker
     def buildargs_for(host)
       docker_buildargs = {}
       docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
-      if docker_buildargs_env != nil
+      unless docker_buildargs_env.nil?
         docker_buildargs_env.split(/ +|\t+/).each do |arg|
           key, value = arg.split('=')
           if key
