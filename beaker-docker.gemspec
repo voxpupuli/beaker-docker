@@ -23,19 +23,19 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   s.require_paths = ['lib']
 
-  s.required_ruby_version = '>= 2.4', '< 4'
+  s.required_ruby_version = '>= 2.7', '< 4'
 
   # Testing dependencies
   s.add_development_dependency 'fakefs', '>= 1.3', '< 3.0'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'rspec', '~> 3.0'
-  s.add_development_dependency 'rubocop', '~> 1.12.0'
+  s.add_development_dependency 'rubocop', '~> 1.48.1'
   s.add_development_dependency 'rubocop-performance', '~> 1.10'
   s.add_development_dependency 'rubocop-rake', '~> 0.2'
   s.add_development_dependency 'rubocop-rspec', '>= 1.44'
 
   # Run time dependencies
-  s.add_runtime_dependency 'beaker', '>= 4.34'
+  s.add_runtime_dependency 'beaker', '~> 5.0'
   s.add_runtime_dependency 'docker-api', '~> 2.1'
   s.add_runtime_dependency 'stringify-hash', '~> 0.0.0'
 end

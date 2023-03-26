@@ -21,7 +21,7 @@ AllCops:
   DisplayCopNames: true
   ExtraDetails: true
   DisplayStyleGuide: true
-  TargetRubyVersion: '2.4'
+  TargetRubyVersion: '2.7'
   Exclude:
   - vendor/**/*
 
