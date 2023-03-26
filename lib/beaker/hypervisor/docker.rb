@@ -153,7 +153,7 @@ module Beaker
       elsif in_container? && !nested_docker?
         # Swarm or local docker host
         gw = network_settings['Gateway']
-        ip = gw unless (gw.nil? || gw.empty?)
+        ip = gw unless gw.nil? || gw.empty?
       else
         # The many faces of container networking
 
@@ -295,7 +295,7 @@ module Beaker
 
           ok = false
           retries = 0
-          while (!ok && (retries < 5))
+          while !ok && (retries < 5)
             container = ::Docker::Container.create(container_opts)
 
             ssh_info = get_ssh_connection_info(container)
