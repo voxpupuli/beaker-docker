@@ -39,14 +39,6 @@ RSpec/AnyInstance:
 RSpec/ExampleLength:
   Max: 53
 
-# Offense count: 50
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: CustomTransform, IgnoredWords, DisallowedExamples.
-# DisallowedExamples: works
-RSpec/ExampleWording:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 2
 RSpec/ExpectInHook:
   Exclude:
