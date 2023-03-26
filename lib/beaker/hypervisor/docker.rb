@@ -53,7 +53,7 @@ module Beaker
     end
 
     def install_and_run_ssh(host)
-      def host.enable_root_login(host, opts)
+      def host.enable_root_login(host, _opts)
         logger.debug("Root login already enabled for #{host}")
       end
 
