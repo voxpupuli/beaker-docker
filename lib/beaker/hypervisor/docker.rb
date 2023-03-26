@@ -40,11 +40,10 @@ module Beaker
       # Find out what kind of remote instance we are talking against
       if /swarm/.match?(@docker_version['Version'])
         @docker_type = 'swarm'
-        if ENV['DOCKER_REGISTRY']
-          @registry = ENV['DOCKER_REGISTRY']
-        else
-          raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
-        end
+        raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var" unless ENV['DOCKER_REGISTRY']
+
+        @registry = ENV.fetch('DOCKER_REGISTRY', nil)
+
       elsif ::Docker.respond_to?(:podman?) && ::Docker.podman?
         @docker_type = 'podman'
       else
@@ -53,7 +52,7 @@ module Beaker
     end
 
     def install_and_run_ssh(host)
-      def host.enable_root_login(host, opts)
+      def host.enable_root_login(host, _opts)
         logger.debug("Root login already enabled for #{host}")
       end
 
@@ -75,18 +74,18 @@ module Beaker
       end
 
       container_opts.merge!({
-        'Image' => image_name,
-        'Hostname' => host.name,
-        'HostConfig' => {
-          'PortBindings' => {
-            '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0' }],
-          },
-          'PublishAllPorts' => true,
-          'RestartPolicy' => {
-            'Name' => 'always',
-          },
-        },
-      })
+                              'Image' => image_name,
+                              'Hostname' => host.name,
+                              'HostConfig' => {
+                                'PortBindings' => {
+                                  '22/tcp' => [{ 'HostPort' => rand(1025..9999).to_s, 'HostIp' => '0.0.0.0' }],
+                                },
+                                'PublishAllPorts' => true,
+                                'RestartPolicy' => {
+                                  'Name' => 'always',
+                                },
+                              },
+                            })
     end
 
     def get_container_image(host)
@@ -101,19 +100,18 @@ module Beaker
         # assume that the dockerfile is in the repo and tests are running
         # from the root of the repo; maybe add support for external Dockerfiles
         # with external build dependencies later.
-        if File.exist?(dockerfile)
-          dir = File.expand_path(dockerfile).chomp(dockerfile)
-          return ::Docker::Image.build_from_dir(
-            dir,
-            {
-              'dockerfile' => dockerfile,
-              :rm => true,
-              :buildargs => buildargs_for(host),
-            },
-          )
-        else
-          raise "Unable to find dockerfile at #{dockerfile}"
-        end
+        raise "Unable to find dockerfile at #{dockerfile}" unless File.exist?(dockerfile)
+
+        dir = File.expand_path(dockerfile).chomp(dockerfile)
+        return ::Docker::Image.build_from_dir(
+          dir,
+          {
+            'dockerfile' => dockerfile,
+            :rm => true,
+            :buildargs => buildargs_for(host),
+          },
+        )
+
       elsif host['use_image_entry_point']
         df = <<-DF
           FROM #{host['image']}
@@ -130,7 +128,7 @@ module Beaker
 
     # Nested Docker scenarios
     def nested_docker?
-      ENV['DOCKER_IN_DOCKER'] || ENV['WSLENV']
+      ENV['DOCKER_IN_DOCKER'] || ENV.fetch('WSLENV', nil)
     end
 
     # Find out where the ssh port is from the container
@@ -150,49 +148,47 @@ module Beaker
       ip = nil
       port = nil
       # Talking against a remote docker host which is a normal docker host
-      if @docker_type == 'docker' && ENV['DOCKER_HOST'] && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
-        ip = URI.parse(ENV['DOCKER_HOST']).host
-      else
+      if @docker_type == 'docker' && ENV.fetch('DOCKER_HOST', nil) && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
+        ip = URI.parse(ENV.fetch('DOCKER_HOST', nil)).host
+      elsif in_container? && !nested_docker?
         # Swarm or local docker host
-        if in_container? && !nested_docker?
-          gw = network_settings['Gateway']
-          ip = gw unless (gw.nil? || gw.empty?)
-        else
-          # The many faces of container networking
+        gw = network_settings['Gateway']
+        ip = gw unless gw.nil? || gw.empty?
+      else
+        # The many faces of container networking
 
-          # Host to Container
-          port22 = network_settings.dig('PortBindings', '22/tcp')
-          if port22.nil? && network_settings.key?('Ports') && !nested_docker?
-            port22 = network_settings.dig('Ports', '22/tcp')
-          end
+        # Host to Container
+        port22 = network_settings.dig('PortBindings', '22/tcp')
+        if port22.nil? && network_settings.key?('Ports') && !nested_docker?
+          port22 = network_settings.dig('Ports', '22/tcp')
+        end
 
-          ip = port22[0]['HostIp'] if port22
-          port = port22[0]['HostPort'] if port22
+        ip = port22[0]['HostIp'] if port22
+        port = port22[0]['HostPort'] if port22
 
-          # Container to container
-          unless ip && port
-            ip = network_settings['IPAddress']
-            port = ip && !ip.empty? ? 22 : nil
-          end
+        # Container to container
+        unless ip && port
+          ip = network_settings['IPAddress']
+          port = ip && !ip.empty? ? 22 : nil
+        end
 
-          # Container through gateway
-          unless ip && port
-            ip = network_settings['Gateway']
+        # Container through gateway
+        unless ip && port
+          ip = network_settings['Gateway']
 
-            if ip && !ip.empty?
-              port22 = network_settings.dig('PortBindings', '22/tcp')
-              port = port22[0]['HostPort'] if port22
-            else
-              port = nil
-            end
-          end
-
-          # Legacy fallback
-          unless ip && port
-            port22 = network_settings.dig('Ports', '22/tcp')
-            ip = port22[0]["HostIp"] if port22
+          if ip && !ip.empty?
+            port22 = network_settings.dig('PortBindings', '22/tcp')
             port = port22[0]['HostPort'] if port22
+          else
+            port = nil
           end
+        end
+
+        # Legacy fallback
+        unless ip && port
+          port22 = network_settings.dig('Ports', '22/tcp')
+          ip = port22[0]["HostIp"] if port22
+          port = port22[0]['HostPort'] if port22
         end
       end
 
@@ -283,11 +279,7 @@ module Beaker
             container_opts['HostConfig']['Privileged'] = container_opts['HostConfig']['Privileged'].nil? ? true : container_opts['HostConfig']['Privileged']
           end
 
-          if host['docker_container_name']
-            container_opts['name'] = host['docker_container_name']
-          else
-            container_opts['name'] = ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-')
-          end
+          container_opts['name'] = (host['docker_container_name'] || ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-'))
 
           if host['docker_port_bindings']
             container_opts['ExposedPorts'] = {} if container_opts['ExposedPorts'].nil?
@@ -303,7 +295,7 @@ module Beaker
 
           ok = false
           retries = 0
-          while (!ok && (retries < 5))
+          while !ok && (retries < 5)
             container = ::Docker::Container.create(container_opts)
 
             ssh_info = get_ssh_connection_info(container)
@@ -325,7 +317,7 @@ module Beaker
 
         if container.nil?
           raise 'Cannot continue because no existing container ' \
-                              'could be found and provisioning is disabled.'
+                'could be found and provisioning is disabled.'
         end
 
         fix_ssh(container) if @options[:provision] == false
@@ -434,41 +426,41 @@ module Beaker
         # setting docker_preserve_container also implies docker_preserve_image
         # is set, since you can't delete an image that's the base of a running
         # container
-        unless host['docker_preserve_container']
-          container = find_container(host)
-          if container
-            @logger.debug("stop container #{container.id}")
-            begin
-              container.kill
-              sleep 2 # avoid a race condition where the root FS can't unmount
-            rescue Excon::Errors::ClientError => e
-              @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
-            end
-            @logger.debug("delete container #{container.id}")
-            begin
-              container.delete(force: true)
-            rescue Excon::Errors::ClientError => e
-              @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
-            end
-          end
+        next if host['docker_preserve_container']
 
-          # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
-          unless host['docker_preserve_image']
-            image_id = host['docker_image_id']
-
-            if image_id
-              @logger.debug("deleting image #{image_id}")
-              begin
-                ::Docker::Image.remove(image_id)
-              rescue Excon::Errors::ClientError => e
-                @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
-              rescue ::Docker::Error::DockerError => e
-                @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
-              end
-            else
-              @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
-            end
+        container = find_container(host)
+        if container
+          @logger.debug("stop container #{container.id}")
+          begin
+            container.kill
+            sleep 2 # avoid a race condition where the root FS can't unmount
+          rescue Excon::Errors::ClientError => e
+            @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
           end
+          @logger.debug("delete container #{container.id}")
+          begin
+            container.delete(force: true)
+          rescue Excon::Errors::ClientError => e
+            @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
+          end
+        end
+
+        # Do not remove the image if docker_preserve_image is set to true, otherwise remove it
+        next if host['docker_preserve_image']
+
+        image_id = host['docker_image_id']
+
+        if image_id
+          @logger.debug("deleting image #{image_id}")
+          begin
+            ::Docker::Image.remove(image_id)
+          rescue Excon::Errors::ClientError => e
+            @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
+          rescue ::Docker::Error::DockerError => e
+            @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
+          end
+        else
+          @logger.warn("Intended to delete the host's docker image, but host['docker_image_id'] was not set")
         end
       end
     end
@@ -481,8 +473,8 @@ module Beaker
 
     def buildargs_for(host)
       docker_buildargs = {}
-      docker_buildargs_env = ENV['DOCKER_BUILDARGS']
-      if docker_buildargs_env != nil
+      docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
+      unless docker_buildargs_env.nil?
         docker_buildargs_env.split(/ +|\t+/).each do |arg|
           key, value = arg.split('=')
           if key
@@ -492,11 +484,11 @@ module Beaker
           end
         end
       end
-      if docker_buildargs.empty?
-        buildargs = host['docker_buildargs'] || {}
-      else
-        buildargs = docker_buildargs
-      end
+      buildargs = if docker_buildargs.empty?
+                    host['docker_buildargs'] || {}
+                  else
+                    docker_buildargs
+                  end
       @logger.debug("Docker build buildargs: #{buildargs}")
       JSON.generate(buildargs)
     end
