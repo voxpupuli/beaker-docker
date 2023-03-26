@@ -8,7 +8,7 @@ module Beaker
     "fedora-22-x86_64",
     "centos-7-x86_64",
     "sles-12-x86_64",
-    "archlinux-2017.12.27-x86_64"
+    "archlinux-2017.12.27-x86_64",
   ]
 
   describe Docker do
@@ -27,15 +27,15 @@ module Beaker
 
     let(:logger) do
       logger = double('logger')
-      allow( logger ).to receive(:debug)
-      allow( logger ).to receive(:info)
-      allow( logger ).to receive(:warn)
-      allow( logger ).to receive(:error)
-      allow( logger ).to receive(:notify)
+      allow(logger).to receive(:debug)
+      allow(logger).to receive(:info)
+      allow(logger).to receive(:warn)
+      allow(logger).to receive(:error)
+      allow(logger).to receive(:notify)
       logger
     end
 
-    let(:options) {{
+    let(:options) { {
       :logger => logger,
       :forward_ssh_agent => true,
       :provision => true,
@@ -49,8 +49,8 @@ module Beaker
 
     let(:image) do
       image = double('Docker::Image')
-      allow( image ).to receive(:id).and_return("zyxwvu")
-      allow( image ).to receive(:tag)
+      allow(image).to receive(:id).and_return("zyxwvu")
+      allow(image).to receive(:tag)
       image
     end
 
@@ -61,7 +61,7 @@ module Beaker
     let(:container_config) do
       conf = {
         'HostConfig' => {
-          'NetworkMode' => 'slirp4netns'
+          'NetworkMode' => 'slirp4netns',
         },
         'NetworkSettings' => {
           'IPAddress' => '192.0.2.1',
@@ -73,8 +73,8 @@ module Beaker
               },
             ],
           },
-          'Gateway' => '192.0.2.254'
-        }
+          'Gateway' => '192.0.2.254',
+        },
       }
 
       unless container_mode == 'rootless'
@@ -86,24 +86,24 @@ module Beaker
 
     let(:container) do
       container = double('Docker::Container')
-      allow( container ).to receive(:id).and_return('abcdef')
-      allow( container ).to receive(:start)
-      allow( container ).to receive(:stats)
-      allow( container ).to receive(:info).and_return(
-        *(0..2).map { |index| { 'Names' => ["/spec-container-#{index}"] } }
+      allow(container).to receive(:id).and_return('abcdef')
+      allow(container).to receive(:start)
+      allow(container).to receive(:stats)
+      allow(container).to receive(:info).and_return(
+        *(0..2).map { |index| { 'Names' => ["/spec-container-#{index}"] } },
       )
-      allow( container ).to receive(:json).and_return(container_config)
-      allow( container ).to receive(:kill)
-      allow( container ).to receive(:delete)
-      allow( container ).to receive(:exec)
+      allow(container).to receive(:json).and_return(container_config)
+      allow(container).to receive(:kill)
+      allow(container).to receive(:delete)
+      allow(container).to receive(:exec)
       container
     end
 
-    let (:docker) { ::Beaker::Docker.new( hosts, options ) }
+    let (:docker) { ::Beaker::Docker.new(hosts, options) }
 
     let(:docker_options) { nil }
 
-    let (:version) { {"ApiVersion"=>"1.18", "Arch"=>"amd64", "GitCommit"=>"4749651", "GoVersion"=>"go1.4.2", "KernelVersion"=>"3.16.0-37-generic", "Os"=>"linux", "Version"=>"1.6.0"} }
+    let (:version) { { "ApiVersion" => "1.18", "Arch" => "amd64", "GitCommit" => "4749651", "GoVersion" => "go1.4.2", "KernelVersion" => "3.16.0-37-generic", "Os" => "linux", "Version" => "1.6.0" } }
 
     before :each do
       allow(::Docker).to receive(:rootless?).and_return(true)
@@ -113,7 +113,7 @@ module Beaker
       describe '#initialize' do
         before :each do
           require 'excon'
-          expect( ::Docker ).to receive(:version).and_raise(Excon::Errors::SocketError.new( StandardError.new('oops') )).exactly(4).times
+          expect(::Docker).to receive(:version).and_raise(Excon::Errors::SocketError.new(StandardError.new('oops'))).exactly(4).times
         end
 
         it 'should fail when docker not present' do
@@ -125,46 +125,45 @@ module Beaker
       end
     end
 
-
     context 'with a working connection' do
       before :each do
         # Stub out all of the docker-api gem. we should never really call it
         # from these tests
-        allow_any_instance_of( ::Beaker::Docker ).to receive(:require).with('docker')
-        allow( ::Docker ).to receive(:options).and_return(docker_options)
-        allow( ::Docker ).to receive(:options=)
-        allow( ::Docker ).to receive(:logger=)
-        allow( ::Docker ).to receive(:podman?).and_return(false)
-        allow( ::Docker ).to receive(:version).and_return(version)
-        allow( ::Docker::Image ).to receive(:build).and_return(image)
-        allow( ::Docker::Image ).to receive(:create).and_return(image)
-        allow( ::Docker::Container ).to receive(:create).and_return(container)
-        allow_any_instance_of( ::Docker::Container ).to receive(:start)
+        allow_any_instance_of(::Beaker::Docker).to receive(:require).with('docker')
+        allow(::Docker).to receive(:options).and_return(docker_options)
+        allow(::Docker).to receive(:options=)
+        allow(::Docker).to receive(:logger=)
+        allow(::Docker).to receive(:podman?).and_return(false)
+        allow(::Docker).to receive(:version).and_return(version)
+        allow(::Docker::Image).to receive(:build).and_return(image)
+        allow(::Docker::Image).to receive(:create).and_return(image)
+        allow(::Docker::Container).to receive(:create).and_return(container)
+        allow_any_instance_of(::Docker::Container).to receive(:start)
       end
 
       describe '#initialize' do
         it 'should require the docker gem' do
-          expect_any_instance_of( ::Beaker::Docker ).to receive(:require).with('docker').once
+          expect_any_instance_of(::Beaker::Docker).to receive(:require).with('docker').once
 
           docker
         end
 
         it 'should fail when the gem is absent' do
-          allow_any_instance_of( ::Beaker::Docker ).to receive(:require).with('docker').and_raise(LoadError)
+          allow_any_instance_of(::Beaker::Docker).to receive(:require).with('docker').and_raise(LoadError)
           expect { docker }.to raise_error(LoadError)
         end
 
         it 'should set Docker options' do
-          expect( ::Docker ).to receive(:options=).with({:write_timeout => 300, :read_timeout => 300}).once
+          expect(::Docker).to receive(:options=).with({ :write_timeout => 300, :read_timeout => 300 }).once
 
           docker
         end
 
         context 'when Docker options are already set' do
-          let(:docker_options) {{:write_timeout => 600, :foo => :bar}}
+          let(:docker_options) { { :write_timeout => 600, :foo => :bar } }
 
           it 'should not override Docker options' do
-            expect( ::Docker ).to receive(:options=).with({:write_timeout => 600, :read_timeout => 300, :foo => :bar}).once
+            expect(::Docker).to receive(:options=).with({ :write_timeout => 600, :read_timeout => 300, :foo => :bar }).once
 
             docker
           end
@@ -175,7 +174,7 @@ module Beaker
         end
 
         it 'should hook the Beaker logger into the Docker one' do
-          expect( ::Docker ).to receive(:logger=).with(logger)
+          expect(::Docker).to receive(:logger=).with(logger)
 
           docker
         end
@@ -183,9 +182,9 @@ module Beaker
 
       describe '#install_ssh_components' do
         let(:test_container) { double('container') }
-        let(:host) {hosts[0]}
+        let(:host) { hosts[0] }
         before :each do
-          allow( docker ).to receive(:dockerfile_for)
+          allow(docker).to receive(:dockerfile_for)
         end
 
         platforms.each do |platform|
@@ -204,13 +203,13 @@ module Beaker
 
         it 'should raise an error with an unsupported platform' do
           host['platform'] = 'boogeyman-2000-x86_64'
-          expect{docker.install_ssh_components(test_container, host)}.to raise_error(RuntimeError, /boogeyman/)
+          expect { docker.install_ssh_components(test_container, host) }.to raise_error(RuntimeError, /boogeyman/)
         end
       end
 
       describe '#provision' do
         before :each do
-          allow( docker ).to receive(:dockerfile_for)
+          allow(docker).to receive(:dockerfile_for)
         end
 
         context 'when the host has "tag" defined' do
@@ -221,13 +220,12 @@ module Beaker
           end
 
           it 'will tag the image with the value of the tag' do
-            expect( image ).to receive(:tag).with({:repo => 'my_tag'}).exactly(3).times
+            expect(image).to receive(:tag).with({ :repo => 'my_tag' }).exactly(3).times
             docker.provision
           end
         end
 
         context 'when the host has "use_image_entry_point" set to true on the host' do
-
           before :each do
             hosts.each do |host|
               host['use_image_entry_point'] = true
@@ -235,28 +233,27 @@ module Beaker
           end
 
           it 'should not call #dockerfile_for but run methods necessary for ssh installation' do
-            expect( docker ).not_to receive(:dockerfile_for)
-            expect( docker ).to receive(:install_ssh_components).exactly(3).times #once per host
-            expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
+            expect(docker).not_to receive(:dockerfile_for)
+            expect(docker).to receive(:install_ssh_components).exactly(3).times # once per host
+            expect(docker).to receive(:fix_ssh).exactly(3).times # once per host
             docker.provision
           end
         end
 
         context 'when the host has a "dockerfile" for the host' do
-
           before :each do
-            allow( docker ).to receive(:buildargs_for).and_return('buildargs')
+            allow(docker).to receive(:buildargs_for).and_return('buildargs')
             hosts.each do |host|
               host['dockerfile'] = 'mydockerfile'
             end
           end
 
           it 'should not call #dockerfile_for but run methods necessary for ssh installation' do
-            allow( File ).to receive(:exist?).with('mydockerfile').and_return(true)
-            allow( ::Docker::Image ).to receive(:build_from_dir).with("/", hash_including(:rm => true, :buildargs => 'buildargs')).and_return(image)
-            expect( docker ).not_to receive(:dockerfile_for)
-            expect( docker ).to receive(:install_ssh_components).exactly(3).times #once per host
-            expect( docker ).to receive(:fix_ssh).exactly(3).times #once per host
+            allow(File).to receive(:exist?).with('mydockerfile').and_return(true)
+            allow(::Docker::Image).to receive(:build_from_dir).with("/", hash_including(:rm => true, :buildargs => 'buildargs')).and_return(image)
+            expect(docker).not_to receive(:dockerfile_for)
+            expect(docker).to receive(:install_ssh_components).exactly(3).times # once per host
+            expect(docker).to receive(:fix_ssh).exactly(3).times # once per host
             docker.provision
           end
         end
@@ -264,11 +261,11 @@ module Beaker
         it 'should call image create for hosts when use_image_as_is is defined' do
           hosts.each do |host|
             host['use_image_as_is'] = true
-            expect( docker ).not_to receive(:install_ssh_components)
-            expect( docker ).not_to receive(:fix_ssh)
-            expect( ::Docker::Image ).to receive(:create).with('fromImage' => host['image']) #once per host
-            expect( ::Docker::Image ).not_to receive(:build)
-            expect( ::Docker::Image ).not_to receive(:build_from_dir)
+            expect(docker).not_to receive(:install_ssh_components)
+            expect(docker).not_to receive(:fix_ssh)
+            expect(::Docker::Image).to receive(:create).with('fromImage' => host['image']) # once per host
+            expect(::Docker::Image).not_to receive(:build)
+            expect(::Docker::Image).not_to receive(:build_from_dir)
           end
 
           docker.provision
@@ -276,49 +273,49 @@ module Beaker
 
         it 'should call dockerfile_for with all the hosts' do
           hosts.each do |host|
-            expect( docker ).not_to receive(:install_ssh_components)
-            expect( docker ).not_to receive(:fix_ssh)
-            expect( docker ).to receive(:dockerfile_for).with(host).and_return('')
+            expect(docker).not_to receive(:install_ssh_components)
+            expect(docker).not_to receive(:fix_ssh)
+            expect(docker).to receive(:dockerfile_for).with(host).and_return('')
           end
 
           docker.provision
         end
 
         it 'should pass the Dockerfile on to Docker::Image.create' do
-          allow( docker ).to receive(:dockerfile_for).and_return('special testing value')
-          expect( ::Docker::Image ).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{}' })
+          allow(docker).to receive(:dockerfile_for).and_return('special testing value')
+          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{}' })
 
           docker.provision
         end
 
         it 'should pass the buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
-          allow( docker ).to receive(:dockerfile_for).and_return('special testing value')
+          allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128'
-          expect( ::Docker::Image ).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\"}" })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\"}" })
 
           docker.provision
         end
 
         it 'should create a container based on the Image (identified by image.id)' do
-          hosts.each_with_index do |host,index|
-            expect( ::Docker::Container ).to receive(:create).with({
+          hosts.each_with_index do |host, index|
+            expect(::Docker::Container).to receive(:create).with({
               'Image' => image.id,
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
                 },
                 'Privileged' => true,
                 'PublishAllPorts' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -326,33 +323,33 @@ module Beaker
         end
 
         it 'should pass the multiple buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
-          allow( docker ).to receive(:dockerfile_for).and_return('special testing value')
+          allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128	HTTPS_PROXY=https://1.1.1.1:3129'
-          expect( ::Docker::Image ).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\",\"HTTPS_PROXY\":\"https://1.1.1.1:3129\"}" })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\",\"HTTPS_PROXY\":\"https://1.1.1.1:3129\"}" })
 
           docker.provision
         end
 
         it 'should create a container based on the Image (identified by image.id)' do
-          hosts.each_with_index do |host,index|
-            expect( ::Docker::Container ).to receive(:create).with({
+          hosts.each_with_index do |host, index|
+            expect(::Docker::Container).to receive(:create).with({
               'Image' => image.id,
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -365,19 +362,19 @@ module Beaker
             host['docker_container_name'] = container_name
 
             allow(::Docker::Container).to receive(:all).and_return([])
-            expect( ::Docker::Container ).to receive(:create).with({
+            expect(::Docker::Container).to receive(:create).with({
               'Image' => image.id,
               'Hostname' => host.name,
               'name' => container_name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
@@ -388,7 +385,6 @@ module Beaker
 
           docker.provision
         end
-
 
         it 'should create a container with volumes bound' do
           hosts.each_with_index do |host, index|
@@ -414,10 +410,10 @@ module Beaker
               'mount5' => {
                 'host_path' => 'local_folder',
                 'container_path' => '/another_relative_mount',
-              }
+              },
             }
 
-            expect( ::Docker::Container ).to receive(:create).with({
+            expect(::Docker::Container).to receive(:create).with({
               'Image' => image.id,
               'Hostname' => host.name,
               'HostConfig' => {
@@ -429,19 +425,19 @@ module Beaker
                   "#{File.expand_path('local_folder')}:/another_relative_mount:z",
                 ],
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
-                }
+                  'Name' => 'always',
+                },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -452,24 +448,24 @@ module Beaker
           hosts.each_with_index do |host, index|
             host['docker_cap_add'] = ['NET_ADMIN', 'SYS_ADMIN']
 
-            expect( ::Docker::Container ).to receive(:create).with({
+            expect(::Docker::Container).to receive(:create).with({
               'Image' => image.id,
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
                 },
                 'PublishAllPorts' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
+                  'Name' => 'always',
                 },
-                'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN']
+                'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -479,10 +475,10 @@ module Beaker
         it 'should create a container with port bindings' do
           hosts.each_with_index do |host, index|
             host['docker_port_bindings'] = {
-              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}]
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
             }
 
-            expect( ::Docker::Container ).to receive(:create).with({
+            expect(::Docker::Container).to receive(:create).with({
               'ExposedPorts' => {
                 '8080/tcp' => {},
               },
@@ -490,20 +486,20 @@ module Beaker
               'Hostname' => host.name,
               'HostConfig' => {
                 'PortBindings' => {
-                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0'}],
-                  '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0'}]
+                  '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
+                  '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
                 },
                 'PublishAllPorts' => true,
                 'Privileged' => true,
                 'RestartPolicy' => {
-                  'Name' => 'always'
+                  'Name' => 'always',
                 },
               },
               'Labels' => {
                 'one' => (index == 2 ? 3 : 1),
                 'two' => (index == 2 ? 4 : 2),
               },
-              'name' => /\Abeaker-/
+              'name' => /\Abeaker-/,
             })
           end
 
@@ -511,7 +507,7 @@ module Beaker
         end
 
         it 'should start the container' do
-          expect( container ).to receive(:start)
+          expect(container).to receive(:start)
 
           docker.provision
         end
@@ -525,36 +521,36 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '127.0.0.1'
-              expect( hosts[0]['port'] ).to be ===  8022
+              expect(hosts[0]['ip']).to be === '127.0.0.1'
+              expect(hosts[0]['port']).to be === 8022
             end
 
             it 'should expose port 22 to beaker when using DOCKER_HOST' do
               ENV['DOCKER_HOST'] = "tcp://192.0.2.2:2375"
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '192.0.2.2'
-              expect( hosts[0]['port'] ).to be === 8022
+              expect(hosts[0]['ip']).to be === '192.0.2.2'
+              expect(hosts[0]['port']).to be === 8022
             end
 
             it 'should have ssh agent forwarding enabled' do
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '127.0.0.1'
-              expect( hosts[0]['port'] ).to be === 8022
-              expect( hosts[0]['ssh'][:password] ).to be ===  'root'
-              expect( hosts[0]['ssh'][:port] ).to be ===  8022
-              expect( hosts[0]['ssh'][:forward_agent] ).to be === true
+              expect(hosts[0]['ip']).to be === '127.0.0.1'
+              expect(hosts[0]['port']).to be === 8022
+              expect(hosts[0]['ssh'][:password]).to be === 'root'
+              expect(hosts[0]['ssh'][:port]).to be === 8022
+              expect(hosts[0]['ssh'][:forward_agent]).to be === true
             end
 
             it 'should connect to gateway ip' do
               FakeFS do
-                File.open('/.dockerenv', 'w') { }
+                File.open('/.dockerenv', 'w') {}
                 docker.provision
 
-                expect( hosts[0]['ip'] ).to be === '192.0.2.254'
-                expect( hosts[0]['port'] ).to be === 8022
+                expect(hosts[0]['ip']).to be === '192.0.2.254'
+                expect(hosts[0]['port']).to be === 8022
               end
             end
           end
@@ -571,44 +567,42 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect( hosts[0]['ip'] ).to be === '127.0.0.1'
-              expect( hosts[0]['port'] ).to be ===  8022
+              expect(hosts[0]['ip']).to be === '127.0.0.1'
+              expect(hosts[0]['port']).to be === 8022
             end
           end
-
         end
 
         it "should generate a new /etc/hosts file referencing each host" do
           ENV['DOCKER_HOST'] = nil
           docker.provision
           hosts.each do |host|
-            expect( docker ).to receive( :get_domain_name ).with( host ).and_return( 'labs.lan' )
-            expect( docker ).to receive( :set_etc_hosts ).with( host, "127.0.0.1\tlocalhost localhost.localdomain\n192.0.2.1\tvm1.labs.lan vm1\n192.0.2.1\tvm2.labs.lan vm2\n192.0.2.1\tvm3.labs.lan vm3\n" ).once
+            expect(docker).to receive(:get_domain_name).with(host).and_return('labs.lan')
+            expect(docker).to receive(:set_etc_hosts).with(host, "127.0.0.1\tlocalhost localhost.localdomain\n192.0.2.1\tvm1.labs.lan vm1\n192.0.2.1\tvm2.labs.lan vm2\n192.0.2.1\tvm3.labs.lan vm3\n").once
           end
-          docker.hack_etc_hosts( hosts, options )
+          docker.hack_etc_hosts(hosts, options)
         end
 
         it 'should record the image and container for later' do
           docker.provision
 
-          expect( hosts[0]['docker_image_id'] ).to be === image.id
-          expect( hosts[0]['docker_container_id'] ).to be === container.id
+          expect(hosts[0]['docker_image_id']).to be === image.id
+          expect(hosts[0]['docker_container_id']).to be === container.id
         end
 
         context 'provision=false' do
-          let(:options) {{
+          let(:options) { {
             :logger => logger,
             :forward_ssh_agent => true,
-            :provision => false
+            :provision => false,
           }}
-
 
           it 'should fix ssh' do
             hosts.each_with_index do |host, index|
               container_name = "spec-container-#{index}"
               host['docker_container_name'] = container_name
 
-              expect( ::Docker::Container ).to receive(:all).and_return([container])
+              expect(::Docker::Container).to receive(:all).and_return([container])
               expect(docker).to receive(:fix_ssh).exactly(1).times
             end
             docker.provision
@@ -619,8 +613,8 @@ module Beaker
               container_name = "spec-container-#{index}"
               host['docker_container_name'] = container_name
 
-              expect( ::Docker::Container ).to receive(:all).and_return([container])
-              expect( ::Docker::Container ).not_to receive(:create)
+              expect(::Docker::Container).to receive(:all).and_return([container])
+              expect(::Docker::Container).not_to receive(:create)
             end
 
             docker.provision
@@ -631,54 +625,53 @@ module Beaker
       describe '#cleanup' do
         before :each do
           # get into a state where there's something to clean
-          allow( ::Docker::Container ).to receive(:all).and_return([container])
-          allow( ::Docker::Image ).to receive(:remove).with(image.id)
-          allow( docker ).to receive(:dockerfile_for)
+          allow(::Docker::Container).to receive(:all).and_return([container])
+          allow(::Docker::Image).to receive(:remove).with(image.id)
+          allow(docker).to receive(:dockerfile_for)
           docker.provision
         end
 
         it 'should stop the containers' do
-          allow( docker ).to receive( :sleep ).and_return(true)
-          expect( container ).to receive(:kill)
+          allow(docker).to receive(:sleep).and_return(true)
+          expect(container).to receive(:kill)
           docker.cleanup
         end
 
         it 'should delete the containers' do
-          allow( docker ).to receive( :sleep ).and_return(true)
-          expect( container ).to receive(:delete)
+          allow(docker).to receive(:sleep).and_return(true)
+          expect(container).to receive(:delete)
           docker.cleanup
         end
 
         it 'should delete the images' do
-          allow( docker ).to receive( :sleep ).and_return(true)
-          expect( ::Docker::Image ).to receive(:remove).with(image.id)
+          allow(docker).to receive(:sleep).and_return(true)
+          expect(::Docker::Image).to receive(:remove).with(image.id)
           docker.cleanup
         end
 
         it 'should not delete the image if docker_preserve_image is set to true' do
-          allow( docker ).to receive( :sleep ).and_return(true)
+          allow(docker).to receive(:sleep).and_return(true)
           hosts.each do |host|
-            host['docker_preserve_image']=true
+            host['docker_preserve_image'] = true
           end
-          expect( ::Docker::Image ).to_not receive(:remove)
+          expect(::Docker::Image).to_not receive(:remove)
           docker.cleanup
         end
 
         it 'should delete the image if docker_preserve_image is set to false' do
-          allow( docker ).to receive( :sleep ).and_return(true)
+          allow(docker).to receive(:sleep).and_return(true)
           hosts.each do |host|
-            host['docker_preserve_image']=false
+            host['docker_preserve_image'] = false
           end
-          expect( ::Docker::Image ).to receive(:remove).with(image.id)
+          expect(::Docker::Image).to receive(:remove).with(image.id)
           docker.cleanup
         end
-
       end
 
       describe '#dockerfile_for' do
         FakeFS.deactivate!
         it 'should raise on an unsupported platform' do
-          expect { docker.send(:dockerfile_for, {'platform' => 'a_sidewalk', 'image' => 'foobar' }) }.to raise_error(/platform a_sidewalk not yet supported/)
+          expect { docker.send(:dockerfile_for, { 'platform' => 'a_sidewalk', 'image' => 'foobar' }) }.to raise_error(/platform a_sidewalk not yet supported/)
         end
 
         it 'should set "ENV container docker"' do
@@ -688,7 +681,7 @@ module Beaker
               'platform' => platform,
               'image' => 'foobar',
             })
-            expect( dockerfile ).to match(/ENV container docker/)
+            expect(dockerfile).to match(/ENV container docker/)
           end
         end
 
@@ -702,10 +695,10 @@ module Beaker
                 'special one',
                 'special two',
                 'special three',
-              ]
+              ],
             })
 
-            expect( dockerfile ).to match(/RUN special one\nRUN special two\nRUN special three/)
+            expect(dockerfile).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
         end
 
@@ -719,10 +712,10 @@ module Beaker
                 'special one',
                 'special two',
                 'special three',
-              ]
+              ],
             })
 
-            expect( dockerfile ).to match(/RUN special one\nRUN special two\nRUN special three/)
+            expect(dockerfile).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
         end
 
@@ -732,10 +725,10 @@ module Beaker
             dockerfile = docker.send(:dockerfile_for, {
               'platform' => platform,
               'image' => 'foobar',
-              'docker_image_entrypoint' => '/bin/bash'
+              'docker_image_entrypoint' => '/bin/bash',
             })
 
-            expect( dockerfile ).to match(%r{ENTRYPOINT /bin/bash})
+            expect(dockerfile).to match(%r{ENTRYPOINT /bin/bash})
           end
         end
 
@@ -746,10 +739,10 @@ module Beaker
             'image' => 'foobar',
           })
 
-          expect( dockerfile ).to match(/zypper -n in openssh/)
+          expect(dockerfile).to match(/zypper -n in openssh/)
         end
 
-        (22..39).to_a.each do | fedora_release |
+        (22..39).to_a.each do |fedora_release|
           it "should use dnf on fedora #{fedora_release}" do
             FakeFS.deactivate!
             dockerfile = docker.send(:dockerfile_for, {
@@ -757,7 +750,7 @@ module Beaker
               'image' => 'foobar',
             })
 
-            expect( dockerfile ).to match(/dnf install -y sudo/)
+            expect(dockerfile).to match(/dnf install -y sudo/)
           end
         end
 
@@ -768,9 +761,9 @@ module Beaker
             'image' => 'foobar',
           })
 
-          expect( dockerfile ).to match(/pacman --sync --refresh --noconfirm archlinux-keyring/)
-          expect( dockerfile ).to match(/pacman --sync --refresh --noconfirm --sysupgrade/)
-          expect( dockerfile ).to match(/pacman --sync --noconfirm curl ntp net-tools openssh/)
+          expect(dockerfile).to match(/pacman --sync --refresh --noconfirm archlinux-keyring/)
+          expect(dockerfile).to match(/pacman --sync --refresh --noconfirm --sysupgrade/)
+          expect(dockerfile).to match(/pacman --sync --noconfirm curl ntp net-tools openssh/)
         end
       end
 
@@ -786,7 +779,7 @@ module Beaker
             include(/PermitRootLogin/) &&
             include(/PasswordAuthentication/) &&
             include(/UseDNS/) &&
-            include(/MaxAuthTries/)
+            include(/MaxAuthTries/),
           )
           docker.send(:fix_ssh, test_container)
         end

@@ -25,6 +25,17 @@ AllCops:
   Exclude:
   - vendor/**/*
 
+Style/TrailingCommaInHashLiteral:
+  Enabled: True
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: True
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInArguments:
+  Enabled: True
+  EnforcedStyleForMultiline: comma
 Metrics:
   Description: Metrics cops are rarely useful
   Enabled: false
@@ -39,9 +50,6 @@ Naming/FileName:
   Exclude:
     - 'lib/beaker-docker.rb'
 
-# Style enforcements
-Style/TrailingCommaInArrayLiteral:
-  EnforcedStyleForMultiline: consistent_comma
 Style/IfUnlessModifier:
   Enabled: false
 Style/StringLiterals:
