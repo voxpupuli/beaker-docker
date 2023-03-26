@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'fakefs/spec_helpers'
 
@@ -14,7 +16,7 @@ module Beaker
   describe Docker do
     require 'docker'
 
-    let(:hosts) {
+    let(:hosts) do
       the_hosts = make_hosts
       the_hosts[2]['dockeropts'] = {
         'Labels' => {
@@ -23,7 +25,7 @@ module Beaker
         },
       }
       the_hosts
-    }
+    end
 
     let(:logger) do
       logger = double('logger')
@@ -35,17 +37,19 @@ module Beaker
       logger
     end
 
-    let(:options) { {
-      :logger => logger,
-      :forward_ssh_agent => true,
-      :provision => true,
-      :dockeropts => {
-        'Labels' => {
-          'one' => 1,
-          'two' => 2,
+    let(:options) do
+      {
+        :logger => logger,
+        :forward_ssh_agent => true,
+        :provision => true,
+        :dockeropts => {
+          'Labels' => {
+            'one' => 1,
+            'two' => 2,
+          },
         },
-      },
-    }}
+      }
+    end
 
     let(:image) do
       image = double('Docker::Image')
@@ -99,11 +103,11 @@ module Beaker
       container
     end
 
-    let (:docker) { ::Beaker::Docker.new(hosts, options) }
+    let(:docker) { ::Beaker::Docker.new(hosts, options) }
 
     let(:docker_options) { nil }
 
-    let (:version) { { "ApiVersion" => "1.18", "Arch" => "amd64", "GitCommit" => "4749651", "GoVersion" => "go1.4.2", "KernelVersion" => "3.16.0-37-generic", "Os" => "linux", "Version" => "1.6.0" } }
+    let(:version) { { "ApiVersion" => "1.18", "Arch" => "amd64", "GitCommit" => "4749651", "GoVersion" => "go1.4.2", "KernelVersion" => "3.16.0-37-generic", "Os" => "linux", "Version" => "1.6.0" } }
 
     before :each do
       allow(::Docker).to receive(:rootless?).and_return(true)
@@ -183,6 +187,7 @@ module Beaker
       describe '#install_ssh_components' do
         let(:test_container) { double('container') }
         let(:host) { hosts[0] }
+
         before :each do
           allow(docker).to receive(:dockerfile_for)
         end
@@ -512,9 +517,10 @@ module Beaker
           docker.provision
         end
 
-        context "connecting to ssh" do
-          context "rootless" do
+        context "when connecting to ssh" do
+          context "when rootless" do
             before { @docker_host = ENV['DOCKER_HOST'] }
+
             after { ENV['DOCKER_HOST'] = @docker_host }
 
             it 'should expose port 22 to beaker' do
@@ -555,8 +561,9 @@ module Beaker
             end
           end
 
-          context 'rootful' do
+          context 'when rootful' do
             before { @docker_host = ENV['DOCKER_HOST'] }
+
             after { ENV['DOCKER_HOST'] = @docker_host }
 
             let(:container_mode) do
@@ -590,12 +597,14 @@ module Beaker
           expect(hosts[0]['docker_container_id']).to be === container.id
         end
 
-        context 'provision=false' do
-          let(:options) { {
-            :logger => logger,
-            :forward_ssh_agent => true,
-            :provision => false,
-          }}
+        context 'when provision=false' do
+          let(:options) do
+            {
+              :logger => logger,
+              :forward_ssh_agent => true,
+              :provision => false,
+            }
+          end
 
           it 'should fix ssh' do
             hosts.each_with_index do |host, index|
@@ -603,7 +612,7 @@ module Beaker
               host['docker_container_name'] = container_name
 
               expect(::Docker::Container).to receive(:all).and_return([container])
-              expect(docker).to receive(:fix_ssh).exactly(1).times
+              expect(docker).to receive(:fix_ssh).once
             end
             docker.provision
           end
@@ -654,7 +663,7 @@ module Beaker
           hosts.each do |host|
             host['docker_preserve_image'] = true
           end
-          expect(::Docker::Image).to_not receive(:remove)
+          expect(::Docker::Image).not_to receive(:remove)
           docker.cleanup
         end
 
@@ -770,6 +779,7 @@ module Beaker
       describe '#fix_ssh' do
         let(:test_container) { double('container') }
         let(:host) { hosts[0] }
+
         before :each do
           expect(test_container).to receive(:id).and_return('abcdef')
         end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Beaker
   class Docker < Beaker::Hypervisor
     # Docker hypvervisor initializtion
@@ -38,10 +40,10 @@ module Beaker
       # Find out what kind of remote instance we are talking against
       if /swarm/.match?(@docker_version['Version'])
         @docker_type = 'swarm'
-        unless ENV['DOCKER_REGISTRY']
-          raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
-        else
+        if ENV['DOCKER_REGISTRY']
           @registry = ENV['DOCKER_REGISTRY']
+        else
+          raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var"
         end
       elsif ::Docker.respond_to?(:podman?) && ::Docker.podman?
         @docker_type = 'podman'
@@ -72,7 +74,7 @@ module Beaker
         container_opts['ExposedPorts'] = { '22/tcp' => {} }
       end
 
-      container_opts.merge! ( {
+      container_opts.merge!({
         'Image' => image_name,
         'Hostname' => host.name,
         'HostConfig' => {
@@ -103,7 +105,8 @@ module Beaker
           dir = File.expand_path(dockerfile).chomp(dockerfile)
           return ::Docker::Image.build_from_dir(
             dir,
-            { 'dockerfile' => dockerfile,
+            {
+              'dockerfile' => dockerfile,
               :rm => true,
               :buildargs => buildargs_for(host),
             },
@@ -122,8 +125,7 @@ module Beaker
         return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
       end
 
-      return ::Docker::Image.build(dockerfile_for(host),
-                  { rm: true, buildargs: buildargs_for(host) })
+      return ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
     end
 
     # Nested Docker scenarios
@@ -201,7 +203,7 @@ module Beaker
         port = port22[0]['HostPort'] if port22
       end
 
-      ssh_connection_info[:ip] = (ip == '0.0.0.0') ? '127.0.0.1' : ip
+      ssh_connection_info[:ip] = ip == '0.0.0.0' ? '127.0.0.1' : ip
       ssh_connection_info[:port] = port || '22'
       ssh_connection_info
     end
@@ -234,7 +236,7 @@ module Beaker
 
         container_opts = get_container_opts(host, image_name)
         if host['dockeropts'] || @options[:dockeropts]
-          dockeropts = host['dockeropts'] ? host['dockeropts'] : @options[:dockeropts]
+          dockeropts = host['dockeropts'] || @options[:dockeropts]
           dockeropts.each do |k, v|
             container_opts[k] = v
           end
@@ -250,8 +252,8 @@ module Beaker
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
               host_path = File.expand_path(mount['host_path'])
               # When using docker_toolbox and getting a "(Driveletter):/" path, convert windows path to VM mount
-              if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ /^.\:\//
-                host_path = "/" + host_path.gsub(/^.\:/, host_path[/^(.)/].downcase)
+              if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ %r{^.:/}
+                host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}"
               end
               a = [host_path, mount['container_path']]
               if mount.has_key?('opts')
@@ -322,7 +324,7 @@ module Beaker
         end
 
         if container.nil?
-          raise RuntimeError, 'Cannot continue because no existing container ' +
+          raise 'Cannot continue because no existing container ' \
                               'could be found and provisioning is disabled.'
         end
 
@@ -385,11 +387,7 @@ module Beaker
     # This sideloads sshd after a container starts
     def install_ssh_components(container, host)
       case host['platform']
-      when /ubuntu/, /debian/
-        container.exec(%w(apt-get update))
-        container.exec(%w(apt-get install -y openssh-server openssh-client))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
-      when /cumulus/
+      when /ubuntu/, /debian/, /cumulus/
         container.exec(%w(apt-get update))
         container.exec(%w(apt-get install -y openssh-server openssh-client))
         container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
@@ -420,7 +418,7 @@ module Beaker
         container.exec(%w(apk add --update openssh))
         container.exec(%w(ssh-keygen -A))
       else
-        # TODO add more platform steps here
+        # TODO: add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
       end
 
@@ -486,7 +484,7 @@ module Beaker
       docker_buildargs_env = ENV['DOCKER_BUILDARGS']
       if docker_buildargs_env != nil
         docker_buildargs_env.split(/ +|\t+/).each do |arg|
-          key, value = arg.split(/=/)
+          key, value = arg.split('=')
           if key
             docker_buildargs[key] = value
           else
@@ -511,7 +509,7 @@ module Beaker
       DF
 
       # Commands before any other commands. Can be used for eg. proxy configuration
-      dockerfile += (host['docker_image_first_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join('')
+      dockerfile += (host['docker_image_first_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join
 
       # add platform-specific actions
       service_name = 'sshd'
@@ -584,7 +582,7 @@ module Beaker
       DF
 
       # Any extra commands specified for the host
-      dockerfile += (host['docker_image_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join('')
+      dockerfile += (host['docker_image_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join
 
       # Override image entrypoint
       dockerfile += "ENTRYPOINT #{host['docker_image_entrypoint']}\n" if host['docker_image_entrypoint']
