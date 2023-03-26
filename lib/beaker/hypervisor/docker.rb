@@ -150,47 +150,45 @@ module Beaker
       # Talking against a remote docker host which is a normal docker host
       if @docker_type == 'docker' && ENV.fetch('DOCKER_HOST', nil) && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
         ip = URI.parse(ENV.fetch('DOCKER_HOST', nil)).host
-      else
+      elsif in_container? && !nested_docker?
         # Swarm or local docker host
-        if in_container? && !nested_docker?
-          gw = network_settings['Gateway']
-          ip = gw unless (gw.nil? || gw.empty?)
-        else
-          # The many faces of container networking
+        gw = network_settings['Gateway']
+        ip = gw unless (gw.nil? || gw.empty?)
+      else
+        # The many faces of container networking
 
-          # Host to Container
-          port22 = network_settings.dig('PortBindings', '22/tcp')
-          if port22.nil? && network_settings.key?('Ports') && !nested_docker?
-            port22 = network_settings.dig('Ports', '22/tcp')
-          end
+        # Host to Container
+        port22 = network_settings.dig('PortBindings', '22/tcp')
+        if port22.nil? && network_settings.key?('Ports') && !nested_docker?
+          port22 = network_settings.dig('Ports', '22/tcp')
+        end
 
-          ip = port22[0]['HostIp'] if port22
-          port = port22[0]['HostPort'] if port22
+        ip = port22[0]['HostIp'] if port22
+        port = port22[0]['HostPort'] if port22
 
-          # Container to container
-          unless ip && port
-            ip = network_settings['IPAddress']
-            port = ip && !ip.empty? ? 22 : nil
-          end
+        # Container to container
+        unless ip && port
+          ip = network_settings['IPAddress']
+          port = ip && !ip.empty? ? 22 : nil
+        end
 
-          # Container through gateway
-          unless ip && port
-            ip = network_settings['Gateway']
+        # Container through gateway
+        unless ip && port
+          ip = network_settings['Gateway']
 
-            if ip && !ip.empty?
-              port22 = network_settings.dig('PortBindings', '22/tcp')
-              port = port22[0]['HostPort'] if port22
-            else
-              port = nil
-            end
-          end
-
-          # Legacy fallback
-          unless ip && port
-            port22 = network_settings.dig('Ports', '22/tcp')
-            ip = port22[0]["HostIp"] if port22
+          if ip && !ip.empty?
+            port22 = network_settings.dig('PortBindings', '22/tcp')
             port = port22[0]['HostPort'] if port22
+          else
+            port = nil
           end
+        end
+
+        # Legacy fallback
+        unless ip && port
+          port22 = network_settings.dig('Ports', '22/tcp')
+          ip = port22[0]["HostIp"] if port22
+          port = port22[0]['HostPort'] if port22
         end
       end
 
