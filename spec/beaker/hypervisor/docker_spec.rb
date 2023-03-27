@@ -174,7 +174,7 @@ module Beaker
         end
 
         it 'checks the Docker gem can work with the api' do
-          docker
+          expect { docker }.not_to raise_error
         end
 
         it 'hooks the Beaker logger into the Docker one' do
