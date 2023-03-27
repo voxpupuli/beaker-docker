@@ -71,13 +71,6 @@ RSpec/VerifiedDoubles:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 15
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowOnConstant, AllowOnSelfClass.
-Style/CaseEquality:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 26
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: PreferredDelimiters.
