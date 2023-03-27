@@ -12,12 +12,6 @@ Performance/Detect:
   Exclude:
     - 'lib/beaker/hypervisor/docker.rb'
 
-# Offense count: 2
-# This cop supports unsafe autocorrection (--autocorrect-all).
-Performance/StringInclude:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
 # Offense count: 4
 RSpec/AnyInstance:
   Exclude:
