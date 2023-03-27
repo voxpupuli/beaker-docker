@@ -475,14 +475,12 @@ module Beaker
     def buildargs_for(host)
       docker_buildargs = {}
       docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
-      unless docker_buildargs_env.nil?
-        docker_buildargs_env.split(/ +|\t+/).each do |arg|
-          key, value = arg.split('=')
-          if key
-            docker_buildargs[key] = value
-          else
-            @logger.warn("DOCKER_BUILDARGS environment variable appears invalid, no key found for value #{value}")
-          end
+      docker_buildargs_env&.split(/ +|\t+/)&.each do |arg|
+        key, value = arg.split('=')
+        if key
+          docker_buildargs[key] = value
+        else
+          @logger.warn("DOCKER_BUILDARGS environment variable appears invalid, no key found for value #{value}")
         end
       end
       buildargs = if docker_buildargs.empty?
