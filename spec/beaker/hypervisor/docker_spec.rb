@@ -552,7 +552,7 @@ module Beaker
 
             it 'connects to gateway ip' do
               FakeFS do
-                File.open('/.dockerenv', 'w') {}
+                FileUtils.touch('/.dockerenv')
                 docker.provision
 
                 expect(hosts[0]['ip']).to be === '192.0.2.254'
