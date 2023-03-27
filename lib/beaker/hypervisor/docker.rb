@@ -62,7 +62,7 @@ module Beaker
       # will cause issues.
       if /sshd/.match?(Array(host[:docker_cmd]).first)
         def host.ssh_service_restart
-          self[:docker_container].exec(%w(kill -1 1))
+          self[:docker_container].exec(%w[kill -1 1])
         end
       end
 
@@ -384,42 +384,42 @@ module Beaker
     def install_ssh_components(container, host)
       case host['platform']
       when /ubuntu/, /debian/, /cumulus/
-        container.exec(%w(apt-get update))
-        container.exec(%w(apt-get install -y openssh-server openssh-client))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
+        container.exec(%w[apt-get update])
+        container.exec(%w[apt-get install -y openssh-server openssh-client])
+        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
       when /el-[89]/, /fedora-(2[2-9]|3[0-9])/
-        container.exec(%w(dnf clean all))
-        container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
-        container.exec(%w(ssh-keygen -A))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
+        container.exec(%w[dnf clean all])
+        container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
+        container.exec(%w[ssh-keygen -A])
+        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
-        container.exec(%w(yum clean all))
-        container.exec(%w(yum install -y sudo openssh-server openssh-clients))
-        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
-        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
+        container.exec(%w[yum clean all])
+        container.exec(%w[yum install -y sudo openssh-server openssh-clients])
+        container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
+        container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
+        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
       when /opensuse/, /sles/
-        container.exec(%w(zypper -n in openssh))
-        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
-        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
-        container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
+        container.exec(%w[zypper -n in openssh])
+        container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
+        container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
+        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
       when /archlinux/
-        container.exec(%w(pacman --noconfirm -Sy archlinux-keyring))
-        container.exec(%w(pacman --noconfirm -Syu))
-        container.exec(%w(pacman -S --noconfirm openssh))
-        container.exec(%w(ssh-keygen -A))
-        container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
-        container.exec(%w(systemctl enable sshd))
+        container.exec(%w[pacman --noconfirm -Sy archlinux-keyring])
+        container.exec(%w[pacman --noconfirm -Syu])
+        container.exec(%w[pacman -S --noconfirm openssh])
+        container.exec(%w[ssh-keygen -A])
+        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
+        container.exec(%w[systemctl enable sshd])
       when /alpine/
-        container.exec(%w(apk add --update openssh))
-        container.exec(%w(ssh-keygen -A))
+        container.exec(%w[apk add --update openssh])
+        container.exec(%w[ssh-keygen -A])
       else
         # TODO: add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
       end
 
       # Make sshd directory, set root password
-      container.exec(%w(mkdir -p /var/run/sshd))
+      container.exec(%w[mkdir -p /var/run/sshd])
       container.exec(['/bin/sh', '-c', "echo root:#{root_password} | chpasswd"])
     end
 
