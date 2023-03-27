@@ -301,32 +301,6 @@ module Beaker
           docker.provision
         end
 
-        it 'creates a container based on the Image (identified by image.id)' do
-          hosts.each_with_index do |host, index|
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'HostConfig' => {
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'Privileged' => true,
-                                                                     'PublishAllPorts' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
-                                                                   },
-                                                                   'name' => /\Abeaker-/,
-                                                                 })
-          end
-
-          docker.provision
-        end
-
         it 'passes the multiple buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128	HTTPS_PROXY=https://1.1.1.1:3129'

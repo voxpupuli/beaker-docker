@@ -43,11 +43,6 @@ RSpec/NoExpectationExample:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 2
-RSpec/RepeatedDescription:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 5
 RSpec/StubbedMock:
   Exclude:
