@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Beaker
+  # Docker hypervisor for Beaker acceptance testing framework
   class Docker < Beaker::Hypervisor
     # Docker hypvervisor initializtion
     # Env variables supported:
