@@ -631,14 +631,14 @@ module Beaker
 
       if id
         @logger.debug("Looking for an existing container with ID #{id}")
-        container = containers.select { |c| c.id == id }.first
+        container = containers.find { |c| c.id == id }
       end
 
       if name && container.nil?
         @logger.debug("Looking for an existing container with name #{name}")
-        container = containers.select do |c|
+        container = containers.find do |c|
           c.info['Names'].include? "/#{name}"
-        end.first
+        end
       end
 
       return container unless container.nil?
