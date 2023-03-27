@@ -39,11 +39,6 @@ RSpec/NoExpectationExample:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
 # Offense count: 5
-RSpec/StubbedMock:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 5
 # Configuration parameters: IgnoreNameless, IgnoreSymbolicNames.
 RSpec/VerifiedDoubles:
   Exclude:

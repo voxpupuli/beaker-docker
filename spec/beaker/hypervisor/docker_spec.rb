@@ -278,9 +278,10 @@ module Beaker
 
         it 'calls dockerfile_for with all the hosts' do
           hosts.each do |host|
+            allow(docker).to receive(:dockerfile_for).with(host).and_return('')
             expect(docker).not_to receive(:install_ssh_components)
             expect(docker).not_to receive(:fix_ssh)
-            expect(docker).to receive(:dockerfile_for).with(host).and_return('')
+            expect(docker).to receive(:dockerfile_for).with(host)
           end
 
           docker.provision
@@ -558,7 +559,7 @@ module Beaker
           ENV['DOCKER_HOST'] = nil
           docker.provision
           hosts.each do |host|
-            expect(docker).to receive(:get_domain_name).with(host).and_return('labs.lan')
+            allow(docker).to receive(:get_domain_name).with(host).and_return('labs.lan')
             etc_hosts = <<~HOSTS
               127.0.0.1\tlocalhost localhost.localdomain
               192.0.2.1\tvm1.labs.lan vm1
@@ -591,7 +592,7 @@ module Beaker
               container_name = "spec-container-#{index}"
               host['docker_container_name'] = container_name
 
-              expect(::Docker::Container).to receive(:all).and_return([container])
+              allow(::Docker::Container).to receive(:all).and_return([container])
               expect(docker).to receive(:fix_ssh).once
             end
             docker.provision
@@ -602,7 +603,7 @@ module Beaker
               container_name = "spec-container-#{index}"
               host['docker_container_name'] = container_name
 
-              expect(::Docker::Container).to receive(:all).and_return([container])
+              allow(::Docker::Container).to receive(:all).and_return([container])
               expect(::Docker::Container).not_to receive(:create)
             end
 
