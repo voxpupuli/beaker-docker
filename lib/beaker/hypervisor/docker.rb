@@ -11,6 +11,7 @@ module Beaker
     #                            or a role (String or Symbol) that identifies one or more hosts.
     # @param [Hash{Symbol=>String}] options Options to pass on to the hypervisor
     def initialize(hosts, options)
+      super
       require 'docker'
       @options = options
       @logger = options[:logger] || Beaker::Logger.new

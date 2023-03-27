@@ -12,11 +12,6 @@ Lint/EmptyBlock:
   Exclude:
     - 'spec/beaker/hypervisor/docker_spec.rb'
 
-# Offense count: 1
-Lint/MissingSuper:
-  Exclude:
-    - 'lib/beaker/hypervisor/docker.rb'
-
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).
 Performance/Detect:
