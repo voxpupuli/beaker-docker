@@ -585,7 +585,13 @@ module Beaker
           docker.provision
           hosts.each do |host|
             expect(docker).to receive(:get_domain_name).with(host).and_return('labs.lan')
-            expect(docker).to receive(:set_etc_hosts).with(host, "127.0.0.1\tlocalhost localhost.localdomain\n192.0.2.1\tvm1.labs.lan vm1\n192.0.2.1\tvm2.labs.lan vm2\n192.0.2.1\tvm3.labs.lan vm3\n").once
+            etc_hosts = <<~HOSTS
+              127.0.0.1\tlocalhost localhost.localdomain
+              192.0.2.1\tvm1.labs.lan vm1
+              192.0.2.1\tvm2.labs.lan vm2
+              192.0.2.1\tvm3.labs.lan vm3
+            HOSTS
+            expect(docker).to receive(:set_etc_hosts).with(host, etc_hosts).once
           end
           docker.hack_etc_hosts(hosts, options)
         end
