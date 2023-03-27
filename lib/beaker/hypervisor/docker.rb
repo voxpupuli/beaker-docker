@@ -253,8 +253,10 @@ module Beaker
                 host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}"
               end
               a = [host_path, mount['container_path']]
-              if mount.has_key?('opts')
-                a << mount['opts'] if mount.has_key?('opts')
+
+              # TODO: rewrite this part
+              if mount.key?('opts')
+                a << mount['opts'] if mount.key?('opts')
               else
                 a << mount['opts'] = 'z'
               end
