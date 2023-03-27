@@ -117,7 +117,7 @@ module Beaker
       describe '#initialize' do
         before do
           require 'excon'
-          expect(::Docker).to receive(:version).and_raise(Excon::Errors::SocketError.new(StandardError.new('oops'))).exactly(4).times
+          allow(::Docker).to receive(:version).and_raise(Excon::Errors::SocketError.new(StandardError.new('oops'))).exactly(4).times
         end
 
         it 'fails when docker not present' do
@@ -761,7 +761,7 @@ module Beaker
         let(:host) { hosts[0] }
 
         before do
-          expect(test_container).to receive(:id).and_return('abcdef')
+          allow(test_container).to receive(:id).and_return('abcdef')
         end
 
         it 'calls exec once when called without host' do

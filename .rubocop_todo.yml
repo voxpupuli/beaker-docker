@@ -16,11 +16,6 @@ RSpec/AnyInstance:
 RSpec/ExampleLength:
   Max: 53
 
-# Offense count: 2
-RSpec/ExpectInHook:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 50
 # Configuration parameters: .
 # SupportedStyles: have_received, receive
