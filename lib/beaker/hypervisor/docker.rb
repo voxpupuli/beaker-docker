@@ -125,7 +125,7 @@ module Beaker
         return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
       end
 
-      return ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
+      ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
     end
 
     # Nested Docker scenarios
@@ -644,12 +644,12 @@ module Beaker
       return container unless container.nil?
 
       @logger.debug("Existing container not found")
-      return nil
+      nil
     end
 
     # return true if we are inside a docker container
     def in_container?
-      return File.file?('/.dockerenv')
+      File.file?('/.dockerenv')
     end
   end
 end
