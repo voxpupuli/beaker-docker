@@ -451,7 +451,7 @@ module Beaker
 
         it 'creates a container with capabilities added' do
           hosts.each_with_index do |host, index|
-            host['docker_cap_add'] = ['NET_ADMIN', 'SYS_ADMIN']
+            host['docker_cap_add'] = %w[NET_ADMIN SYS_ADMIN]
 
             expect(::Docker::Container).to receive(:create).with({
                                                                    'Image' => image.id,
@@ -464,7 +464,7 @@ module Beaker
                                                                      'RestartPolicy' => {
                                                                        'Name' => 'always',
                                                                      },
-                                                                     'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
+                                                                     'CapAdd' => %w[NET_ADMIN SYS_ADMIN],
                                                                    },
                                                                    'Labels' => {
                                                                      'one' => (index == 2 ? 3 : 1),
