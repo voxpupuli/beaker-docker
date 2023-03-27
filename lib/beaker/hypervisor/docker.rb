@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Beaker
+  # Docker hypervisor for Beaker acceptance testing framework
   class Docker < Beaker::Hypervisor
     # Docker hypvervisor initializtion
     # Env variables supported:
@@ -11,6 +12,7 @@ module Beaker
     #                            or a role (String or Symbol) that identifies one or more hosts.
     # @param [Hash{Symbol=>String}] options Options to pass on to the hypervisor
     def initialize(hosts, options)
+      super
       require 'docker'
       @options = options
       @logger = options[:logger] || Beaker::Logger.new
@@ -38,7 +40,7 @@ module Beaker
       ::Docker.logger = @logger
 
       # Find out what kind of remote instance we are talking against
-      if /swarm/.match?(@docker_version['Version'])
+      if @docker_version['Version'].include?('swarm')
         @docker_type = 'swarm'
         raise "Using Swarm with beaker requires a private registry. Please setup the private registry and set the 'DOCKER_REGISTRY' env var" unless ENV['DOCKER_REGISTRY']
 
@@ -58,9 +60,9 @@ module Beaker
 
       # If the container is running ssh as its init process then this method
       # will cause issues.
-      if /sshd/.match?(Array(host[:docker_cmd]).first)
+      if Array(host[:docker_cmd]).first&.include?('sshd')
         def host.ssh_service_restart
-          self[:docker_container].exec(%w(kill -1 1))
+          self[:docker_container].exec(%w[kill -1 1])
         end
       end
 
@@ -123,7 +125,7 @@ module Beaker
         return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
       end
 
-      return ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
+      ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
     end
 
     # Nested Docker scenarios
@@ -252,8 +254,10 @@ module Beaker
                 host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}"
               end
               a = [host_path, mount['container_path']]
-              if mount.has_key?('opts')
-                a << mount['opts'] if mount.has_key?('opts')
+
+              # TODO: rewrite this part
+              if mount.key?('opts')
+                a << mount['opts'] if mount.key?('opts')
               else
                 a << mount['opts'] = 'z'
               end
@@ -360,7 +364,7 @@ module Beaker
           :password => root_password,
           :port => port,
           :forward_agent => forward_ssh_agent,
-          :auth_methods => ['password', 'publickey', 'hostbased', 'keyboard-interactive'],
+          :auth_methods => %w[password publickey hostbased keyboard-interactive],
         }
 
         @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
@@ -380,42 +384,42 @@ module Beaker
     def install_ssh_components(container, host)
       case host['platform']
       when /ubuntu/, /debian/, /cumulus/
-        container.exec(%w(apt-get update))
-        container.exec(%w(apt-get install -y openssh-server openssh-client))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
+        container.exec(%w[apt-get update])
+        container.exec(%w[apt-get install -y openssh-server openssh-client])
+        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
       when /el-[89]/, /fedora-(2[2-9]|3[0-9])/
-        container.exec(%w(dnf clean all))
-        container.exec(%w(dnf install -y sudo openssh-server openssh-clients))
-        container.exec(%w(ssh-keygen -A))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
+        container.exec(%w[dnf clean all])
+        container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
+        container.exec(%w[ssh-keygen -A])
+        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
-        container.exec(%w(yum clean all))
-        container.exec(%w(yum install -y sudo openssh-server openssh-clients))
-        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
-        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
-        container.exec(%w(sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*))
+        container.exec(%w[yum clean all])
+        container.exec(%w[yum install -y sudo openssh-server openssh-clients])
+        container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
+        container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
+        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
       when /opensuse/, /sles/
-        container.exec(%w(zypper -n in openssh))
-        container.exec(%w(ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key))
-        container.exec(%w(ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key))
-        container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
+        container.exec(%w[zypper -n in openssh])
+        container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
+        container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
+        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
       when /archlinux/
-        container.exec(%w(pacman --noconfirm -Sy archlinux-keyring))
-        container.exec(%w(pacman --noconfirm -Syu))
-        container.exec(%w(pacman -S --noconfirm openssh))
-        container.exec(%w(ssh-keygen -A))
-        container.exec(%w(sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config))
-        container.exec(%w(systemctl enable sshd))
+        container.exec(%w[pacman --noconfirm -Sy archlinux-keyring])
+        container.exec(%w[pacman --noconfirm -Syu])
+        container.exec(%w[pacman -S --noconfirm openssh])
+        container.exec(%w[ssh-keygen -A])
+        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
+        container.exec(%w[systemctl enable sshd])
       when /alpine/
-        container.exec(%w(apk add --update openssh))
-        container.exec(%w(ssh-keygen -A))
+        container.exec(%w[apk add --update openssh])
+        container.exec(%w[ssh-keygen -A])
       else
         # TODO: add more platform steps here
         raise "platform #{host['platform']} not yet supported on docker"
       end
 
       # Make sshd directory, set root password
-      container.exec(%w(mkdir -p /var/run/sshd))
+      container.exec(%w[mkdir -p /var/run/sshd])
       container.exec(['/bin/sh', '-c', "echo root:#{root_password} | chpasswd"])
     end
 
@@ -474,14 +478,12 @@ module Beaker
     def buildargs_for(host)
       docker_buildargs = {}
       docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
-      unless docker_buildargs_env.nil?
-        docker_buildargs_env.split(/ +|\t+/).each do |arg|
-          key, value = arg.split('=')
-          if key
-            docker_buildargs[key] = value
-          else
-            @logger.warn("DOCKER_BUILDARGS environment variable appears invalid, no key found for value #{value}")
-          end
+      docker_buildargs_env&.split(/ +|\t+/)&.each do |arg|
+        key, value = arg.split('=')
+        if key
+          docker_buildargs[key] = value
+        else
+          @logger.warn("DOCKER_BUILDARGS environment variable appears invalid, no key found for value #{value}")
         end
       end
       buildargs = if docker_buildargs.empty?
@@ -629,25 +631,25 @@ module Beaker
 
       if id
         @logger.debug("Looking for an existing container with ID #{id}")
-        container = containers.select { |c| c.id == id }.first
+        container = containers.find { |c| c.id == id }
       end
 
       if name && container.nil?
         @logger.debug("Looking for an existing container with name #{name}")
-        container = containers.select do |c|
+        container = containers.find do |c|
           c.info['Names'].include? "/#{name}"
-        end.first
+        end
       end
 
       return container unless container.nil?
 
       @logger.debug("Existing container not found")
-      return nil
+      nil
     end
 
     # return true if we are inside a docker container
     def in_container?
-      return File.file?('/.dockerenv')
+      File.file?('/.dockerenv')
     end
   end
 end

@@ -451,7 +451,7 @@ module Beaker
 
         it 'creates a container with capabilities added' do
           hosts.each_with_index do |host, index|
-            host['docker_cap_add'] = ['NET_ADMIN', 'SYS_ADMIN']
+            host['docker_cap_add'] = %w[NET_ADMIN SYS_ADMIN]
 
             expect(::Docker::Container).to receive(:create).with({
                                                                    'Image' => image.id,
@@ -464,7 +464,7 @@ module Beaker
                                                                      'RestartPolicy' => {
                                                                        'Name' => 'always',
                                                                      },
-                                                                     'CapAdd' => ['NET_ADMIN', 'SYS_ADMIN'],
+                                                                     'CapAdd' => %w[NET_ADMIN SYS_ADMIN],
                                                                    },
                                                                    'Labels' => {
                                                                      'one' => (index == 2 ? 3 : 1),
@@ -527,36 +527,36 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect(hosts[0]['ip']).to be === '127.0.0.1'
-              expect(hosts[0]['port']).to be === 8022
+              expect(hosts[0]['ip']).to eq '127.0.0.1'
+              expect(hosts[0]['port']).to eq 8022
             end
 
             it 'exposes port 22 to beaker when using DOCKER_HOST' do
               ENV['DOCKER_HOST'] = "tcp://192.0.2.2:2375"
               docker.provision
 
-              expect(hosts[0]['ip']).to be === '192.0.2.2'
-              expect(hosts[0]['port']).to be === 8022
+              expect(hosts[0]['ip']).to eq '192.0.2.2'
+              expect(hosts[0]['port']).to eq 8022
             end
 
             it 'has ssh agent forwarding enabled' do
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect(hosts[0]['ip']).to be === '127.0.0.1'
-              expect(hosts[0]['port']).to be === 8022
-              expect(hosts[0]['ssh'][:password]).to be === 'root'
-              expect(hosts[0]['ssh'][:port]).to be === 8022
-              expect(hosts[0]['ssh'][:forward_agent]).to be === true
+              expect(hosts[0]['ip']).to eq '127.0.0.1'
+              expect(hosts[0]['port']).to eq 8022
+              expect(hosts[0]['ssh'][:password]).to eq 'root'
+              expect(hosts[0]['ssh'][:port]).to eq 8022
+              expect(hosts[0]['ssh'][:forward_agent]).to be true
             end
 
             it 'connects to gateway ip' do
               FakeFS do
-                File.open('/.dockerenv', 'w') {}
+                FileUtils.touch('/.dockerenv')
                 docker.provision
 
-                expect(hosts[0]['ip']).to be === '192.0.2.254'
-                expect(hosts[0]['port']).to be === 8022
+                expect(hosts[0]['ip']).to eq '192.0.2.254'
+                expect(hosts[0]['port']).to eq 8022
               end
             end
           end
@@ -574,8 +574,8 @@ module Beaker
               ENV['DOCKER_HOST'] = nil
               docker.provision
 
-              expect(hosts[0]['ip']).to be === '127.0.0.1'
-              expect(hosts[0]['port']).to be === 8022
+              expect(hosts[0]['ip']).to eq '127.0.0.1'
+              expect(hosts[0]['port']).to eq 8022
             end
           end
         end
@@ -593,8 +593,8 @@ module Beaker
         it 'records the image and container for later' do
           docker.provision
 
-          expect(hosts[0]['docker_image_id']).to be === image.id
-          expect(hosts[0]['docker_container_id']).to be === container.id
+          expect(hosts[0]['docker_image_id']).to eq image.id
+          expect(hosts[0]['docker_container_id']).to eq container.id
         end
 
         context 'when provision=false' do
