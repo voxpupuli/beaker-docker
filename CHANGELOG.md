@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.0](https://github.com/voxpupuli/beaker-docker/tree/2.0.0) (2023-03-28)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.5.0...2.0.0)
+
+**Breaking changes:**
+
+- Drop Ruby 2.4/2.5/2.6 support [\#109](https://github.com/voxpupuli/beaker-docker/pull/109) ([bastelfreak](https://github.com/bastelfreak))
+
+**Implemented enhancements:**
+
+- Drop `beaker-rspec` dependency [\#107](https://github.com/voxpupuli/beaker-docker/pull/107) ([jay7x](https://github.com/jay7x))
+
+**Merged pull requests:**
+
+- Rubocop: fix more violations [\#113](https://github.com/voxpupuli/beaker-docker/pull/113) ([bastelfreak](https://github.com/bastelfreak))
+- rubocop: Use shared config from beaker [\#112](https://github.com/voxpupuli/beaker-docker/pull/112) ([bastelfreak](https://github.com/bastelfreak))
+- Fix even more rubocop issues [\#111](https://github.com/voxpupuli/beaker-docker/pull/111) ([jay7x](https://github.com/jay7x))
+- More rubocop fixes [\#110](https://github.com/voxpupuli/beaker-docker/pull/110) ([jay7x](https://github.com/jay7x))
+- Fix more rubocop warnings [\#108](https://github.com/voxpupuli/beaker-docker/pull/108) ([jay7x](https://github.com/jay7x))
+- Fix multiple Rubocop warnings [\#106](https://github.com/voxpupuli/beaker-docker/pull/106) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [1.5.0](https://github.com/voxpupuli/beaker-docker/tree/1.5.0) (2023-03-24)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.4.0...1.5.0)
