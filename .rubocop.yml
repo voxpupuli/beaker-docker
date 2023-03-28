@@ -4,17 +4,7 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   beaker: rubocop.yml
 
-Style/HashSyntax:
-  Description: Disable temporarily (FIXME)
-  EnforcedStyle: ruby19
-  Enabled: false
-
 Naming/FileName:
   Description: Some files violates the snake_case convention
   Exclude:
     - 'lib/beaker-docker.rb'
-
-Style/IfUnlessModifier:
-  Enabled: false
-Style/StringLiterals:
-  Enabled: false

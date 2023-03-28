@@ -19,7 +19,7 @@ module Beaker
       @hosts = hosts
 
       # increase the http timeouts as provisioning images can be slow
-      default_docker_options = { :write_timeout => 300, :read_timeout => 300 }.merge(::Docker.options || {})
+      default_docker_options = { write_timeout: 300, read_timeout: 300 }.merge(::Docker.options || {})
       # Merge docker options from the entry in hosts file
       ::Docker.options = default_docker_options.merge(@options[:docker_options] || {})
 
@@ -71,9 +71,7 @@ module Beaker
 
     def get_container_opts(host, image_name)
       container_opts = {}
-      if host['dockerfile']
-        container_opts['ExposedPorts'] = { '22/tcp' => {} }
-      end
+      container_opts['ExposedPorts'] = { '22/tcp' => {} } if host['dockerfile']
 
       container_opts.merge!({
                               'Image' => image_name,
@@ -91,11 +89,9 @@ module Beaker
     end
 
     def get_container_image(host)
-      @logger.debug("Creating image")
+      @logger.debug('Creating image')
 
-      if host['use_image_as_is']
-        return ::Docker::Image.create('fromImage' => host['image'])
-      end
+      return ::Docker::Image.create('fromImage' => host['image']) if host['use_image_as_is']
 
       dockerfile = host['dockerfile']
       if dockerfile
@@ -161,9 +157,7 @@ module Beaker
 
         # Host to Container
         port22 = network_settings.dig('PortBindings', '22/tcp')
-        if port22.nil? && network_settings.key?('Ports') && !nested_docker?
-          port22 = network_settings.dig('Ports', '22/tcp')
-        end
+        port22 = network_settings.dig('Ports', '22/tcp') if port22.nil? && network_settings.key?('Ports') && !nested_docker?
 
         ip = port22[0]['HostIp'] if port22
         port = port22[0]['HostPort'] if port22
@@ -189,7 +183,7 @@ module Beaker
         # Legacy fallback
         unless ip && port
           port22 = network_settings.dig('Ports', '22/tcp')
-          ip = port22[0]["HostIp"] if port22
+          ip = port22[0]['HostIp'] if port22
           port = port22[0]['HostPort'] if port22
         end
       end
@@ -207,23 +201,21 @@ module Beaker
     end
 
     def provision
-      @logger.notify "Provisioning docker"
+      @logger.notify 'Provisioning docker'
 
       @hosts.each do |host|
         @logger.notify "provisioning #{host.name}"
 
         image = get_container_image(host)
 
-        if host['tag']
-          image.tag({ :repo => host['tag'] })
-        end
+        image.tag({ repo: host['tag'] }) if host['tag']
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
-          ret = ::Docker::Image.search(:term => image_name)
+          ret = ::Docker::Image.search(term: image_name)
           if ret.first.nil?
-            @logger.debug("Image does not exist on registry. Pushing.")
-            image.tag({ :repo => image_name, :force => true })
+            @logger.debug('Image does not exist on registry. Pushing.')
+            image.tag({ repo: image_name, force: true })
             image.push
           end
         else
@@ -250,9 +242,7 @@ module Beaker
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
               host_path = File.expand_path(mount['host_path'])
               # When using docker_toolbox and getting a "(Driveletter):/" path, convert windows path to VM mount
-              if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ %r{^.:/}
-                host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}"
-              end
+              host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}" if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ %r{^.:/}
               a = [host_path, mount['container_path']]
 
               # TODO: rewrite this part
@@ -266,9 +256,7 @@ module Beaker
             end
           end
 
-          if host['docker_env']
-            container_opts['Env'] = host['docker_env']
-          end
+          container_opts['Env'] = host['docker_env'] if host['docker_env']
 
           # Fixup privileges
           #
@@ -361,19 +349,19 @@ module Beaker
         host['ip'] = ip
         host['port'] = port
         host['ssh']  = {
-          :password => root_password,
-          :port => port,
-          :forward_agent => forward_ssh_agent,
-          :auth_methods => %w[password publickey hostbased keyboard-interactive],
+          password: root_password,
+          port: port,
+          forward_agent: forward_ssh_agent,
+          auth_methods: %w[password publickey hostbased keyboard-interactive],
         }
 
         @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
         host['docker_container_id'] = container.id
         host['docker_image_id'] = image.id
-        host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s
+        host['vm_ip'] = container.json['NetworkSettings']['IPAddress'].to_s
 
         def host.reboot
-          @logger.warn("Rebooting containers is ineffective...ignoring")
+          @logger.warn('Rebooting containers is ineffective...ignoring')
         end
       end
 
@@ -424,7 +412,7 @@ module Beaker
     end
 
     def cleanup
-      @logger.notify "Cleaning up docker"
+      @logger.notify 'Cleaning up docker'
       @hosts.each do |host|
         # leave the container running if docker_preserve_container is set
         # setting docker_preserve_container also implies docker_preserve_image
@@ -643,7 +631,7 @@ module Beaker
 
       return container unless container.nil?
 
-      @logger.debug("Existing container not found")
+      @logger.debug('Existing container not found')
       nil
     end
 
