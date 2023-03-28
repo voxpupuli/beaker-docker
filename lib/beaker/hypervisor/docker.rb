@@ -19,7 +19,7 @@ module Beaker
       @hosts = hosts
 
       # increase the http timeouts as provisioning images can be slow
-      default_docker_options = { :write_timeout => 300, :read_timeout => 300 }.merge(::Docker.options || {})
+      default_docker_options = { write_timeout: 300, read_timeout: 300 }.merge(::Docker.options || {})
       # Merge docker options from the entry in hosts file
       ::Docker.options = default_docker_options.merge(@options[:docker_options] || {})
 
@@ -208,14 +208,14 @@ module Beaker
 
         image = get_container_image(host)
 
-        image.tag({ :repo => host['tag'] }) if host['tag']
+        image.tag({ repo: host['tag'] }) if host['tag']
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
-          ret = ::Docker::Image.search(:term => image_name)
+          ret = ::Docker::Image.search(term: image_name)
           if ret.first.nil?
             @logger.debug('Image does not exist on registry. Pushing.')
-            image.tag({ :repo => image_name, :force => true })
+            image.tag({ repo: image_name, force: true })
             image.push
           end
         else
@@ -349,10 +349,10 @@ module Beaker
         host['ip'] = ip
         host['port'] = port
         host['ssh']  = {
-          :password => root_password,
-          :port => port,
-          :forward_agent => forward_ssh_agent,
-          :auth_methods => %w[password publickey hostbased keyboard-interactive],
+          password: root_password,
+          port: port,
+          forward_agent: forward_ssh_agent,
+          auth_methods: %w[password publickey hostbased keyboard-interactive],
         }
 
         @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")

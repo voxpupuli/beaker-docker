@@ -39,10 +39,10 @@ module Beaker
 
     let(:options) do
       {
-        :logger => logger,
-        :forward_ssh_agent => true,
-        :provision => true,
-        :dockeropts => {
+        logger: logger,
+        forward_ssh_agent: true,
+        provision: true,
+        dockeropts: {
           'Labels' => {
             'one' => 1,
             'two' => 2,
@@ -156,16 +156,16 @@ module Beaker
         end
 
         it 'sets Docker options' do
-          expect(::Docker).to receive(:options=).with({ :write_timeout => 300, :read_timeout => 300 }).once
+          expect(::Docker).to receive(:options=).with({ write_timeout: 300, read_timeout: 300 }).once
 
           docker
         end
 
         context 'when Docker options are already set' do
-          let(:docker_options) { { :write_timeout => 600, :foo => :bar } }
+          let(:docker_options) { { write_timeout: 600, foo: :bar } }
 
           it 'does not override Docker options' do
-            expect(::Docker).to receive(:options=).with({ :write_timeout => 600, :read_timeout => 300, :foo => :bar }).once
+            expect(::Docker).to receive(:options=).with({ write_timeout: 600, read_timeout: 300, foo: :bar }).once
 
             docker
           end
@@ -223,7 +223,7 @@ module Beaker
           end
 
           it 'will tag the image with the value of the tag' do
-            expect(image).to receive(:tag).with({ :repo => 'my_tag' }).exactly(3).times
+            expect(image).to receive(:tag).with({ repo: 'my_tag' }).exactly(3).times
             docker.provision
           end
         end
@@ -253,7 +253,7 @@ module Beaker
 
           it 'does not call #dockerfile_for but run methods necessary for ssh installation' do
             allow(File).to receive(:exist?).with('mydockerfile').and_return(true)
-            allow(::Docker::Image).to receive(:build_from_dir).with('/', hash_including(:rm => true, :buildargs => 'buildargs')).and_return(image)
+            allow(::Docker::Image).to receive(:build_from_dir).with('/', hash_including(rm: true, buildargs: 'buildargs')).and_return(image)
             expect(docker).not_to receive(:dockerfile_for)
             expect(docker).to receive(:install_ssh_components).exactly(3).times # once per host
             expect(docker).to receive(:fix_ssh).exactly(3).times # once per host
@@ -287,7 +287,7 @@ module Beaker
 
         it 'passes the Dockerfile on to Docker::Image.create' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
-          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{}' })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { rm: true, buildargs: '{}' })
 
           docker.provision
         end
@@ -295,7 +295,7 @@ module Beaker
         it 'passes the buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128'
-          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{"HTTP_PROXY":"http://1.1.1.1:3128"}' })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { rm: true, buildargs: '{"HTTP_PROXY":"http://1.1.1.1:3128"}' })
 
           docker.provision
         end
@@ -303,7 +303,7 @@ module Beaker
         it 'passes the multiple buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128	HTTPS_PROXY=https://1.1.1.1:3129'
-          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{"HTTP_PROXY":"http://1.1.1.1:3128","HTTPS_PROXY":"https://1.1.1.1:3129"}' })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { rm: true, buildargs: '{"HTTP_PROXY":"http://1.1.1.1:3128","HTTPS_PROXY":"https://1.1.1.1:3129"}' })
 
           docker.provision
         end
@@ -579,9 +579,9 @@ module Beaker
         context 'when provision=false' do
           let(:options) do
             {
-              :logger => logger,
-              :forward_ssh_agent => true,
-              :provision => false,
+              logger: logger,
+              forward_ssh_agent: true,
+              provision: false,
             }
           end
 
