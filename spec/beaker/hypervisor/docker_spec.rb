@@ -5,12 +5,12 @@ require 'fakefs/spec_helpers'
 
 module Beaker
   platforms = [
-    "ubuntu-14.04-x86_64",
-    "cumulus-2.2-x86_64",
-    "fedora-22-x86_64",
-    "centos-7-x86_64",
-    "sles-12-x86_64",
-    "archlinux-2017.12.27-x86_64",
+    'ubuntu-14.04-x86_64',
+    'cumulus-2.2-x86_64',
+    'fedora-22-x86_64',
+    'centos-7-x86_64',
+    'sles-12-x86_64',
+    'archlinux-2017.12.27-x86_64',
   ]
 
   describe Docker do
@@ -53,7 +53,7 @@ module Beaker
 
     let(:image) do
       image = double('Docker::Image')
-      allow(image).to receive(:id).and_return("zyxwvu")
+      allow(image).to receive(:id).and_return('zyxwvu')
       allow(image).to receive(:tag)
       image
     end
@@ -107,7 +107,7 @@ module Beaker
 
     let(:docker_options) { nil }
 
-    let(:version) { { "ApiVersion" => "1.18", "Arch" => "amd64", "GitCommit" => "4749651", "GoVersion" => "go1.4.2", "KernelVersion" => "3.16.0-37-generic", "Os" => "linux", "Version" => "1.6.0" } }
+    let(:version) { { 'ApiVersion' => '1.18', 'Arch' => 'amd64', 'GitCommit' => '4749651', 'GoVersion' => 'go1.4.2', 'KernelVersion' => '3.16.0-37-generic', 'Os' => 'linux', 'Version' => '1.6.0' } }
 
     before do
       allow(::Docker).to receive(:rootless?).and_return(true)
@@ -255,7 +255,7 @@ module Beaker
 
           it 'does not call #dockerfile_for but run methods necessary for ssh installation' do
             allow(File).to receive(:exist?).with('mydockerfile').and_return(true)
-            allow(::Docker::Image).to receive(:build_from_dir).with("/", hash_including(:rm => true, :buildargs => 'buildargs')).and_return(image)
+            allow(::Docker::Image).to receive(:build_from_dir).with('/', hash_including(:rm => true, :buildargs => 'buildargs')).and_return(image)
             expect(docker).not_to receive(:dockerfile_for)
             expect(docker).to receive(:install_ssh_components).exactly(3).times # once per host
             expect(docker).to receive(:fix_ssh).exactly(3).times # once per host
@@ -297,7 +297,7 @@ module Beaker
         it 'passes the buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128'
-          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\"}" })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{"HTTP_PROXY":"http://1.1.1.1:3128"}' })
 
           docker.provision
         end
@@ -305,7 +305,7 @@ module Beaker
         it 'passes the multiple buildargs from ENV DOCKER_BUILDARGS on to Docker::Image.create' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128	HTTPS_PROXY=https://1.1.1.1:3129'
-          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\",\"HTTPS_PROXY\":\"https://1.1.1.1:3129\"}" })
+          expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => '{"HTTP_PROXY":"http://1.1.1.1:3128","HTTPS_PROXY":"https://1.1.1.1:3129"}' })
 
           docker.provision
         end
@@ -492,8 +492,8 @@ module Beaker
           docker.provision
         end
 
-        context "when connecting to ssh" do
-          context "when rootless" do
+        context 'when connecting to ssh' do
+          context 'when rootless' do
             before { @docker_host = ENV.fetch('DOCKER_HOST', nil) }
 
             after { ENV['DOCKER_HOST'] = @docker_host }
@@ -507,7 +507,7 @@ module Beaker
             end
 
             it 'exposes port 22 to beaker when using DOCKER_HOST' do
-              ENV['DOCKER_HOST'] = "tcp://192.0.2.2:2375"
+              ENV['DOCKER_HOST'] = 'tcp://192.0.2.2:2375'
               docker.provision
 
               expect(hosts[0]['ip']).to eq '192.0.2.2'
@@ -555,7 +555,7 @@ module Beaker
           end
         end
 
-        it "generates a new /etc/hosts file referencing each host" do
+        it 'generates a new /etc/hosts file referencing each host' do
           ENV['DOCKER_HOST'] = nil
           docker.provision
           hosts.each do |host|

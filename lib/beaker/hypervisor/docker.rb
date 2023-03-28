@@ -91,7 +91,7 @@ module Beaker
     end
 
     def get_container_image(host)
-      @logger.debug("Creating image")
+      @logger.debug('Creating image')
 
       if host['use_image_as_is']
         return ::Docker::Image.create('fromImage' => host['image'])
@@ -189,7 +189,7 @@ module Beaker
         # Legacy fallback
         unless ip && port
           port22 = network_settings.dig('Ports', '22/tcp')
-          ip = port22[0]["HostIp"] if port22
+          ip = port22[0]['HostIp'] if port22
           port = port22[0]['HostPort'] if port22
         end
       end
@@ -207,7 +207,7 @@ module Beaker
     end
 
     def provision
-      @logger.notify "Provisioning docker"
+      @logger.notify 'Provisioning docker'
 
       @hosts.each do |host|
         @logger.notify "provisioning #{host.name}"
@@ -222,7 +222,7 @@ module Beaker
           image_name = "#{@registry}/beaker/#{image.id}"
           ret = ::Docker::Image.search(:term => image_name)
           if ret.first.nil?
-            @logger.debug("Image does not exist on registry. Pushing.")
+            @logger.debug('Image does not exist on registry. Pushing.')
             image.tag({ :repo => image_name, :force => true })
             image.push
           end
@@ -370,10 +370,10 @@ module Beaker
         @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
         host['docker_container_id'] = container.id
         host['docker_image_id'] = image.id
-        host['vm_ip'] = container.json["NetworkSettings"]["IPAddress"].to_s
+        host['vm_ip'] = container.json['NetworkSettings']['IPAddress'].to_s
 
         def host.reboot
-          @logger.warn("Rebooting containers is ineffective...ignoring")
+          @logger.warn('Rebooting containers is ineffective...ignoring')
         end
       end
 
@@ -424,7 +424,7 @@ module Beaker
     end
 
     def cleanup
-      @logger.notify "Cleaning up docker"
+      @logger.notify 'Cleaning up docker'
       @hosts.each do |host|
         # leave the container running if docker_preserve_container is set
         # setting docker_preserve_container also implies docker_preserve_image
@@ -643,7 +643,7 @@ module Beaker
 
       return container unless container.nil?
 
-      @logger.debug("Existing container not found")
+      @logger.debug('Existing container not found')
       nil
     end
 
