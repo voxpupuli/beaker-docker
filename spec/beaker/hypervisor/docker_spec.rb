@@ -28,7 +28,7 @@ module Beaker
     end
 
     let(:logger) do
-      logger = double('logger')
+      logger = instance_double(Logger)
       allow(logger).to receive(:debug)
       allow(logger).to receive(:info)
       allow(logger).to receive(:warn)
@@ -52,7 +52,7 @@ module Beaker
     end
 
     let(:image) do
-      image = double('Docker::Image')
+      image = instance_double(::Docker::Image)
       allow(image).to receive(:id).and_return('zyxwvu')
       allow(image).to receive(:tag)
       image
@@ -87,7 +87,7 @@ module Beaker
     end
 
     let(:container) do
-      container = double('Docker::Container')
+      container = instance_double(::Docker::Container)
       allow(container).to receive(:id).and_return('abcdef')
       allow(container).to receive(:start)
       allow(container).to receive(:stats)
@@ -183,7 +183,7 @@ module Beaker
       end
 
       describe '#install_ssh_components' do
-        let(:test_container) { double('container') }
+        let(:test_container) { object_double(container) }
         let(:host) { hosts[0] }
 
         before do
@@ -756,7 +756,7 @@ module Beaker
       end
 
       describe '#fix_ssh' do
-        let(:test_container) { double('container') }
+        let(:test_container) { object_double(container) }
         let(:host) { hosts[0] }
 
         before do
