@@ -16,11 +16,6 @@ RSpec/AnyInstance:
 RSpec/ExampleLength:
   Max: 53
 
-# Offense count: 2
-RSpec/ExpectInHook:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 50
 # Configuration parameters: .
 # SupportedStyles: have_received, receive
@@ -36,23 +31,6 @@ RSpec/MultipleExpectations:
 RSpec/MultipleMemoizedHelpers:
   Max: 12
 
-# Offense count: 1
-# Configuration parameters: AllowedPatterns.
-# AllowedPatterns: ^expect_, ^assert_
-RSpec/NoExpectationExample:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 2
-RSpec/RepeatedDescription:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
-# Offense count: 5
-RSpec/StubbedMock:
-  Exclude:
-    - 'spec/beaker/hypervisor/docker_spec.rb'
-
 # Offense count: 5
 # Configuration parameters: IgnoreNameless, IgnoreSymbolicNames.
 RSpec/VerifiedDoubles:
@@ -64,4 +42,4 @@ RSpec/VerifiedDoubles:
 # Configuration parameters: AllowHeredoc, AllowURI, URISchemes, IgnoreCopDirectives, AllowedPatterns.
 # URISchemes: http, https
 Layout/LineLength:
-  Max: 204
+  Max: 200

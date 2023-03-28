@@ -117,7 +117,7 @@ module Beaker
       describe '#initialize' do
         before do
           require 'excon'
-          expect(::Docker).to receive(:version).and_raise(Excon::Errors::SocketError.new(StandardError.new('oops'))).exactly(4).times
+          allow(::Docker).to receive(:version).and_raise(Excon::Errors::SocketError.new(StandardError.new('oops'))).exactly(4).times
         end
 
         it 'fails when docker not present' do
@@ -174,7 +174,7 @@ module Beaker
         end
 
         it 'checks the Docker gem can work with the api' do
-          docker
+          expect { docker }.not_to raise_error
         end
 
         it 'hooks the Beaker logger into the Docker one' do
@@ -278,9 +278,10 @@ module Beaker
 
         it 'calls dockerfile_for with all the hosts' do
           hosts.each do |host|
+            allow(docker).to receive(:dockerfile_for).with(host).and_return('')
             expect(docker).not_to receive(:install_ssh_components)
             expect(docker).not_to receive(:fix_ssh)
-            expect(docker).to receive(:dockerfile_for).with(host).and_return('')
+            expect(docker).to receive(:dockerfile_for).with(host)
           end
 
           docker.provision
@@ -297,32 +298,6 @@ module Beaker
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128'
           expect(::Docker::Image).to receive(:build).with('special testing value', { :rm => true, :buildargs => "{\"HTTP_PROXY\":\"http://1.1.1.1:3128\"}" })
-
-          docker.provision
-        end
-
-        it 'creates a container based on the Image (identified by image.id)' do
-          hosts.each_with_index do |host, index|
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'HostConfig' => {
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'Privileged' => true,
-                                                                     'PublishAllPorts' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
-                                                                   },
-                                                                   'name' => /\Abeaker-/,
-                                                                 })
-          end
 
           docker.provision
         end
@@ -584,8 +559,14 @@ module Beaker
           ENV['DOCKER_HOST'] = nil
           docker.provision
           hosts.each do |host|
-            expect(docker).to receive(:get_domain_name).with(host).and_return('labs.lan')
-            expect(docker).to receive(:set_etc_hosts).with(host, "127.0.0.1\tlocalhost localhost.localdomain\n192.0.2.1\tvm1.labs.lan vm1\n192.0.2.1\tvm2.labs.lan vm2\n192.0.2.1\tvm3.labs.lan vm3\n").once
+            allow(docker).to receive(:get_domain_name).with(host).and_return('labs.lan')
+            etc_hosts = <<~HOSTS
+              127.0.0.1\tlocalhost localhost.localdomain
+              192.0.2.1\tvm1.labs.lan vm1
+              192.0.2.1\tvm2.labs.lan vm2
+              192.0.2.1\tvm3.labs.lan vm3
+            HOSTS
+            expect(docker).to receive(:set_etc_hosts).with(host, etc_hosts).once
           end
           docker.hack_etc_hosts(hosts, options)
         end
@@ -611,7 +592,7 @@ module Beaker
               container_name = "spec-container-#{index}"
               host['docker_container_name'] = container_name
 
-              expect(::Docker::Container).to receive(:all).and_return([container])
+              allow(::Docker::Container).to receive(:all).and_return([container])
               expect(docker).to receive(:fix_ssh).once
             end
             docker.provision
@@ -622,7 +603,7 @@ module Beaker
               container_name = "spec-container-#{index}"
               host['docker_container_name'] = container_name
 
-              expect(::Docker::Container).to receive(:all).and_return([container])
+              allow(::Docker::Container).to receive(:all).and_return([container])
               expect(::Docker::Container).not_to receive(:create)
             end
 
@@ -781,7 +762,7 @@ module Beaker
         let(:host) { hosts[0] }
 
         before do
-          expect(test_container).to receive(:id).and_return('abcdef')
+          allow(test_container).to receive(:id).and_return('abcdef')
         end
 
         it 'calls exec once when called without host' do
