@@ -81,9 +81,7 @@ module Beaker
         },
       }
 
-      unless container_mode == 'rootless'
-        conf['HostConfig']['NetworkMode'] = 'bridge'
-      end
+      conf['HostConfig']['NetworkMode'] = 'bridge' unless container_mode == 'rootless'
 
       conf
     end

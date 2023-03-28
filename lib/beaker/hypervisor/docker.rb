@@ -71,9 +71,7 @@ module Beaker
 
     def get_container_opts(host, image_name)
       container_opts = {}
-      if host['dockerfile']
-        container_opts['ExposedPorts'] = { '22/tcp' => {} }
-      end
+      container_opts['ExposedPorts'] = { '22/tcp' => {} } if host['dockerfile']
 
       container_opts.merge!({
                               'Image' => image_name,
@@ -93,9 +91,7 @@ module Beaker
     def get_container_image(host)
       @logger.debug('Creating image')
 
-      if host['use_image_as_is']
-        return ::Docker::Image.create('fromImage' => host['image'])
-      end
+      return ::Docker::Image.create('fromImage' => host['image']) if host['use_image_as_is']
 
       dockerfile = host['dockerfile']
       if dockerfile
@@ -161,9 +157,7 @@ module Beaker
 
         # Host to Container
         port22 = network_settings.dig('PortBindings', '22/tcp')
-        if port22.nil? && network_settings.key?('Ports') && !nested_docker?
-          port22 = network_settings.dig('Ports', '22/tcp')
-        end
+        port22 = network_settings.dig('Ports', '22/tcp') if port22.nil? && network_settings.key?('Ports') && !nested_docker?
 
         ip = port22[0]['HostIp'] if port22
         port = port22[0]['HostPort'] if port22
@@ -214,9 +208,7 @@ module Beaker
 
         image = get_container_image(host)
 
-        if host['tag']
-          image.tag({ :repo => host['tag'] })
-        end
+        image.tag({ :repo => host['tag'] }) if host['tag']
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
@@ -250,9 +242,7 @@ module Beaker
             container_opts['HostConfig']['Binds'] = host['mount_folders'].values.map do |mount|
               host_path = File.expand_path(mount['host_path'])
               # When using docker_toolbox and getting a "(Driveletter):/" path, convert windows path to VM mount
-              if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ %r{^.:/}
-                host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}"
-              end
+              host_path = "/#{host_path.gsub(/^.:/, host_path[/^(.)/].downcase)}" if ENV['DOCKER_TOOLBOX_INSTALL_PATH'] && host_path =~ %r{^.:/}
               a = [host_path, mount['container_path']]
 
               # TODO: rewrite this part
@@ -266,9 +256,7 @@ module Beaker
             end
           end
 
-          if host['docker_env']
-            container_opts['Env'] = host['docker_env']
-          end
+          container_opts['Env'] = host['docker_env'] if host['docker_env']
 
           # Fixup privileges
           #

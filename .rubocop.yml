@@ -13,6 +13,3 @@ Naming/FileName:
   Description: Some files violates the snake_case convention
   Exclude:
     - 'lib/beaker-docker.rb'
-
-Style/IfUnlessModifier:
-  Enabled: false
