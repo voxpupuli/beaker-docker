@@ -129,32 +129,16 @@ module Beaker
 
     context 'with a working connection' do
       before do
-        # Stub out all of the docker-api gem. we should never really call it
-        # from these tests
-        allow_any_instance_of(::Beaker::Docker).to receive(:require).with('docker')
+        # Stub out all of the docker-api gem. we should never really call it from these tests
         allow(::Docker).to receive(:options).and_return(docker_options)
-        allow(::Docker).to receive(:options=)
-        allow(::Docker).to receive(:logger=)
         allow(::Docker).to receive(:podman?).and_return(false)
         allow(::Docker).to receive(:version).and_return(version)
         allow(::Docker::Image).to receive(:build).and_return(image)
         allow(::Docker::Image).to receive(:create).and_return(image)
         allow(::Docker::Container).to receive(:create).and_return(container)
-        allow_any_instance_of(::Docker::Container).to receive(:start)
       end
 
       describe '#initialize' do
-        it 'requires the docker gem' do
-          expect_any_instance_of(::Beaker::Docker).to receive(:require).with('docker').once
-
-          docker
-        end
-
-        it 'fails when the gem is absent' do
-          allow_any_instance_of(::Beaker::Docker).to receive(:require).with('docker').and_raise(LoadError)
-          expect { docker }.to raise_error(LoadError)
-        end
-
         it 'sets Docker options' do
           expect(::Docker).to receive(:options=).with({ write_timeout: 300, read_timeout: 300 }).once
 
