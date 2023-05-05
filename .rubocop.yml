@@ -2,7 +2,7 @@
 inherit_from: .rubocop_todo.yml
 
 inherit_gem:
-  beaker: rubocop.yml
+  voxpupuli-rubocop: rubocop.yml
 
 Naming/FileName:
   Description: Some files violates the snake_case convention
