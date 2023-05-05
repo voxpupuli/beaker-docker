@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.1.0](https://github.com/voxpupuli/beaker-docker/tree/2.1.0) (2023-05-05)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.0.0...2.1.0)
+
+**Implemented enhancements:**
+
+- switch to voxpupuli-rubocop & restore beaker 4 support [\#120](https://github.com/voxpupuli/beaker-docker/pull/120) ([bastelfreak](https://github.com/bastelfreak))
+
+**Closed issues:**
+
+- Enable SSH Agent forwarding on MacOS [\#117](https://github.com/voxpupuli/beaker-docker/issues/117)
+
+**Merged pull requests:**
+
+- GCG: Add faraday-retry dep [\#119](https://github.com/voxpupuli/beaker-docker/pull/119) ([bastelfreak](https://github.com/bastelfreak))
+- CI: Build gems with strictness and verbosity [\#118](https://github.com/voxpupuli/beaker-docker/pull/118) ([bastelfreak](https://github.com/bastelfreak))
+- rubocop: Fix RSpec/AnyInstance [\#116](https://github.com/voxpupuli/beaker-docker/pull/116) ([jay7x](https://github.com/jay7x))
+- rubocop: Fix RSpec/VerifiedDoubles [\#115](https://github.com/voxpupuli/beaker-docker/pull/115) ([jay7x](https://github.com/jay7x))
+
 ## [2.0.0](https://github.com/voxpupuli/beaker-docker/tree/2.0.0) (2023-03-28)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/1.5.0...2.0.0)
