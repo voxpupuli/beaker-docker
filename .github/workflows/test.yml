@@ -13,7 +13,7 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
@@ -37,7 +37,7 @@ jobs:
       COVERAGE: ${{ matrix.coverage }}
     name: RSpec - Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Docker
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Docker - Beaker in container connection test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # use this and not container key from gha to not have a docker network from github
       - name: Run Beaker in docker container
         uses: addnab/docker-run-action@v3
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Podman
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
