@@ -375,7 +375,7 @@ module Beaker
         container.exec(%w[apt-get update])
         container.exec(%w[apt-get install -y openssh-server openssh-client])
         container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
-      when /el-[89]/, /fedora-(2[2-9]|3[0-9])/
+      when /el-[89]/, /fedora-(2[2-9]|3[0-9])/, /amazon-2023/
         container.exec(%w[dnf clean all])
         container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
         container.exec(%w[ssh-keygen -A])
@@ -509,7 +509,7 @@ module Beaker
           RUN apt-get update \
           && apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
         DF
-      when /el-[89]/, /fedora-(2[2-9]|3)/
+      when /el-[89]/, /fedora-(2[2-9]|3)/, /amazon-2023/
         dockerfile += <<~DF
           RUN dnf clean all \
           && dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
