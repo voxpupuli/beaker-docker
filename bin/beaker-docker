@@ -2,7 +2,43 @@
 # frozen_string_literal: true
 
 require 'rubygems' unless defined?(Gem)
-require 'beaker-docker'
+require 'beaker'
+require "beaker/hypervisor/docker"
+
+def build(hostspec)
+  ENV['BEAKER_HYPERVISOR'] = 'docker'
+  options = Beaker::Options::Parser.new.parse_args(['--hosts', hostspec])
+  logger = Beaker::Logger.new(options)
+
+  # add additional paths to the LOAD_PATH
+  options[:load_path].each do |path|
+    $LOAD_PATH << File.expand_path(path)
+  end
+  options[:helper].each do |helper|
+    require File.expand_path(helper)
+  end
+
+  # Simplified version of Beaker::NetworkManager
+  hostless_options = Beaker::Options::OptionsHash.new.merge(options.select { |k, _v| !k.to_s.include?('HOSTS') })
+
+  hosts = options['HOSTS'].map do |name, host_hash|
+    Beaker::Host.create(name, host_hash, hostless_options)
+  end
+
+  hypervisor = Beaker::Docker.new(hosts, options)
+  logger.notify 'Provisioning docker'
+
+  hosts.map do |host|
+    logger.notify "building #{host.name}"
+    image = hypervisor.get_container_image(host)
+
+    if host['tag']
+      hypervisor.tag_contaner_image(image, host['tag'])
+    else
+      logger.notify "Built #{host.name} with #{image.id}"
+    end
+  end
+end
 
 VERSION_STRING = <<'VER'
                                  _ .--.
@@ -25,6 +61,10 @@ VERSION_STRING = <<'VER'
                      '=='
 VER
 
-puts VERSION_STRING % BeakerDocker::VERSION
+if ARGV[0] == 'build'
+  build(ARGV[1])
+else
+  puts VERSION_STRING % BeakerDocker::VERSION
+end
 
 exit 0

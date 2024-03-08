@@ -124,6 +124,18 @@ module Beaker
       ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
     end
 
+    def tag_container_image(image, host_tag)
+      raise ValueError, 'No tag specified' unless host_tag
+
+      if host_tag.include?(':')
+        repo, tag = host_tag.split(':')
+        opts = { repo: repo, tag: tag }
+      else
+        opts = { repo: repo }
+      end
+      image.tag(opts)
+    end
+
     # Nested Docker scenarios
     def nested_docker?
       ENV['DOCKER_IN_DOCKER'] || ENV.fetch('WSLENV', nil)
@@ -208,7 +220,7 @@ module Beaker
 
         image = get_container_image(host)
 
-        image.tag({ repo: host['tag'] }) if host['tag']
+        tag_container_image(image, host['tag']) if host['tag']
 
         if @docker_type == 'swarm'
           image_name = "#{@registry}/beaker/#{image.id}"
