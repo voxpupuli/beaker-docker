@@ -40,6 +40,36 @@ def build(hostspec)
   end
 end
 
+def dockerfile(hostspec, filename)
+  ENV['BEAKER_HYPERVISOR'] = 'docker'
+  options = Beaker::Options::Parser.new.parse_args(['--hosts', hostspec])
+  logger = Beaker::Logger.new(options)
+
+  # add additional paths to the LOAD_PATH
+  options[:load_path].each do |path|
+    $LOAD_PATH << File.expand_path(path)
+  end
+  options[:helper].each do |helper|
+    require File.expand_path(helper)
+  end
+
+  # Simplified version of Beaker::NetworkManager
+  hostless_options = Beaker::Options::OptionsHash.new.merge(options.select { |k, _v| !k.to_s.include?('HOSTS') })
+
+  hosts = options['HOSTS'].map do |name, host_hash|
+    Beaker::Host.create(name, host_hash, hostless_options)
+  end
+
+  if hosts.size != 1
+    logger.error "Found #{hosts.size} hosts, expected 1"
+    exit(1)
+  end
+
+  hypervisor = Beaker::Docker.new(hosts, options)
+  # TODO: private method
+  File.write(filename, hypervisor.send(:dockerfile_for, hosts.first))
+end
+
 VERSION_STRING = <<'VER'
                                  _ .--.
                                 ( `    )
@@ -61,8 +91,11 @@ VERSION_STRING = <<'VER'
                      '=='
 VER
 
-if ARGV[0] == 'build'
+case ARGV[0]
+when 'build'
   build(ARGV[1])
+when 'containerfile', 'dockerfile'
+  dockerfile(ARGV[1], ARGV[2] || 'Containerfile')
 else
   puts VERSION_STRING % BeakerDocker::VERSION
 end
