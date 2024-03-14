@@ -481,54 +481,46 @@ module Beaker
         end
 
         context 'when connecting to ssh' do
-          context 'when rootless' do
-            it 'exposes port 22 to beaker' do
-              docker.provision
+          %w[rootless privileged].each do |mode|
+            context "when #{mode}" do
+              let(:container_mode) do
+                mode
+              end
 
-              expect(hosts[0]['ip']).to eq '127.0.0.1'
-              expect(hosts[0]['port']).to eq 8022
-            end
-
-            it 'exposes port 22 to beaker when using DOCKER_HOST' do
-              ENV['DOCKER_HOST'] = 'tcp://192.0.2.2:2375'
-              docker.provision
-
-              expect(hosts[0]['ip']).to eq '192.0.2.2'
-              expect(hosts[0]['port']).to eq 8022
-            end
-
-            it 'has ssh agent forwarding enabled' do
-              docker.provision
-
-              expect(hosts[0]['ip']).to eq '127.0.0.1'
-              expect(hosts[0]['port']).to eq 8022
-              expect(hosts[0]['ssh'][:password]).to eq 'root'
-              expect(hosts[0]['ssh'][:port]).to eq 8022
-              expect(hosts[0]['ssh'][:forward_agent]).to be true
-            end
-
-            it 'connects to gateway ip' do
-              FakeFS do
-                FileUtils.touch('/.dockerenv')
+              it 'exposes port 22 to beaker' do
                 docker.provision
 
-                expect(hosts[0]['ip']).to eq '192.0.2.254'
+                expect(hosts[0]['ip']).to eq '127.0.0.1'
                 expect(hosts[0]['port']).to eq 8022
               end
-            end
-          end
 
-          context 'when rootful' do
-            let(:container_mode) do
-              'rootful'
-            end
+              it 'exposes port 22 to beaker when using DOCKER_HOST' do
+                ENV['DOCKER_HOST'] = 'tcp://192.0.2.2:2375'
+                docker.provision
 
-            it 'exposes port 22 to beaker' do
-              ENV['DOCKER_HOST'] = nil
-              docker.provision
+                expect(hosts[0]['ip']).to eq '192.0.2.2'
+                expect(hosts[0]['port']).to eq 8022
+              end
 
-              expect(hosts[0]['ip']).to eq '127.0.0.1'
-              expect(hosts[0]['port']).to eq 8022
+              it 'has ssh agent forwarding enabled' do
+                docker.provision
+
+                expect(hosts[0]['ip']).to eq '127.0.0.1'
+                expect(hosts[0]['port']).to eq 8022
+                expect(hosts[0]['ssh'][:password]).to eq 'root'
+                expect(hosts[0]['ssh'][:port]).to eq 8022
+                expect(hosts[0]['ssh'][:forward_agent]).to be true
+              end
+
+              it 'connects to gateway ip' do
+                FakeFS do
+                  FileUtils.touch('/.dockerenv')
+                  docker.provision
+
+                  expect(hosts[0]['ip']).to eq '192.0.2.254'
+                  expect(hosts[0]['port']).to eq 8022
+                end
+              end
             end
           end
         end
