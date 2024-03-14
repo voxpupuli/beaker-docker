@@ -109,6 +109,12 @@ module Beaker
 
     before do
       allow(::Docker).to receive(:rootless?).and_return(true)
+      @docker_host = ENV.fetch('DOCKER_HOST', nil)
+      ENV.delete('DOCKER_HOST') if @docker_host
+    end
+
+    after do
+      ENV['DOCKER_HOST'] = @docker_host if @docker_host
     end
 
     context 'with connection failure' do
@@ -476,12 +482,7 @@ module Beaker
 
         context 'when connecting to ssh' do
           context 'when rootless' do
-            before { @docker_host = ENV.fetch('DOCKER_HOST', nil) }
-
-            after { ENV['DOCKER_HOST'] = @docker_host }
-
             it 'exposes port 22 to beaker' do
-              ENV['DOCKER_HOST'] = nil
               docker.provision
 
               expect(hosts[0]['ip']).to eq '127.0.0.1'
@@ -497,7 +498,6 @@ module Beaker
             end
 
             it 'has ssh agent forwarding enabled' do
-              ENV['DOCKER_HOST'] = nil
               docker.provision
 
               expect(hosts[0]['ip']).to eq '127.0.0.1'
@@ -519,10 +519,6 @@ module Beaker
           end
 
           context 'when rootful' do
-            before { @docker_host = ENV.fetch('DOCKER_HOST', nil) }
-
-            after { ENV['DOCKER_HOST'] = @docker_host }
-
             let(:container_mode) do
               'rootful'
             end
