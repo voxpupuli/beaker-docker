@@ -11,6 +11,7 @@ module Beaker
     'centos-7-x86_64',
     'sles-12-x86_64',
     'archlinux-2017.12.27-x86_64',
+    'amazon-2023-x86_64',
   ]
 
   describe Docker do
