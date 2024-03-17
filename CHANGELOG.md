@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.2.0](https://github.com/voxpupuli/beaker-docker/tree/2.2.0) (2024-03-17)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.1.0...2.2.0)
+
+**Implemented enhancements:**
+
+- Implement writing out a containerfile for a host [\#125](https://github.com/voxpupuli/beaker-docker/pull/125) ([ekohl](https://github.com/ekohl))
+- Support Amazon Linux 2023 [\#123](https://github.com/voxpupuli/beaker-docker/pull/123) ([treydock](https://github.com/treydock))
+
+**Merged pull requests:**
+
+- Rakefile: Use rubocop tasks from voxpupuli-rubocop [\#131](https://github.com/voxpupuli/beaker-docker/pull/131) ([bastelfreak](https://github.com/bastelfreak))
+- voxpupuli-rubocop: Update 1.2-\>2.6 [\#129](https://github.com/voxpupuli/beaker-docker/pull/129) ([bastelfreak](https://github.com/bastelfreak))
+- README.md: Document CLI; Add ToC [\#127](https://github.com/voxpupuli/beaker-docker/pull/127) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [2.1.0](https://github.com/voxpupuli/beaker-docker/tree/2.1.0) (2023-05-05)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.0.0...2.1.0)
@@ -84,7 +99,6 @@
 
 **Merged pull requests:**
 
-- Bump actions/checkout from 2 to 3 [\#90](https://github.com/voxpupuli/beaker-docker/pull/90) ([dependabot[bot]](https://github.com/apps/dependabot))
 - dependabot: check for github actions as well [\#89](https://github.com/voxpupuli/beaker-docker/pull/89) ([bastelfreak](https://github.com/bastelfreak))
 
 ## [1.3.0](https://github.com/voxpupuli/beaker-docker/tree/1.3.0) (2022-12-18)
