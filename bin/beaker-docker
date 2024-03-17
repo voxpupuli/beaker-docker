@@ -2,7 +2,26 @@
 # frozen_string_literal: true
 
 require 'rubygems' unless defined?(Gem)
+require 'beaker'
 require 'beaker-docker'
+
+def dockerfile(hostspec, filename)
+  ENV['BEAKER_HYPERVISOR'] = 'docker'
+  options = Beaker::Options::Parser.new.parse_args(['--hosts', hostspec || '', '--no-provision'])
+  options[:logger] = Beaker::Logger.new(options)
+  network_manager = Beaker::NetworkManager.new(options, options[:logger])
+  network_manager.provision
+  hosts = network_manager.hosts
+
+  if hosts.size != 1
+    options[:logger].error "Found #{hosts.size} hosts, expected 1"
+    exit(1)
+  end
+
+  hypervisor = network_manager.hypervisors['docker']
+  # TODO: private method
+  File.write(filename, hypervisor.send(:dockerfile_for, hosts.first))
+end
 
 VERSION_STRING = <<'VER'
                                  _ .--.
@@ -25,6 +44,13 @@ VERSION_STRING = <<'VER'
                      '=='
 VER
 
-puts VERSION_STRING % BeakerDocker::VERSION
+case ARGV[0]
+when 'containerfile'
+  dockerfile(ARGV[1], ARGV[2] || 'Containerfile')
+when 'dockerfile'
+  dockerfile(ARGV[1], ARGV[2] || 'Dockerfile')
+else
+  puts VERSION_STRING % BeakerDocker::VERSION
+end
 
 exit 0
