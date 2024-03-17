@@ -10,6 +10,18 @@
 
 Beaker library to use docker hypervisor
 
+* [How to use this wizardry](#how-to-use-this-wizardry)
+  * [Nodeset Options](#nodeset-options)
+  * [Privileged containers](#privileged-containers)
+  * [Cleaning up after tests](#cleaning-up-after-tests)
+* [Working with `podman`](#working-with-podman)
+* [Generating a Dockerfile](#generating-a-dockerfile)
+* [Spec tests]()
+* [Acceptance tests]()
+* [Transfer Notice](#transfer-notice)
+* [License](#license)
+* [Release Information](#release-information)
+
 ## How to use this wizardry
 
 This gem that allows you to use hosts with [docker](docker.md) hypervisor with [beaker](https://github.com/voxpupuli/beaker).
@@ -101,6 +113,56 @@ to edit the `dockeropts` hash in your nodeset to include different flags in the
 See the
 [HostConfig](https://any-api.com/docker_com/engine/docs/Definitions/HostConfig)
 portion of the docker API for more information.
+
+## Generating a Dockerfile
+
+Usually beaker-docker is used to provision docker instances with beaker. During
+this step beaker-docker generates a Dockerfile and posts it to the docker daemon
+API.
+
+There's also a small CLI command to only generate the file:
+
+```
+bundle exec beaker-docker dockerfile archlinux-64
+```
+
+Will generate a local `Dockerfile`:
+
+```dockerfile
+FROM archlinux/archlinux
+ENV container docker
+RUN pacman --sync --refresh --noconfirm archlinux-keyring && pacman --sync --refresh --noconfirm --sysupgrade && pacman --sync --noconfirm curl ntp net-tools openssh && ssh-keygen -A && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config && systemctl enable sshd
+RUN mkdir -p /var/run/sshd && echo root:root | chpasswd
+RUN sed -ri -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' -e 's/^#?UseDNS .*/UseDNS no/' -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' /etc/ssh/sshd_config
+EXPOSE 22
+CMD ["/sbin/init"]
+```
+
+This works by calling
+(beaker-hostgenerator](https://github.com/voxpupuli/beaker-hostgenerator?tab=readme-ov-file#beaker-host-generator).
+So you can provide any host string that's supported by beaker-hostgenerator.
+
+For non-rolling release distros this is usually `$os$majorversion-$architecture`
+
+```
+beaker-docker dockerfile centos9-64
+```
+
+```dockerfile
+FROM quay.io/centos/centos:stream9
+ENV container docker
+RUN dnf clean all && dnf install -y sudo openssh-server openssh-clients chrony && ssh-keygen -A && sed 's@session *required *pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+RUN mkdir -p /var/run/sshd && echo root:root | chpasswd
+RUN sed -ri -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' -e 's/^#?UseDNS .*/UseDNS no/' -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' /etc/ssh/sshd_config
+RUN cp /bin/true /sbin/agetty
+RUN dnf install -y cronie crontabs initscripts iproute openssl wget which glibc-langpack-en hostname
+EXPOSE 22
+CMD ["/sbin/init"]
+```
+
+This requires a running docker daemon. You can also request a containerfile.
+This will currently generate a `Containerfile` but with the same content (this
+may change in the future, depending on the API spec).
 
 ## Spec tests
 
