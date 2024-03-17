@@ -207,7 +207,7 @@ module Beaker
             end
           end
 
-          it 'will tag the image with the value of the tag' do
+          it 'tags the image with the value of the tag' do
             expect(image).to receive(:tag).with({ repo: 'my_tag' }).exactly(3).times
             docker.provision
           end
@@ -309,8 +309,8 @@ module Beaker
                                                                      },
                                                                    },
                                                                    'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                     'one' => ((index == 2) ? 3 : 1),
+                                                                     'two' => ((index == 2) ? 4 : 2),
                                                                    },
                                                                    'name' => /\Abeaker-/,
                                                                  })
@@ -340,8 +340,8 @@ module Beaker
                                                                      },
                                                                    },
                                                                    'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                     'one' => ((index == 2) ? 3 : 1),
+                                                                     'two' => ((index == 2) ? 4 : 2),
                                                                    },
                                                                  })
           end
@@ -397,8 +397,8 @@ module Beaker
                                                                      },
                                                                    },
                                                                    'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                     'one' => ((index == 2) ? 3 : 1),
+                                                                     'two' => ((index == 2) ? 4 : 2),
                                                                    },
                                                                    'name' => /\Abeaker-/,
                                                                  })
@@ -425,8 +425,8 @@ module Beaker
                                                                      'CapAdd' => %w[NET_ADMIN SYS_ADMIN],
                                                                    },
                                                                    'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                     'one' => ((index == 2) ? 3 : 1),
+                                                                     'two' => ((index == 2) ? 4 : 2),
                                                                    },
                                                                    'name' => /\Abeaker-/,
                                                                  })
@@ -459,8 +459,8 @@ module Beaker
                                                                      },
                                                                    },
                                                                    'Labels' => {
-                                                                     'one' => (index == 2 ? 3 : 1),
-                                                                     'two' => (index == 2 ? 4 : 2),
+                                                                     'one' => ((index == 2) ? 3 : 1),
+                                                                     'two' => ((index == 2) ? 4 : 2),
                                                                    },
                                                                    'name' => /\Abeaker-/,
                                                                  })

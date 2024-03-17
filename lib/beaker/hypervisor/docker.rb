@@ -165,7 +165,7 @@ module Beaker
         # Container to container
         unless ip && port
           ip = network_settings['IPAddress']
-          port = ip && !ip.empty? ? 22 : nil
+          port = (ip && !ip.empty?) ? 22 : nil
         end
 
         # Container through gateway
@@ -195,7 +195,7 @@ module Beaker
         port = port22[0]['HostPort'] if port22
       end
 
-      ssh_connection_info[:ip] = ip == '0.0.0.0' ? '127.0.0.1' : ip
+      ssh_connection_info[:ip] = (ip == '0.0.0.0') ? '127.0.0.1' : ip
       ssh_connection_info[:port] = port || '22'
       ssh_connection_info
     end
