@@ -188,9 +188,9 @@ module Beaker
         end
       end
 
-      if host_config['NetworkMode'] != 'slirp4netns' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
-        ip = network_settings['IPAddress'] if ip.nil?
-      else
+      ip = network_settings['IPAddress'] if ip.nil? && host_config['NetworkMode'] != 'slirp4netns' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
+
+      if port.nil?
         port22 = network_settings.dig('Ports', '22/tcp')
         port = port22[0]['HostPort'] if port22
       end
