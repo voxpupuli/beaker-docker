@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/voxpupuli/beaker-docker/tree/2.2.1) (2024-03-27)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.2.0...2.2.1)
+
+**Fixed bugs:**
+
+- Fix privileged remote docker port forward resolution  [\#126](https://github.com/voxpupuli/beaker-docker/pull/126) ([h0tw1r3](https://github.com/h0tw1r3))
+
 ## [2.2.0](https://github.com/voxpupuli/beaker-docker/tree/2.2.0) (2024-03-17)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.1.0...2.2.0)
