@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'voxpupuli-rubocop', '~> 2.7.0'
 
   # Run time dependencies
-  s.add_runtime_dependency 'beaker', '>= 4', '< 6'
+  s.add_runtime_dependency 'beaker', '>= 4', '< 7'
   s.add_runtime_dependency 'docker-api', '~> 2.1'
   s.add_runtime_dependency 'stringify-hash', '~> 0.0.0'
 end
