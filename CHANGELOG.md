@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0](https://github.com/voxpupuli/beaker-docker/tree/2.3.0) (2024-05-28)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.2.1...2.3.0)
+
+**Implemented enhancements:**
+
+- beaker: Allow 6.x [\#135](https://github.com/voxpupuli/beaker-docker/pull/135) ([bastelfreak](https://github.com/bastelfreak))
+- Add Ruby 3.3 to CI matrix [\#134](https://github.com/voxpupuli/beaker-docker/pull/134) ([bastelfreak](https://github.com/bastelfreak))
+
+**Merged pull requests:**
+
+- voxpupuli-rubocop: Use 2.7.0 [\#136](https://github.com/voxpupuli/beaker-docker/pull/136) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [2.2.1](https://github.com/voxpupuli/beaker-docker/tree/2.2.1) (2024-03-27)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.2.0...2.2.1)
