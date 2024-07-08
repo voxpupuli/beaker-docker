@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.1](https://github.com/voxpupuli/beaker-docker/tree/2.3.1) (2024-07-08)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.3.0...2.3.1)
+
+**Fixed bugs:**
+
+- CI: Switch from EL7/8-\>Debian12/EL9 [\#140](https://github.com/voxpupuli/beaker-docker/pull/140) ([bastelfreak](https://github.com/bastelfreak))
+- docker-api: depend on 2.3 or newer [\#139](https://github.com/voxpupuli/beaker-docker/pull/139) ([bastelfreak](https://github.com/bastelfreak))
+
+**Merged pull requests:**
+
+- voxpupuli-rubocop: Update to 2.8.0 [\#138](https://github.com/voxpupuli/beaker-docker/pull/138) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [2.3.0](https://github.com/voxpupuli/beaker-docker/tree/2.3.0) (2024-05-28)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.2.1...2.3.0)
