@@ -1,9 +1,9 @@
 ---
 HOSTS:
-  centos8:
-    platform: el-8-x86_64
+  centos9:
+    platform: el-9-x86_64
     hypervisor: docker
-    image: quay.io/centos/centos:stream8
+    image: quay.io/centos/centos:stream9
     roles:
       - master
       - agent
@@ -12,14 +12,13 @@ HOSTS:
       - classifier
       - default
     docker_cmd: '["/sbin/init"]'
-  centos7:
-    platform: el-7-x86_64
+  debian12:
+    platform: debian-12-x86_64
     hypervisor: docker
-    image: centos:7
+    image: debian:12
     roles:
       - agent
-    docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
-    use_image_entrypoint: true
+    docker_cmd: '["/sbin/init"]'
 CONFIG:
   nfs_server: none
   consoleport: 443
