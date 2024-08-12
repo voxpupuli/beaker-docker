@@ -392,8 +392,6 @@ module Beaker
         container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
         container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
       when /archlinux/
-        container.exec(%w[pacman --noconfirm -Sy archlinux-keyring])
-        container.exec(%w[pacman --noconfirm -Syu])
         container.exec(%w[pacman -S --noconfirm openssh])
         container.exec(%w[ssh-keygen -A])
         container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
