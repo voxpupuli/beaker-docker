@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.0](https://github.com/voxpupuli/beaker-docker/tree/2.4.0) (2024-08-13)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.3.1...2.4.0)
+
+**Implemented enhancements:**
+
+- Arch Linux: remove redundant system updates [\#142](https://github.com/voxpupuli/beaker-docker/pull/142) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [2.3.1](https://github.com/voxpupuli/beaker-docker/tree/2.3.1) (2024-07-08)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.3.0...2.3.1)
