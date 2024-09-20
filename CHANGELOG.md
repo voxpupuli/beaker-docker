@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.5.0](https://github.com/voxpupuli/beaker-docker/tree/2.5.0) (2024-09-20)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.4.0...2.5.0)
+
+**Implemented enhancements:**
+
+- add ContainerDocker and ContainerSwarm [\#145](https://github.com/voxpupuli/beaker-docker/pull/145) ([evgeni](https://github.com/evgeni))
+- Add ContainerPodman class [\#130](https://github.com/voxpupuli/beaker-docker/pull/130) ([bastelfreak](https://github.com/bastelfreak))
+
+**Merged pull requests:**
+
+- fix tests after Beaker::Platform refactoring [\#146](https://github.com/voxpupuli/beaker-docker/pull/146) ([evgeni](https://github.com/evgeni))
+
 ## [2.4.0](https://github.com/voxpupuli/beaker-docker/tree/2.4.0) (2024-08-13)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.3.1...2.4.0)
