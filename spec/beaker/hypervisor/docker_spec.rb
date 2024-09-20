@@ -6,7 +6,6 @@ require 'fakefs/spec_helpers'
 module Beaker
   platforms = [
     'ubuntu-14.04-x86_64',
-    'cumulus-2.2-x86_64',
     'fedora-22-x86_64',
     'centos-7-x86_64',
     'sles-12-x86_64',
@@ -190,14 +189,14 @@ module Beaker
         end
 
         it 'accepts alpine as valid platform' do
-          host['platform'] = 'alpine-3.8-x86_64'
+          host['platform'] = Beaker::Platform.new('alpine-3.8-x86_64')
           expect(test_container).to receive(:exec).at_least(:twice)
           docker.install_ssh_components(test_container, host)
         end
 
         it 'raises an error with an unsupported platform' do
-          host['platform'] = 'boogeyman-2000-x86_64'
-          expect { docker.install_ssh_components(test_container, host) }.to raise_error(RuntimeError, /boogeyman/)
+          host['platform'] = Beaker::Platform.new('windows-11-64')
+          expect { docker.install_ssh_components(test_container, host) }.to raise_error(RuntimeError, /windows/)
         end
       end
 
@@ -632,16 +631,16 @@ module Beaker
       describe '#dockerfile_for' do
         FakeFS.deactivate!
         it 'raises on an unsupported platform' do
-          expect { docker.send(:dockerfile_for, { 'platform' => 'a_sidewalk', 'image' => 'foobar' }) }.to raise_error(/platform a_sidewalk not yet supported/)
+          expect { docker.send(:dockerfile_for, make_host('none', { 'platform' => 'solaris-11-64', 'image' => 'foobar' })) }.to raise_error(/platform solaris-11-64 not yet supported/)
         end
 
         it 'sets "ENV container docker"' do
           FakeFS.deactivate!
           platforms.each do |platform|
-            dockerfile = docker.send(:dockerfile_for, {
-                                       'platform' => platform,
-                                       'image' => 'foobar',
-                                     })
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => platform,
+                                                                  'image' => 'foobar',
+                                                                }))
             expect(dockerfile).to match(/ENV container docker/)
           end
         end
@@ -649,15 +648,15 @@ module Beaker
         it 'adds docker_image_first_commands as RUN statements' do
           FakeFS.deactivate!
           platforms.each do |platform|
-            dockerfile = docker.send(:dockerfile_for, {
-                                       'platform' => platform,
-                                       'image' => 'foobar',
-                                       'docker_image_first_commands' => [
-                                         'special one',
-                                         'special two',
-                                         'special three',
-                                       ],
-                                     })
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => platform,
+                                                                  'image' => 'foobar',
+                                                                  'docker_image_first_commands' => [
+                                                                    'special one',
+                                                                    'special two',
+                                                                    'special three',
+                                                                  ],
+                                                                }))
 
             expect(dockerfile).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
@@ -666,15 +665,15 @@ module Beaker
         it 'adds docker_image_commands as RUN statements' do
           FakeFS.deactivate!
           platforms.each do |platform|
-            dockerfile = docker.send(:dockerfile_for, {
-                                       'platform' => platform,
-                                       'image' => 'foobar',
-                                       'docker_image_commands' => [
-                                         'special one',
-                                         'special two',
-                                         'special three',
-                                       ],
-                                     })
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => platform,
+                                                                  'image' => 'foobar',
+                                                                  'docker_image_commands' => [
+                                                                    'special one',
+                                                                    'special two',
+                                                                    'special three',
+                                                                  ],
+                                                                }))
 
             expect(dockerfile).to match(/RUN special one\nRUN special two\nRUN special three/)
           end
@@ -683,11 +682,11 @@ module Beaker
         it 'adds docker_image_entrypoint' do
           FakeFS.deactivate!
           platforms.each do |platform|
-            dockerfile = docker.send(:dockerfile_for, {
-                                       'platform' => platform,
-                                       'image' => 'foobar',
-                                       'docker_image_entrypoint' => '/bin/bash',
-                                     })
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => platform,
+                                                                  'image' => 'foobar',
+                                                                  'docker_image_entrypoint' => '/bin/bash',
+                                                                }))
 
             expect(dockerfile).to match(%r{ENTRYPOINT /bin/bash})
           end
@@ -695,10 +694,10 @@ module Beaker
 
         it 'uses zypper on sles' do
           FakeFS.deactivate!
-          dockerfile = docker.send(:dockerfile_for, {
-                                     'platform' => 'sles-12-x86_64',
-                                     'image' => 'foobar',
-                                   })
+          dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                'platform' => Beaker::Platform.new('sles-12-x86_64'),
+                                                                'image' => 'foobar',
+                                                              }))
 
           expect(dockerfile).to match(/zypper -n in openssh/)
         end
@@ -706,10 +705,10 @@ module Beaker
         (22..39).to_a.each do |fedora_release|
           it "uses dnf on fedora #{fedora_release}" do
             FakeFS.deactivate!
-            dockerfile = docker.send(:dockerfile_for, {
-                                       'platform' => "fedora-#{fedora_release}-x86_64",
-                                       'image' => 'foobar',
-                                     })
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => Beaker::Platform.new("fedora-#{fedora_release}-x86_64"),
+                                                                  'image' => 'foobar',
+                                                                }))
 
             expect(dockerfile).to match(/dnf install -y sudo/)
           end
@@ -717,14 +716,14 @@ module Beaker
 
         it 'uses pacman on archlinux' do
           FakeFS.deactivate!
-          dockerfile = docker.send(:dockerfile_for, {
-                                     'platform' => 'archlinux-current-x86_64',
-                                     'image' => 'foobar',
-                                   })
+          dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                'platform' => Beaker::Platform.new('archlinux-current-x86_64'),
+                                                                'image' => 'foobar',
+                                                              }))
 
           expect(dockerfile).to match(/pacman --sync --refresh --noconfirm archlinux-keyring/)
           expect(dockerfile).to match(/pacman --sync --refresh --noconfirm --sysupgrade/)
-          expect(dockerfile).to match(/pacman --sync --noconfirm curl ntp net-tools openssh/)
+          expect(dockerfile).to match(/pacman --sync --noconfirm curl net-tools openssh/)
         end
       end
 
@@ -747,21 +746,21 @@ module Beaker
         end
 
         it 'execs sshd on alpine' do
-          host['platform'] = 'alpine-3.8-x86_64'
+          host['platform'] = Beaker::Platform.new('alpine-3.8-x86_64')
           expect(test_container).to receive(:exec).with(array_including('sed'))
           expect(test_container).to receive(:exec).with(%w[/usr/sbin/sshd])
           docker.send(:fix_ssh, test_container, host)
         end
 
         it 'restarts ssh service on ubuntu' do
-          host['platform'] = 'ubuntu-20.04-x86_64'
+          host['platform'] = Beaker::Platform.new('ubuntu-20.04-x86_64')
           expect(test_container).to receive(:exec).with(array_including('sed'))
           expect(test_container).to receive(:exec).with(%w[service ssh restart])
           docker.send(:fix_ssh, test_container, host)
         end
 
         it 'restarts sshd service otherwise' do
-          host['platform'] = 'boogeyman-2000-x86_64'
+          host['platform'] = Beaker::Platform.new('centos-6-x86_64')
           expect(test_container).to receive(:exec).with(array_including('sed'))
           expect(test_container).to receive(:exec).with(%w[service sshd restart])
           docker.send(:fix_ssh, test_container, host)
