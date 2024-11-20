@@ -3,6 +3,8 @@
 module Beaker
   # Docker hypervisor for Beaker acceptance testing framework
   class Docker < Beaker::Hypervisor
+    SSH_CONFIG_PATH = '/etc/ssh/sshd_config.d/zz-beaker.conf'
+
     # Docker hypvervisor initializtion
     # Env variables supported:
     # DOCKER_REGISTRY: Docker registry URL
@@ -390,11 +392,9 @@ module Beaker
         container.exec(%w[zypper -n in openssh])
         container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
         container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
-        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
       when /archlinux/
         container.exec(%w[pacman -S --noconfirm openssh])
         container.exec(%w[ssh-keygen -A])
-        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
         container.exec(%w[systemctl enable sshd])
       when /alpine/
         container.exec(%w[apk add --update openssh])
@@ -546,19 +546,11 @@ module Beaker
         && echo root:#{root_password} | chpasswd
       DF
 
-      # Configure sshd service to allowroot login using password
-      # Also, disable reverse DNS lookups to prevent every. single. ssh
-      # operation taking 30 seconds while the lookup times out.
-      # Also unbreak users with a bunch of SSH keys loaded in their keyring.
-      # Also unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host (UsePAM no)
+      # TODO does multi-line work here?
       dockerfile += <<~DF
-        RUN find /etc/ssh/sshd_config /etc/ssh/sshd_config.d/ -type f -exec sed -ri \
-        -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
-        -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
-        -e 's/^#?UseDNS .*/UseDNS no/' \
-        -e 's/^#?UsePAM .*/UsePAM no/' \
-        -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' \
-        {} \\;
+        RUN mkdir -p #{File.dirname(SSH_CONFIG_PATH)} && cat > #{SSH_CONFIG_PATH} <<SSH
+        #{ssh_config_dropin}
+        SSH
       DF
 
       # Any extra commands specified for the host
@@ -586,13 +578,7 @@ module Beaker
     # restart command we should try.
     def fix_ssh(container, host = nil)
       @logger.debug("Fixing ssh on container #{container.id}")
-      container.exec(['sed', '-ri',
-                      '-e', 's/^#?PermitRootLogin .*/PermitRootLogin yes/',
-                      '-e', 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/',
-                      '-e', 's/^#?UseDNS .*/UseDNS no/',
-                      # Unbreak users with a bunch of SSH keys loaded in their keyring.
-                      '-e', 's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
-                      '/etc/ssh/sshd_config',])
+      container.store_file(SSH_CONFIG_PATH, ssh_config_dropin)
 
       return unless host
 
@@ -636,6 +622,23 @@ module Beaker
     # return true if we are inside a docker container
     def in_container?
       File.file?('/.dockerenv')
+    end
+
+    private
+
+    def ssh_config_dropin
+      <<~SSH
+        # Configure sshd service to allowroot login using password
+        PermitRootLogin yes
+        PasswordAuthentication yes
+        # Disable reverse DNS lookups to prevent every. single. ssh
+        # operation taking 30 seconds while the lookup times out.
+        UseDNS no
+        # Unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host
+        UsePAM no
+        # Unbreak users with a bunch of SSH keys loaded in their keyring.
+        MaxAuthTries 1000
+      SSH
     end
   end
 end
