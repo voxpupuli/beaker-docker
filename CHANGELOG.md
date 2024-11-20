@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.2](https://github.com/voxpupuli/beaker-docker/tree/2.5.2) (2024-11-20)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.5.1...2.5.2)
+
+**Fixed bugs:**
+
+- fix: ignore /etc/ssh/sshd\_config.d/\* if files are not present [\#152](https://github.com/voxpupuli/beaker-docker/pull/152) ([vchepkov](https://github.com/vchepkov))
+
 ## [2.5.1](https://github.com/voxpupuli/beaker-docker/tree/2.5.1) (2024-11-20)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.5.0...2.5.1)
