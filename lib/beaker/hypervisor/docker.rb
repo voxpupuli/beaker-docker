@@ -525,7 +525,6 @@ module Beaker
         dockerfile += <<~DF
           RUN zypper -n in openssh #{additional_packages.join(' ')} \
           && ssh-keygen -A \
-          && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config \
           && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
         DF
       when /archlinux/
@@ -534,7 +533,6 @@ module Beaker
           && pacman --sync --refresh --noconfirm --sysupgrade \
           && pacman --sync --noconfirm #{additional_packages.join(' ')} \
           && ssh-keygen -A \
-          && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config \
           && systemctl enable sshd
         DF
       else
@@ -552,13 +550,15 @@ module Beaker
       # Also, disable reverse DNS lookups to prevent every. single. ssh
       # operation taking 30 seconds while the lookup times out.
       # Also unbreak users with a bunch of SSH keys loaded in their keyring.
+      # Also unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host (UsePAM no)
       dockerfile += <<~DF
-        RUN sed -ri \
+        RUN find /etc/ssh/sshd_config /etc/ssh/sshd_config.d/ -type f -exec sed -ri \
         -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
         -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
         -e 's/^#?UseDNS .*/UseDNS no/' \
+        -e 's/^#?UsePAM .*/UsePAM no/' \
         -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' \
-        /etc/ssh/sshd_config
+        {} \\;
       DF
 
       # Any extra commands specified for the host
