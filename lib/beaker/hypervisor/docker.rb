@@ -552,13 +552,13 @@ module Beaker
       # Also unbreak users with a bunch of SSH keys loaded in their keyring.
       # Also unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host (UsePAM no)
       dockerfile += <<~DF
-        RUN find /etc/ssh/sshd_config /etc/ssh/sshd_config.d/ -type f -exec sed -ri \
+        RUN sed -ri \
         -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
         -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
         -e 's/^#?UseDNS .*/UseDNS no/' \
         -e 's/^#?UsePAM .*/UsePAM no/' \
         -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' \
-        {} \\;
+        /etc/ssh/sshd_config $(compgen -G '/etc/ssh/sshd_config.d/*' || echo '')
       DF
 
       # Any extra commands specified for the host
