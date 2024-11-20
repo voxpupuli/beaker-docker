@@ -551,8 +551,9 @@ module Beaker
       # operation taking 30 seconds while the lookup times out.
       # Also unbreak users with a bunch of SSH keys loaded in their keyring.
       # Also unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host (UsePAM no)
+      # Create directory for OS that don't use /etc/ssh/sshd_config.d
       dockerfile += <<~DF
-        RUN find /etc/ssh/sshd_config /etc/ssh/sshd_config.d/ -type f -exec sed -ri \
+        RUN mkdir -p /etc/ssh/sshd_config.d && find /etc/ssh/sshd_config /etc/ssh/sshd_config.d/ -type f -exec sed -ri \
         -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
         -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
         -e 's/^#?UseDNS .*/UseDNS no/' \
