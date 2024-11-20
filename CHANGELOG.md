@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.1](https://github.com/voxpupuli/beaker-docker/tree/2.5.1) (2024-11-20)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.5.0...2.5.1)
+
+**Fixed bugs:**
+
+- Update sshd configuration \(UsePAM no, sshd\_config.d\) [\#148](https://github.com/voxpupuli/beaker-docker/pull/148) ([jay7x](https://github.com/jay7x))
+
 ## [2.5.0](https://github.com/voxpupuli/beaker-docker/tree/2.5.0) (2024-09-20)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.4.0...2.5.0)
