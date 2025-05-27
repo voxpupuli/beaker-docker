@@ -268,7 +268,7 @@ module Beaker
             container_opts['HostConfig']['CapAdd'] = host['docker_cap_add']
             container_opts['HostConfig'].delete('Privileged')
           else
-            container_opts['HostConfig']['Privileged'] = container_opts['HostConfig']['Privileged'].nil? ? true : container_opts['HostConfig']['Privileged']
+            container_opts['HostConfig']['Privileged'] = container_opts['HostConfig']['Privileged'].nil? || container_opts['HostConfig']['Privileged']
           end
 
           container_opts['name'] = (host['docker_container_name'] || ['beaker', host.name, SecureRandom.uuid.split('-').last].join('-'))
