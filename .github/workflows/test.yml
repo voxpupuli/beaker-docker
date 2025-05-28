@@ -84,6 +84,7 @@ jobs:
               export DOCKER_IN_DOCKER=true
               bundle exec rake test:acceptance
 
+  # verifies that podman service is a dropin replacement for docker
   podman:
     runs-on: ubuntu-24.04
     needs: rubocop_and_matrix
@@ -93,6 +94,10 @@ jobs:
         ruby: ${{ fromJSON(needs.rubocop_and_matrix.outputs.ruby) }}
     name: Podman on Ruby ${{ matrix.ruby }}
     steps:
+      - name: Start podman
+        run: |
+          sudo systemctl stop docker.service docker.socket && systemctl start --user podman.socket
+          echo "DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
