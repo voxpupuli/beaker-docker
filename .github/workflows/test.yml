@@ -54,7 +54,7 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ${{ fromJSON(needs.rubocop_and_matrix.outputs.ruby) }}
-    name: RSpec - Ruby ${{ matrix.ruby }}
+    name: Docker on Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Ruby ${{ matrix.ruby }}
