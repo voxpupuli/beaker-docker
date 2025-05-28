@@ -15,13 +15,6 @@ namespace :test do
       t.rspec_opts = ['--color', '--format documentation']
       t.pattern = 'spec/'
     end
-
-    desc 'Run spec tests with coverage'
-    RSpec::Core::RakeTask.new(:coverage) do |t|
-      ENV['BEAKER_DOCKER_COVERAGE'] = 'y'
-      t.rspec_opts = ['--color', '--format documentation']
-      t.pattern = 'spec/'
-    end
   end
 
   namespace :acceptance do
