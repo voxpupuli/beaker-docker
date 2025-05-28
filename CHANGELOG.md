@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.6.0](https://github.com/voxpupuli/beaker-docker/tree/2.6.0) (2025-05-28)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.5.2...2.6.0)
+
+**Implemented enhancements:**
+
+- CI: Run tests with podman and docker [\#160](https://github.com/voxpupuli/beaker-docker/pull/160) ([bastelfreak](https://github.com/bastelfreak))
+- CI: Generate matrix automatically & drop unused coverage reporting [\#158](https://github.com/voxpupuli/beaker-docker/pull/158) ([bastelfreak](https://github.com/bastelfreak))
+- voxpupuli-rubocop: 3.0.0-\>3.1.0 [\#157](https://github.com/voxpupuli/beaker-docker/pull/157) ([bastelfreak](https://github.com/bastelfreak))
+- fakefs: Allow 3.x [\#155](https://github.com/voxpupuli/beaker-docker/pull/155) ([bastelfreak](https://github.com/bastelfreak))
+
+**Fixed bugs:**
+
+- excon: exclude 1.2.6 [\#156](https://github.com/voxpupuli/beaker-docker/pull/156) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [2.5.2](https://github.com/voxpupuli/beaker-docker/tree/2.5.2) (2024-11-20)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.5.1...2.5.2)
