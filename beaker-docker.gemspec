@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'voxpupuli-rubocop', '~> 3.1.0'
 
   # Run time dependencies
-  s.add_dependency 'beaker', '>= 4', '< 7'
+  s.add_dependency 'beaker', '>= 4', '< 8'
   s.add_dependency 'docker-api', '~> 2.3'
   # excon is a docker-api dependency, 1.2.6 is broken
   # https://github.com/excon/excon/issues/884
