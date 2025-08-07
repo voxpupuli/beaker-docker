@@ -2,7 +2,7 @@
 
 require 'beaker'
 
-Dir['./lib/beaker/hypervisor/*.rb'].sort.each { |file| require file }
+Dir['./lib/beaker/hypervisor/*.rb'].each { |file| require file }
 
 # setup & require beaker's spec_helper.rb
 beaker_gem_spec = Gem::Specification.find_by_name('beaker')
