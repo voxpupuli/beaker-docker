@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0](https://github.com/voxpupuli/beaker-docker/tree/3.0.0) (2025-08-11)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.6.0...3.0.0)
+
+**Breaking changes:**
+
+- Require Ruby 3.2 or newer [\#163](https://github.com/voxpupuli/beaker-docker/pull/163) ([bastelfreak](https://github.com/bastelfreak))
+
+**Implemented enhancements:**
+
+- beaker: Allow 7.x [\#162](https://github.com/voxpupuli/beaker-docker/pull/162) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [2.6.0](https://github.com/voxpupuli/beaker-docker/tree/2.6.0) (2025-05-28)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.5.2...2.6.0)
