@@ -10,9 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  BUNDLE_WITHOUT: release
-
 jobs:
   rubocop_and_matrix:
     runs-on: ubuntu-24.04
@@ -68,24 +65,25 @@ jobs:
       - name: Run acceptance tests
         run: bundle exec rake test:acceptance
 
-  beaker_in_container:
-    runs-on: ubuntu-24.04
-    needs: rubocop_and_matrix
-    name: Docker - Beaker in container connection test
-    steps:
-      - uses: actions/checkout@v4
-      # use this and not container key from gha to not have a docker network from github
-      - name: Run Beaker in docker container
-        uses: addnab/docker-run-action@v3
-        with:
-            image: puppet/puppet-dev-tools:2023-02-24-1bca42e
-            options: -v ${{ github.workspace }}:/work
-            run: |
-              cd /work
-              ls -la
-              bundle install
-              export DOCKER_IN_DOCKER=true
-              bundle exec rake test:acceptance
+  # this job is currently broken because puppet/puppet-dev-tools:2023-02-24-1bca42e is too old
+  #beaker_in_container:
+  #  runs-on: ubuntu-24.04
+  #  needs: rubocop_and_matrix
+  #  name: Docker - Beaker in container connection test
+  #  steps:
+  #    - uses: actions/checkout@v4
+  #    # use this and not container key from gha to not have a docker network from github
+  #    - name: Run Beaker in docker container
+  #      uses: addnab/docker-run-action@v3
+  #      with:
+  #          image: puppet/puppet-dev-tools:2023-02-24-1bca42e
+  #          options: -v ${{ github.workspace }}:/work
+  #          run: |
+  #            cd /work
+  #            ls -la
+  #            bundle install
+  #            export DOCKER_IN_DOCKER=true
+  #            bundle exec rake test:acceptance
 
   # verifies that podman service is a dropin replacement for docker
   podman:
@@ -114,7 +112,7 @@ jobs:
     needs:
       - rubocop_and_matrix
       - docker
-      - beaker_in_container
+      # - beaker_in_container
       - podman
       - rspec
     runs-on: ubuntu-24.04
