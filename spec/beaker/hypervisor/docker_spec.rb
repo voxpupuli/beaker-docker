@@ -19,7 +19,7 @@ module Beaker
     let(:hosts) do
       the_hosts = make_hosts
       the_hosts[2]['dockeropts'] = {
-        'Labels' => {
+        Labels: {
           'one' => 3,
           'two' => 4,
         },
@@ -43,7 +43,7 @@ module Beaker
         forward_ssh_agent: true,
         provision: true,
         dockeropts: {
-          'Labels' => {
+          Labels: {
             'one' => 1,
             'two' => 2,
           },
@@ -298,64 +298,103 @@ module Beaker
           docker.provision
         end
 
-        it 'creates a container based on the Image (identified by image.id)' do
-          hosts.each_with_index do |host, index|
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'HostConfig' => {
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'PublishAllPorts' => true,
-                                                                     'Privileged' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => ((index == 2) ? 3 : 1),
-                                                                     'two' => ((index == 2) ? 4 : 2),
-                                                                   },
-                                                                   'name' => /\Abeaker-/,
-                                                                 })
+        it 'creates a container with correct image and hostname' do
+          hosts.each_with_index do |host, _index|
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Image]).to eq(image.id)
+              expect(args[:Hostname]).to eq(host.name)
+            end.and_return(container)
           end
 
           docker.provision
         end
 
-        it 'creates a named container based on the Image (identified by image.id)' do
+        it 'creates a container with correct host config settings' do
+          hosts.each_with_index do |_host, _index|
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PublishAllPorts]).to be true
+              expect(args[:HostConfig][:Privileged]).to be true
+              expect(args[:HostConfig][:RestartPolicy][:Name]).to eq('always')
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a container with correct port bindings' do
+          hosts.each_with_index do |_host, _index|
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostPort']).to be_a(String)
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostIp']).to eq('0.0.0.0')
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a container with correct labels and name' do
+          hosts.each_with_index do |_host, index|
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Labels][:one]).to eq(((index == 2) ? 3 : 1))
+              expect(args[:Labels][:two]).to eq(((index == 2) ? 4 : 2))
+              expect(args[:name]).to match(/\Abeaker-/)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a named container with correct basic properties' do
           hosts.each_with_index do |host, index|
             container_name = "spec-container-#{index}"
             host['docker_container_name'] = container_name
 
             allow(::Docker::Container).to receive(:all).and_return([])
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'name' => container_name,
-                                                                   'HostConfig' => {
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'PublishAllPorts' => true,
-                                                                     'Privileged' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => ((index == 2) ? 3 : 1),
-                                                                     'two' => ((index == 2) ? 4 : 2),
-                                                                   },
-                                                                 })
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Image]).to eq(image.id)
+              expect(args[:Hostname]).to eq(host.name)
+              expect(args[:name]).to eq(container_name)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a named container with correct host config' do
+          hosts.each_with_index do |host, index|
+            container_name = "spec-container-#{index}"
+            host['docker_container_name'] = container_name
+
+            allow(::Docker::Container).to receive(:all).and_return([])
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PublishAllPorts]).to be true
+              expect(args[:HostConfig][:Privileged]).to be true
+              expect(args[:HostConfig][:RestartPolicy][:Name]).to eq('always')
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a named container with correct port bindings and labels' do
+          hosts.each_with_index do |host, index|
+            container_name = "spec-container-#{index}"
+            host['docker_container_name'] = container_name
+
+            allow(::Docker::Container).to receive(:all).and_return([])
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostPort']).to be_a(String)
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostIp']).to eq('0.0.0.0')
+              expect(args[:Labels][:one]).to eq(((index == 2) ? 3 : 1))
+              expect(args[:Labels][:two]).to eq(((index == 2) ? 4 : 2))
+            end.and_return(container)
           end
 
           docker.provision
         end
 
         it 'creates a container with volumes bound' do
-          hosts.each_with_index do |host, index|
+          hosts.each_with_index do |host, _index|
             host['mount_folders'] = {
               'mount1' => {
                 'host_path' => '/source_folder',
@@ -381,94 +420,220 @@ module Beaker
               },
             }
 
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'HostConfig' => {
-                                                                     'Binds' => [
-                                                                       '/source_folder:/mount_point:z',
-                                                                       '/another_folder:/another_mount:ro',
-                                                                       '/different_folder:/different_mount:rw',
-                                                                       "#{File.expand_path('./')}:/relative_mount:z",
-                                                                       "#{File.expand_path('local_folder')}:/another_relative_mount:z",
-                                                                     ],
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'PublishAllPorts' => true,
-                                                                     'Privileged' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => ((index == 2) ? 3 : 1),
-                                                                     'two' => ((index == 2) ? 4 : 2),
-                                                                   },
-                                                                   'name' => /\Abeaker-/,
-                                                                 })
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:Binds]).to eq([
+                                                        '/source_folder:/mount_point:z',
+                                                        '/another_folder:/another_mount:ro',
+                                                        '/different_folder:/different_mount:rw',
+                                                        "#{File.expand_path('./')}:/relative_mount:z",
+                                                        "#{File.expand_path('local_folder')}:/another_relative_mount:z",
+                                                      ])
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a volume container with correct image and hostname' do
+          hosts.each_with_index do |host, _index|
+            host['mount_folders'] = {
+              'mount1' => {
+                'host_path' => '/source_folder',
+                'container_path' => '/mount_point',
+              },
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Image]).to eq(image.id)
+              expect(args[:Hostname]).to eq(host.name)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a volume container with correct labels and name' do
+          hosts.each_with_index do |host, index|
+            host['mount_folders'] = {
+              'mount1' => {
+                'host_path' => '/source_folder',
+                'container_path' => '/mount_point',
+              },
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Labels][:one]).to eq(((index == 2) ? 3 : 1))
+              expect(args[:Labels][:two]).to eq(((index == 2) ? 4 : 2))
+              expect(args[:name]).to match(/\Abeaker-/)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a volume container with correct port bindings' do
+          hosts.each_with_index do |host, _index|
+            host['mount_folders'] = {
+              'mount1' => {
+                'host_path' => '/source_folder',
+                'container_path' => '/mount_point',
+              },
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostPort']).to be_a(String)
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostIp']).to eq('0.0.0.0')
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a volume container with correct container settings' do
+          hosts.each_with_index do |host, _index|
+            host['mount_folders'] = {
+              'mount1' => {
+                'host_path' => '/source_folder',
+                'container_path' => '/mount_point',
+              },
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PublishAllPorts]).to be true
+              expect(args[:HostConfig][:Privileged]).to be true
+              expect(args[:HostConfig][:RestartPolicy][:Name]).to eq('always')
+            end.and_return(container)
           end
 
           docker.provision
         end
 
         it 'creates a container with capabilities added' do
+          hosts.each_with_index do |host, _index|
+            host['docker_cap_add'] = %w[NET_ADMIN SYS_ADMIN]
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:CapAdd]).to eq(%w[NET_ADMIN SYS_ADMIN])
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a cap container with correct image and hostname' do
+          hosts.each_with_index do |host, _index|
+            host['docker_cap_add'] = %w[NET_ADMIN SYS_ADMIN]
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Image]).to eq(image.id)
+              expect(args[:Hostname]).to eq(host.name)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a cap container with correct labels and name' do
           hosts.each_with_index do |host, index|
             host['docker_cap_add'] = %w[NET_ADMIN SYS_ADMIN]
 
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'HostConfig' => {
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'PublishAllPorts' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                     'CapAdd' => %w[NET_ADMIN SYS_ADMIN],
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => ((index == 2) ? 3 : 1),
-                                                                     'two' => ((index == 2) ? 4 : 2),
-                                                                   },
-                                                                   'name' => /\Abeaker-/,
-                                                                 })
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Labels][:one]).to eq(((index == 2) ? 3 : 1))
+              expect(args[:Labels][:two]).to eq(((index == 2) ? 4 : 2))
+              expect(args[:name]).to match(/\Abeaker-/)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a cap container with correct host config' do
+          hosts.each_with_index do |host, _index|
+            host['docker_cap_add'] = %w[NET_ADMIN SYS_ADMIN]
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostPort']).to be_a(String)
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostIp']).to eq('0.0.0.0')
+              expect(args[:HostConfig][:PublishAllPorts]).to be true
+              expect(args[:HostConfig][:RestartPolicy][:Name]).to eq('always')
+            end.and_return(container)
           end
 
           docker.provision
         end
 
         it 'creates a container with port bindings' do
+          hosts.each_with_index do |host, _index|
+            host['docker_port_bindings'] = {
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:ExposedPorts]).to eq({ '8080/tcp' => {} })
+              expect(args[:HostConfig][:PortBindings]['8080/tcp']).to eq([{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }])
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a port binding container with correct image and hostname' do
+          hosts.each_with_index do |host, _index|
+            host['docker_port_bindings'] = {
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Image]).to eq(image.id)
+              expect(args[:Hostname]).to eq(host.name)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a port binding container with correct labels and name' do
           hosts.each_with_index do |host, index|
             host['docker_port_bindings'] = {
               '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
             }
 
-            expect(::Docker::Container).to receive(:create).with({
-                                                                   'ExposedPorts' => {
-                                                                     '8080/tcp' => {},
-                                                                   },
-                                                                   'Image' => image.id,
-                                                                   'Hostname' => host.name,
-                                                                   'HostConfig' => {
-                                                                     'PortBindings' => {
-                                                                       '22/tcp' => [{ 'HostPort' => /\b\d{4}\b/, 'HostIp' => '0.0.0.0' }],
-                                                                       '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
-                                                                     },
-                                                                     'PublishAllPorts' => true,
-                                                                     'Privileged' => true,
-                                                                     'RestartPolicy' => {
-                                                                       'Name' => 'always',
-                                                                     },
-                                                                   },
-                                                                   'Labels' => {
-                                                                     'one' => ((index == 2) ? 3 : 1),
-                                                                     'two' => ((index == 2) ? 4 : 2),
-                                                                   },
-                                                                   'name' => /\Abeaker-/,
-                                                                 })
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:Labels][:one]).to eq(((index == 2) ? 3 : 1))
+              expect(args[:Labels][:two]).to eq(((index == 2) ? 4 : 2))
+              expect(args[:name]).to match(/\Abeaker-/)
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a port binding container with correct port bindings' do
+          hosts.each_with_index do |host, _index|
+            host['docker_port_bindings'] = {
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostPort']).to be_a(String)
+              expect(args[:HostConfig][:PortBindings]['22/tcp'][0]['HostIp']).to eq('0.0.0.0')
+            end.and_return(container)
+          end
+
+          docker.provision
+        end
+
+        it 'creates a port binding container with correct container settings' do
+          hosts.each_with_index do |host, _index|
+            host['docker_port_bindings'] = {
+              '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+            }
+
+            expect(::Docker::Container).to receive(:create) do |args|
+              expect(args[:HostConfig][:PublishAllPorts]).to be true
+              expect(args[:HostConfig][:Privileged]).to be true
+              expect(args[:HostConfig][:RestartPolicy][:Name]).to eq('always')
+            end.and_return(container)
           end
 
           docker.provision

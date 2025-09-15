@@ -70,7 +70,7 @@ module Beaker
     end
 
     def get_container_opts(host, image_name)
-      container_opts = {}
+      container_opts = StringifyHash.new
       container_opts['ExposedPorts'] = { '22/tcp' => {} } if host['dockerfile']
 
       container_opts.merge!({
@@ -225,12 +225,8 @@ module Beaker
         ### BEGIN CONTAINER OPTIONS MANGLING ###
 
         container_opts = get_container_opts(host, image_name)
-        if host['dockeropts'] || @options[:dockeropts]
-          dockeropts = host['dockeropts'] || @options[:dockeropts]
-          dockeropts.each do |k, v|
-            container_opts[k] = v
-          end
-        end
+        container_opts.merge!(@options[:dockeropts]) if @options[:dockeropts]
+        container_opts.merge!(host['dockeropts']) if host['dockeropts']
 
         container = find_container(host)
 
