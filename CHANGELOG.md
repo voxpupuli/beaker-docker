@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.1](https://github.com/voxpupuli/beaker-docker/tree/3.0.1) (2025-09-30)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.0.0...3.0.1)
+
+**Fixed bugs:**
+
+-  fix: deep merge dockeropts [\#167](https://github.com/voxpupuli/beaker-docker/pull/167) ([mpldr](https://github.com/mpldr))
+
 ## [3.0.0](https://github.com/voxpupuli/beaker-docker/tree/3.0.0) (2025-08-11)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/2.6.0...3.0.0)
