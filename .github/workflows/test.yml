@@ -16,7 +16,7 @@ jobs:
     outputs:
       ruby: ${{ steps.ruby.outputs.versions }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Ruby 3.4
         uses: ruby/setup-ruby@v1
         with:
@@ -36,7 +36,7 @@ jobs:
         ruby: ${{ fromJSON(needs.rubocop_and_matrix.outputs.ruby) }}
     name: RSpec - Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
@@ -56,7 +56,7 @@ jobs:
         ruby: ${{ fromJSON(needs.rubocop_and_matrix.outputs.ruby) }}
     name: Docker on Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
@@ -71,7 +71,7 @@ jobs:
   #  needs: rubocop_and_matrix
   #  name: Docker - Beaker in container connection test
   #  steps:
-  #    - uses: actions/checkout@v5
+  #    - uses: actions/checkout@v6
   #    # use this and not container key from gha to not have a docker network from github
   #    - name: Run Beaker in docker container
   #      uses: addnab/docker-run-action@v3
@@ -99,7 +99,7 @@ jobs:
         run: |
           sudo systemctl stop docker.service docker.socket && systemctl start --user podman.socket
           echo "DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock" >> "$GITHUB_ENV"
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
