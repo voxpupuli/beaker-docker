@@ -1,6 +1,14 @@
 # Changelog
 
-## [3.0.1](https://github.com/voxpupuli/beaker-docker/tree/3.0.1) (2025-09-30)
+## [3.1.0](https://github.com/voxpupuli/beaker-docker/tree/3.1.0) (2025-12-27)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.0.1...3.1.0)
+
+**Implemented enhancements:**
+
+- Add Ruby 4.0 support [\#177](https://github.com/voxpupuli/beaker-docker/pull/177) ([bastelfreak](https://github.com/bastelfreak))
+
+## [3.0.1](https://github.com/voxpupuli/beaker-docker/tree/3.0.1) (2025-10-01)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.0.0...3.0.1)
 
