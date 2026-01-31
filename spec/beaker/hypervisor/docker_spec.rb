@@ -688,6 +688,44 @@ module Beaker
               end
             end
           end
+
+          context 'when IPAddress is empty but available in Networks' do
+            let(:container_config) do
+              {
+                'HostConfig' => {
+                  'NetworkMode' => 'bridge',
+                },
+                'NetworkSettings' => {
+                  'IPAddress' => '',
+                  'Ports' => {
+                    '22/tcp' => [
+                      {
+                        'HostIp' => '0.0.0.0',
+                        'HostPort' => 8022,
+                      },
+                    ],
+                  },
+                  'Gateway' => '192.0.2.254',
+                  'Networks' => {
+                    'bridge' => {
+                      'IPAddress' => '192.0.2.10',
+                    },
+                  },
+                },
+              }
+            end
+
+            it 'falls back to Networks[NetworkMode][IPAddress]' do
+              ENV['DOCKER_IN_DOCKER'] = 'true'
+              FakeFS do
+                FileUtils.touch('/.dockerenv')
+                docker.provision
+
+                expect(hosts[0]['ip']).to eq '192.0.2.10'
+                expect(hosts[0]['port']).to eq 22
+              end
+            end
+          end
         end
 
         it 'generates a new /etc/hosts file referencing each host' do

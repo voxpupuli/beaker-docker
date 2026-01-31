@@ -164,7 +164,9 @@ module Beaker
 
         # Container to container
         unless ip && port
-          ip = network_settings['IPAddress']
+          ip = network_settings['IPAddress'] # podman
+          # also handle scenarios where network_settings['IPAddress'] is not set (e.g. docker-ce >= v29)
+          ip = network_settings['Networks'][host_config['NetworkMode']]['IPAddress'] if ip.nil? || ip.empty?
           port = (ip && !ip.empty?) ? 22 : nil
         end
 
