@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.1](https://github.com/voxpupuli/beaker-docker/tree/3.1.1) (2026-01-31)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.1.0...3.1.1)
+
+**Fixed bugs:**
+
+- Handle both podman and docker to get SUT container IP address [\#180](https://github.com/voxpupuli/beaker-docker/pull/180) ([alelindq](https://github.com/alelindq))
+
 ## [3.1.0](https://github.com/voxpupuli/beaker-docker/tree/3.1.0) (2025-12-27)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.0.1...3.1.0)
