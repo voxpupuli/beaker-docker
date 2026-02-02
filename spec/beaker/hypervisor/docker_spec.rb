@@ -723,6 +723,7 @@ module Beaker
 
                 expect(hosts[0]['ip']).to eq '192.0.2.10'
                 expect(hosts[0]['port']).to eq 22
+                expect(hosts[0]['vm_ip']).to eq '192.0.2.10'
               end
             end
           end
