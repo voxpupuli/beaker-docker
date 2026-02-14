@@ -356,7 +356,11 @@ module Beaker
         @logger.debug("node available as ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@#{ip} -p #{port}")
         host['docker_container_id'] = container.id
         host['docker_image_id'] = image.id
-        host['vm_ip'] = container.json['NetworkSettings']['IPAddress'].to_s
+        host_config = container.json['HostConfig']
+        vm_ip = container.json['NetworkSettings']['IPAddress']
+        # handle scenarios where network_settings['IPAddress'] is not set (e.g. docker-ce >= v29)
+        vm_ip = container.json['NetworkSettings']['Networks'][host_config['NetworkMode']]['IPAddress'] if vm_ip.nil? || vm_ip.empty?
+        host['vm_ip'] = vm_ip.to_s
 
         def host.reboot
           @logger.warn('Rebooting containers is ineffective...ignoring')
