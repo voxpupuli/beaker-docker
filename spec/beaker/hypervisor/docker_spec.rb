@@ -689,14 +689,13 @@ module Beaker
             end
           end
 
-          context 'when IPAddress is empty but available in Networks' do
+          context 'when using newer docker-ce where IPs are only in Networks' do
             let(:container_config) do
               {
                 'HostConfig' => {
                   'NetworkMode' => 'bridge',
                 },
                 'NetworkSettings' => {
-                  'IPAddress' => '',
                   'Ports' => {
                     '22/tcp' => [
                       {
@@ -705,9 +704,9 @@ module Beaker
                       },
                     ],
                   },
-                  'Gateway' => '192.0.2.254',
                   'Networks' => {
                     'bridge' => {
+                      'Gateway' => '192.0.2.254',
                       'IPAddress' => '192.0.2.10',
                     },
                   },
@@ -723,6 +722,19 @@ module Beaker
 
                 expect(hosts[0]['ip']).to eq '192.0.2.10'
                 expect(hosts[0]['port']).to eq 22
+                expect(hosts[0]['vm_ip']).to eq '192.0.2.10'
+              end
+            end
+
+            it 'stills finds gateway' do
+              ENV['DOCKER_IN_DOCKER'] = nil
+              ENV['DOCKER_HOST'] = nil
+              FakeFS do
+                FileUtils.touch('/.dockerenv')
+                docker.provision
+
+                expect(hosts[0]['ip']).to eq '192.0.2.254'
+                expect(hosts[0]['port']).to eq 8022
                 expect(hosts[0]['vm_ip']).to eq '192.0.2.10'
               end
             end
