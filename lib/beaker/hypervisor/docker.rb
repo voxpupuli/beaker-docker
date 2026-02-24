@@ -151,6 +151,10 @@ module Beaker
       elsif in_container? && !nested_docker?
         # Swarm or local docker host
         gw = network_settings['Gateway']
+
+        # also handle scenarios where network_settings['Gateway'] is not set (e.g. docker-ce >= v29)
+        gw = network_settings['Networks'][host_config['NetworkMode']]['Gateway'] if gw.nil? || gw.empty?
+
         ip = gw unless gw.nil? || gw.empty?
       else
         # The many faces of container networking
