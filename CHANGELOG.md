@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.2](https://github.com/voxpupuli/beaker-docker/tree/3.1.2) (2026-02-27)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.1.1...3.1.2)
+
+**Fixed bugs:**
+
+- fix: complete the support for docker-ce \>= v29 network configuration [\#183](https://github.com/voxpupuli/beaker-docker/pull/183) ([mxey](https://github.com/mxey))
+- Handle empty IPAddress when setting host vm\_ip [\#182](https://github.com/voxpupuli/beaker-docker/pull/182) ([uvNikita](https://github.com/uvNikita))
+
 ## [3.1.1](https://github.com/voxpupuli/beaker-docker/tree/3.1.1) (2026-01-31)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.1.0...3.1.1)
