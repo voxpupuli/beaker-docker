@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       ruby: ${{ steps.ruby.outputs.versions }}
+      latest_ruby: ${{ steps.latest_ruby.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Ruby 4.0
@@ -26,6 +27,9 @@ jobs:
         run: bundle exec rake rubocop
       - id: ruby
         uses: voxpupuli/ruby-version@be0467ce7366d206b2e87f5b7a032a030120b7cb # 2.0.0
+      - id: latest_ruby
+        name: Determine newest supported Ruby
+        run: echo "version=$(echo '${{ steps.ruby.outputs.versions }}' | jq -r 'max_by(split(".") | map(tonumber))')" >> "$GITHUB_OUTPUT"
 
   rspec:
     runs-on: ubuntu-24.04
@@ -65,25 +69,77 @@ jobs:
       - name: Run acceptance tests
         run: bundle exec rake test:acceptance
 
-  # this job is currently broken because puppet/puppet-dev-tools:2023-02-24-1bca42e is too old
-  #beaker_in_container:
-  #  runs-on: ubuntu-24.04
-  #  needs: rubocop_and_matrix
-  #  name: Docker - Beaker in container connection test
-  #  steps:
-  #    - uses: actions/checkout@v7
-  #    # use this and not container key from gha to not have a docker network from github
-  #    - name: Run Beaker in docker container
-  #      uses: addnab/docker-run-action@v3
-  #      with:
-  #          image: puppet/puppet-dev-tools:2023-02-24-1bca42e
-  #          options: -v ${{ github.workspace }}:/work
-  #          run: |
-  #            cd /work
-  #            ls -la
-  #            bundle install
-  #            export DOCKER_IN_DOCKER=true
-  #            bundle exec rake test:acceptance
+  # Run Beaker itself inside a container talking to the host daemon, so the
+  # test containers are siblings. Covers both connection routing modes:
+  # gateway - in_container? detects /.dockerenv and connects via the bridge
+  #           gateway and published ssh port
+  # dind    - DOCKER_IN_DOCKER=true forces a direct connection to the test
+  #           container's network IP
+  beaker_in_container:
+    runs-on: ubuntu-24.04
+    needs: rubocop_and_matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [gateway, dind]
+    name: Docker - Beaker in container connection test (${{ matrix.mode }})
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run Beaker in docker container
+        run: |
+          docker run --rm \
+            -v "$PWD:/work" -w /work \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ${{ matrix.mode == 'dind' && '-e DOCKER_IN_DOCKER=true' || '' }} \
+            ruby:${{ needs.rubocop_and_matrix.outputs.latest_ruby }} \
+            bash -c 'bundle install && bundle exec rake test:acceptance'
+
+  # Same as beaker_in_container, but with podman. The gateway mode exercises
+  # the /run/.containerenv detection in in_container?.
+  # Rootless podman publishes ports only in the host network namespace, so
+  # they are not reachable at the bridge gateway from a sibling container and
+  # gateway mode has to use rootful podman. dind mode connects to sibling IPs
+  # directly, which rootless podman supports once the Beaker container joins
+  # the default bridge network instead of the slirp4netns one a plain run gets.
+  # This needs netavark >= 1.6.0: older versions turn the 0.0.0.0 host ip of a
+  # port binding into a DNAT rule that never matches, so the gateway connection
+  # lands on conmon's port reservation socket and hangs. ubuntu-24.04 ships
+  # netavark 1.4.0, ubuntu-26.04 ships podman 5.7.
+  beaker_in_podman:
+    runs-on: ubuntu-26.04
+    needs: rubocop_and_matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [gateway, dind]
+    name: Podman - Beaker in container connection test (${{ matrix.mode }})
+    timeout-minutes: 15
+    steps:
+      - name: Start podman
+        run: |
+          sudo systemctl stop docker.service docker.socket
+          sudo systemctl start podman.socket
+          systemctl start --user podman.socket
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run Beaker in podman container
+        run: |
+          if [ "${{ matrix.mode }}" = gateway ]; then
+            podman='sudo podman'
+            socket=/run/podman/podman.sock
+          else
+            podman=podman
+            socket="/run/user/$(id -u)/podman/podman.sock"
+          fi
+          $podman run --rm \
+            -v "$PWD:/work" -w /work \
+            -v "$socket:/run/podman/podman.sock" \
+            -e DOCKER_HOST=unix:///run/podman/podman.sock \
+            --network podman \
+            --security-opt label=disable \
+            ${{ matrix.mode == 'dind' && '-e DOCKER_IN_DOCKER=true' || '' }} \
+            ruby:${{ needs.rubocop_and_matrix.outputs.latest_ruby }} \
+            bash -c 'bundle install && bundle exec rake test:acceptance'
 
   # verifies that podman service is a dropin replacement for docker
   podman:
@@ -113,7 +169,8 @@ jobs:
     needs:
       - rubocop_and_matrix
       - docker
-      # - beaker_in_container
+      - beaker_in_container
+      - beaker_in_podman
       - podman
       - rspec
     runs-on: ubuntu-24.04
