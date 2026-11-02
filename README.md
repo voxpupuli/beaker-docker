@@ -15,6 +15,7 @@ Beaker library to use docker hypervisor
   * [Privileged containers](#privileged-containers)
   * [Cleaning up after tests](#cleaning-up-after-tests)
 * [Working with `podman`](#working-with-podman)
+  * [Running podman inside the test containers](#running-podman-inside-the-test-containers)
 * [Generating a Dockerfile](#generating-a-dockerfile)
 * [Spec tests]()
 * [Acceptance tests]()
@@ -113,6 +114,52 @@ to edit the `dockeropts` hash in your nodeset to include different flags in the
 See the
 [HostConfig](https://any-api.com/docker_com/engine/docs/Definitions/HostConfig)
 portion of the docker API for more information.
+
+### Running podman inside the test containers
+
+If the code under test runs `podman` itself (for example a module that manages
+Quadlets) and the test containers are created by `podman` as well, the nested
+`podman` can fail with an error like this in the kernel log:
+
+```
+overlay: filesystem on /var/lib/containers/storage/overlay-containers/<id>/rootfs/upper not supported as upperdir
+```
+
+The root filesystem of a test container is already an overlay mount, and the
+kernel can't stack another overlay filesystem on top of it. This has been seen
+with `podman` 5.6, which builds the pod infrastructure container from a rootfs
+overlay. Running rootful or rootless `podman` inside a rootless `podman`
+container is affected.
+
+To avoid it, mount a directory from the host's regular filesystem over
+`/var/lib/containers`, so that the nested `podman` stores its images and
+containers outside of the overlay. This can be done with `mount_folders`:
+
+```yaml
+HOSTS:
+  el10:
+    platform: el-10-x86_64
+    hypervisor: docker
+    image: quay.io/centos/centos:stream10
+    docker_cmd: '["/sbin/init"]'
+    mount_folders:
+      podman-storage:
+        host_path: /var/tmp/beaker-podman-storage/el10
+        container_path: /var/lib/containers
+        opts: Z
+```
+
+Some notes:
+
+* The directory has to exist on the host before the test run and must not be
+  on an overlay filesystem itself.
+* Use a separate directory for every host. Container storage can't be shared
+  between `podman` instances that run at the same time.
+* `opts: Z` relabels the directory for SELinux and makes it private to the
+  container. `mount_folders` defaults to the shared label `z` if `opts` is
+  omitted.
+* This only matters when the tests run `podman` inside the test containers.
+  Nothing changes for tests that don't.
 
 ## Generating a Dockerfile
 
