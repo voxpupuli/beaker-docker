@@ -522,7 +522,7 @@ module Beaker
           RUN apt-get update \
           && apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
         DF
-      when /el-[89]/, /fedora-(2[2-9]|3)/, /amazon-2023/
+      when /el-([8-9]|10)/, /fedora-(2[2-9]|3)/, /amazon-2023/
         dockerfile += <<~DF
           RUN dnf clean all \
           && dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
