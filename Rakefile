@@ -38,6 +38,19 @@ namespace :test do
          '--log-level', 'debug',
          '--debug')
     end
+
+    desc 'Simulate WSL (WSLENV set) with an explicitly bound ssh port. Not part of test:acceptance'
+    task :wsl do
+      # Already set when this really runs under WSL
+      ENV['WSLENV'] ||= 'WT_SESSION:WT_PROFILE_ID'
+
+      ENV['BEAKER_setfile'] = 'acceptance/config/nodes/wsl.yaml'
+      sh('beaker',
+         '--hosts', 'acceptance/config/nodes/wsl.yaml',
+         '--tests', 'acceptance/wsl/',
+         '--log-level', 'debug',
+         '--debug')
+    end
   end
 end
 
