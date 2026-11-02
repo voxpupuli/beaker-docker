@@ -914,7 +914,7 @@ module Beaker
                                                                   'platform' => platform,
                                                                   'image' => 'foobar',
                                                                 }))
-            expect(dockerfile).to match(/ENV container docker/)
+            expect(dockerfile).to include('ENV container docker')
           end
         end
 
@@ -961,7 +961,7 @@ module Beaker
                                                                   'docker_image_entrypoint' => '/bin/bash',
                                                                 }))
 
-            expect(dockerfile).to match(%r{ENTRYPOINT /bin/bash})
+            expect(dockerfile).to include('ENTRYPOINT /bin/bash')
           end
         end
 
@@ -972,7 +972,7 @@ module Beaker
                                                                 'image' => 'foobar',
                                                               }))
 
-          expect(dockerfile).to match(/zypper -n in openssh/)
+          expect(dockerfile).to include('zypper -n in openssh')
         end
 
         (22..39).to_a.each do |fedora_release|
@@ -983,7 +983,7 @@ module Beaker
                                                                   'image' => 'foobar',
                                                                 }))
 
-            expect(dockerfile).to match(/dnf install -y sudo/)
+            expect(dockerfile).to include('dnf install -y sudo')
           end
         end
 
@@ -994,9 +994,9 @@ module Beaker
                                                                 'image' => 'foobar',
                                                               }))
 
-          expect(dockerfile).to match(/pacman --sync --refresh --noconfirm archlinux-keyring/)
-          expect(dockerfile).to match(/pacman --sync --refresh --noconfirm --sysupgrade/)
-          expect(dockerfile).to match(/pacman --sync --noconfirm curl net-tools openssh/)
+          expect(dockerfile).to include('pacman --sync --refresh --noconfirm archlinux-keyring')
+          expect(dockerfile).to include('pacman --sync --refresh --noconfirm --sysupgrade')
+          expect(dockerfile).to include('pacman --sync --noconfirm curl net-tools openssh')
         end
       end
 
