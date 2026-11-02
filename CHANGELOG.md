@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.2.0](https://github.com/voxpupuli/beaker-docker/tree/3.2.0) (2026-11-02)
+
+[Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.1.3...3.2.0)
+
+**Implemented enhancements:**
+
+- Support el10 hosts [\#212](https://github.com/voxpupuli/beaker-docker/pull/212) ([treydock](https://github.com/treydock))
+- CI: re-enable beaker-in-container acceptance jobs [\#198](https://github.com/voxpupuli/beaker-docker/pull/198) ([miharp](https://github.com/miharp))
+
 ## [3.1.3](https://github.com/voxpupuli/beaker-docker/tree/3.1.3) (2026-08-21)
 
 [Full Changelog](https://github.com/voxpupuli/beaker-docker/compare/3.1.2...3.1.3)
@@ -10,6 +19,7 @@
 
 **Closed issues:**
 
+- CI: re-enable the beaker\_in\_container acceptance job to cover in-container connection routing [\#195](https://github.com/voxpupuli/beaker-docker/issues/195)
 - `in_container?` only checks `/.dockerenv`, so the gateway connection path never triggers under Podman [\#193](https://github.com/voxpupuli/beaker-docker/issues/193)
 - `DOCKER_IN_DOCKER=true` crashes with NoMethodError on Podman 5: `Networks[NetworkMode]` lookup assumes Docker's network naming [\#192](https://github.com/voxpupuli/beaker-docker/issues/192)
 

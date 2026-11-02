@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'irb', '< 2'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'rspec', '~> 3.0'
-  s.add_development_dependency 'voxpupuli-rubocop', '~> 5.1.0'
+  s.add_development_dependency 'voxpupuli-rubocop', '~> 5.3.0'
 
   # Run time dependencies
   s.add_dependency 'beaker', '>= 4', '< 8'

@@ -12,6 +12,13 @@ HOSTS:
       - classifier
       - default
     docker_cmd: '["/sbin/init"]'
+  centos10:
+    platform: el-10-x86_64
+    hypervisor: docker
+    image: quay.io/centos/centos:stream10
+    roles:
+      - agent
+    docker_cmd: '["/sbin/init"]'
   debian12:
     platform: debian-12-x86_64
     hypervisor: docker
