@@ -213,4 +213,7 @@ environment variable DOCKER_IN_DOCKER=true. Beaker-docker then ignores the
 DOCKER_HOST address and published ports, and connects to each test
 container's network IP directly; make sure the beaker container is attached
 to the same network as the test containers. This works with podman as well
-as docker, and is also enabled automatically under WSL.
+as docker, and is also enabled automatically under WSL. Under WSL, a host that
+explicitly binds its ssh port (`22/tcp`) through `docker_port_bindings` is
+reached through that published port instead; `DOCKER_IN_DOCKER=true` always
+connects to the container IP.

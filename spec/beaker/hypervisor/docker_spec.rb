@@ -752,6 +752,59 @@ module Beaker
             end
           end
 
+          context 'when running under WSL' do
+            before do
+              @docker_in_docker = ENV.fetch('DOCKER_IN_DOCKER', nil)
+              @wslenv = ENV.fetch('WSLENV', nil)
+              ENV.delete('DOCKER_IN_DOCKER')
+              ENV['WSLENV'] = 'WT_SESSION:WT_PROFILE_ID'
+              allow(docker).to receive(:in_container?).and_return(false)
+            end
+
+            after do
+              ENV['DOCKER_IN_DOCKER'] = @docker_in_docker
+              ENV['WSLENV'] = @wslenv
+            end
+
+            it 'is treated like docker-in-docker and connects to the container IP' do
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.1'
+              expect(hosts[0]['port']).to eq 22
+            end
+
+            it 'uses the published port when the ssh port is bound explicitly' do
+              hosts[0]['docker_port_bindings'] = {
+                '22/tcp' => [{ 'HostPort' => '8022', 'HostIp' => '127.0.0.1' }],
+              }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '127.0.0.1'
+              expect(hosts[0]['port']).to eq 8022
+            end
+
+            it 'is still treated like docker-in-docker when only other ports are bound' do
+              hosts[0]['docker_port_bindings'] = {
+                '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+              }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.1'
+              expect(hosts[0]['port']).to eq 22
+            end
+
+            it 'keeps connecting to the container IP with DOCKER_IN_DOCKER even if the ssh port is bound explicitly' do
+              ENV['DOCKER_IN_DOCKER'] = 'true'
+              hosts[0]['docker_port_bindings'] = {
+                '22/tcp' => [{ 'HostPort' => '8022', 'HostIp' => '127.0.0.1' }],
+              }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.1'
+              expect(hosts[0]['port']).to eq 22
+            end
+          end
+
           context 'when using podman where Networks is keyed by network name instead of NetworkMode' do
             let(:container_config) do
               {
