@@ -67,7 +67,9 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - name: Run acceptance tests
-        run: bundle exec rake test:acceptance
+        run: |
+          sed -i '/image: debian:12/a\    docker_platform: linux/amd64' acceptance/config/nodes/hosts.yaml
+          bundle exec rake test:acceptance
 
   # Run Beaker itself inside a container talking to the host daemon, so the
   # test containers are siblings. Covers both connection routing modes:
@@ -162,7 +164,9 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - name: Run acceptance tests
-        run: bundle exec rake test:acceptance
+        run: |
+          sed -i '/image: debian:12/a\    docker_platform: linux/amd64' acceptance/config/nodes/hosts.yaml
+          bundle exec rake test:acceptance
 
   tests:
     if: always()
