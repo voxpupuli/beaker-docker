@@ -1,0 +1,27 @@
+---
+# Used by `rake test:acceptance:wsl`. The ssh port is bound explicitly, so
+# beaker-docker has to connect through 127.0.0.1:2222 even when it believes it
+# runs under WSL, instead of falling back to the container IP on port 22.
+HOSTS:
+  debian12:
+    platform: debian-12-x86_64
+    hypervisor: docker
+    image: debian:12
+    roles:
+      - agent
+    docker_cmd: '["/sbin/init"]'
+    docker_port_bindings:
+      22/tcp:
+        - HostPort: '2222'
+          HostIp: '127.0.0.1'
+CONFIG:
+  nfs_server: none
+  consoleport: 443
+  log_level: verbose
+  type: aio
+  ssh:
+    verify_host_key: false
+    user_known_hosts_file: '/dev/null'
+    password: root
+    auth_methods:
+      - password

@@ -125,15 +125,41 @@ module Beaker
     end
 
     # Nested Docker scenarios
-    def nested_docker?
-      ENV['DOCKER_IN_DOCKER'] || ENV.fetch('WSLENV', nil)
+    #
+    # An explicit DOCKER_IN_DOCKER decides: 0, false, no and off (in any case)
+    # select the normal behaviour, any other value the nested one. An empty value
+    # counts as unset, because a variable that is exported but empty is not a
+    # choice. Only when it is unset is WSL assumed to be nested, unless the host
+    # explicitly publishes an SSH port that Beaker can use.
+    def nested_docker?(host = nil, loopback_accessible: true)
+      setting = ENV.fetch('DOCKER_IN_DOCKER', '').strip.downcase
+      return !%w[0 false no off].include?(setting) unless setting.empty?
+
+      wsl? && !explicit_ssh_port_binding?(host, loopback_accessible: loopback_accessible)
+    end
+
+    # Running under Windows Subsystem for Linux
+    def wsl?
+      ENV.key?('WSLENV')
+    end
+
+    # Did the user configure a binding for the ssh port (22/tcp) on this host?
+    # The default binding to a random port is always present on the container,
+    # so this has to be looked up in the host's options. A `22/tcp` key with no
+    # value publishes nothing. A loopback bind belongs to the daemon's own
+    # network namespace and only counts when Beaker can reach it there.
+    def explicit_ssh_port_binding?(host, loopback_accessible: true)
+      bindings = host && host['docker_port_bindings']
+      return false unless bindings.is_a?(Hash)
+
+      !ssh_port_binding(bindings['22/tcp'] || bindings[:'22/tcp'], loopback_accessible).nil?
     end
 
     # Find out where the ssh port is from the container
     # When running on swarm DOCKER_HOST points to the swarm manager so we have to get the
     # IP of the swarm slave via the container data
     # When we are talking to a normal docker instance DOCKER_HOST can point to a remote docker instance.
-    def get_ssh_connection_info(container)
+    def get_ssh_connection_info(container, host = nil)
       ssh_connection_info = {
         ip: nil,
         port: nil,
@@ -142,13 +168,19 @@ module Beaker
       container_json   = container.json
       network_settings = container_json['NetworkSettings']
       host_config      = container_json['HostConfig']
+      daemon = ENV.fetch('DOCKER_HOST', nil)
+      remote_ip = URI.parse(daemon).host if @docker_type == 'docker' && daemon && !daemon.include?(':///')
+      inside = in_container?
+      loopback_accessible = remote_ip ? loopback_address?(remote_ip) : !inside
+      nested = nested_docker?(host, loopback_accessible: loopback_accessible)
 
+      legacy_binding = ssh_port_binding(network_settings.dig('PortBindings', '22/tcp'), loopback_accessible)
+      published = ssh_port_binding(network_settings.dig('Ports', '22/tcp'), loopback_accessible)
       ip = nil
       port = nil
-      # Talking against a remote docker host which is a normal docker host
-      if @docker_type == 'docker' && ENV.fetch('DOCKER_HOST', nil) && !ENV.fetch('DOCKER_HOST', '').include?(':///') && !nested_docker?
-        ip = URI.parse(ENV.fetch('DOCKER_HOST', nil)).host
-      elsif in_container? && !nested_docker?
+      if remote_ip && !nested
+        ip = remote_ip
+      elsif inside && !nested
         # Swarm or local docker host
         gw = network_settings['Gateway']
 
@@ -160,11 +192,10 @@ module Beaker
         # The many faces of container networking
 
         # Host to Container
-        port22 = network_settings.dig('PortBindings', '22/tcp')
-        port22 = network_settings.dig('Ports', '22/tcp') if port22.nil? && network_settings.key?('Ports') && !nested_docker?
-
-        ip = port22[0]['HostIp'] if port22
-        port = port22[0]['HostPort'] if port22
+        if !nested && (binding = legacy_binding || published)
+          ip = binding['HostIp']
+          port = binding['HostPort']
+        end
 
         # Container to container
         unless ip && port
@@ -179,27 +210,22 @@ module Beaker
           ip = network_settings['Gateway']
 
           if ip && !ip.empty?
-            port22 = network_settings.dig('PortBindings', '22/tcp')
-            port = port22[0]['HostPort'] if port22
+            port = legacy_binding['HostPort'] if legacy_binding
           else
             port = nil
           end
         end
 
         # Legacy fallback
-        unless ip && port
-          port22 = network_settings.dig('Ports', '22/tcp')
-          ip = port22[0]['HostIp'] if port22
-          port = port22[0]['HostPort'] if port22
+        if (!ip || !port) && published
+          ip = published['HostIp']
+          port = published['HostPort']
         end
       end
 
       ip = network_settings['IPAddress'] if ip.nil? && host_config['NetworkMode'] != 'slirp4netns' && network_settings['IPAddress'] && !network_settings['IPAddress'].empty?
 
-      if port.nil?
-        port22 = network_settings.dig('Ports', '22/tcp')
-        port = port22[0]['HostPort'] if port22
-      end
+      port ||= published['HostPort'] if published
 
       ssh_connection_info[:ip] = (ip == '0.0.0.0') ? '127.0.0.1' : ip
       ssh_connection_info[:port] = port || '22'
@@ -292,7 +318,7 @@ module Beaker
           while !ok && (retries < 5)
             container = ::Docker::Container.create(container_opts)
 
-            ssh_info = get_ssh_connection_info(container)
+            ssh_info = get_ssh_connection_info(container, host)
             if ::Docker.rootless? && ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024)
               @logger.debug("#{host} was given a port less than 1024 but you are connecting to a rootless instance, retrying")
 
@@ -339,7 +365,7 @@ module Beaker
           fix_ssh(container, host)
         end
 
-        ssh_connection_info = get_ssh_connection_info(container)
+        ssh_connection_info = get_ssh_connection_info(container, host)
 
         ip = ssh_connection_info[:ip]
         port = ssh_connection_info[:port]
@@ -462,6 +488,16 @@ module Beaker
     end
 
     private
+
+    def ssh_port_binding(bindings, loopback_accessible)
+      Array(bindings).find do |binding|
+        binding.is_a?(Hash) && (loopback_accessible || !loopback_address?(binding['HostIp'] || binding[:HostIp]))
+      end
+    end
+
+    def loopback_address?(address)
+      /\A(?:127\.|localhost\z|::1\z|\[::1\]\z)/i.match?(address)
+    end
 
     # container.exec runs an argv directly, without a shell. The sed script
     # therefore has to be a single argument without literal quotes, and the
