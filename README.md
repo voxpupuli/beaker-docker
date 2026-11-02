@@ -73,6 +73,26 @@ CONFIG:
     - AUDIT_WRITE
 ```
 
+#### Building for another platform
+
+By default Docker resolves images for the platform of the Docker host. To test
+another architecture, for example `linux/arm64` or `linux/ppc64le` using QEMU
+emulation, set `docker_platform` on the node. It is passed to Docker when the
+image is built or pulled:
+
+```yaml
+HOSTS:
+  el9-ppc64le:
+    platform: el-9-ppc64le
+    hypervisor: docker
+    image: almalinux:9
+    docker_platform: linux/ppc64le
+```
+
+`docker_platform` is separate from the Beaker `platform` key, which describes
+the operating system of the node. Emulation has to be set up on the Docker host
+separately, for example with `qemu-user-static` or `docker/setup-qemu-action`.
+
 ### Privileged containers
 
 Containers are run in privileged mode by default unless capabilities are set.
