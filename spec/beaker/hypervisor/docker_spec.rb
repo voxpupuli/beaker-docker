@@ -753,6 +753,26 @@ module Beaker
           end
 
           context 'when running under WSL' do
+            # Not the default 8022, so that a test can't pass by accident using the fixture's port.
+            # Docker reports the published port as a string.
+            let(:ssh_binding) { [{ 'HostPort' => '2222', 'HostIp' => '127.0.0.1' }] }
+
+            # The container reports the published ssh port. The nested code path ignores it.
+            let(:container_config) do
+              {
+                'HostConfig' => {
+                  'NetworkMode' => 'slirp4netns',
+                },
+                'NetworkSettings' => {
+                  'IPAddress' => '192.0.2.1',
+                  'Ports' => {
+                    '22/tcp' => ssh_binding,
+                  },
+                  'Gateway' => '192.0.2.254',
+                },
+              }
+            end
+
             before do
               @docker_in_docker = ENV.fetch('DOCKER_IN_DOCKER', nil)
               @wslenv = ENV.fetch('WSLENV', nil)
@@ -764,6 +784,7 @@ module Beaker
             after do
               ENV['DOCKER_IN_DOCKER'] = @docker_in_docker
               ENV['WSLENV'] = @wslenv
+              ENV.delete('DOCKER_HOST')
             end
 
             it 'is treated like docker-in-docker and connects to the container IP' do
@@ -773,14 +794,36 @@ module Beaker
               expect(hosts[0]['port']).to eq 22
             end
 
-            it 'uses the published port when the ssh port is bound explicitly' do
-              hosts[0]['docker_port_bindings'] = {
-                '22/tcp' => [{ 'HostPort' => '8022', 'HostIp' => '127.0.0.1' }],
-              }
+            it 'creates the container with the requested binding and connects through it when the ssh port is bound explicitly' do
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              created = []
+              allow(::Docker::Container).to receive(:create) do |args|
+                created << args
+                container
+              end
               docker.provision
 
+              expect(created.first[:HostConfig][:PortBindings]['22/tcp']).to eq(ssh_binding)
               expect(hosts[0]['ip']).to eq '127.0.0.1'
-              expect(hosts[0]['port']).to eq 8022
+              expect(hosts[0]['port']).to eq '2222'
+            end
+
+            it 'uses the DOCKER_HOST address with the published port when the ssh port is bound explicitly' do
+              ENV['DOCKER_HOST'] = 'tcp://192.0.2.2:2375'
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.2'
+              expect(hosts[0]['port']).to eq '2222'
+            end
+
+            it 'uses the bridge gateway with the published port inside a container when the ssh port is bound explicitly' do
+              allow(docker).to receive(:in_container?).and_return(true)
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.254'
+              expect(hosts[0]['port']).to eq '2222'
             end
 
             it 'is still treated like docker-in-docker when only other ports are bound' do
@@ -795,9 +838,7 @@ module Beaker
 
             it 'keeps connecting to the container IP with DOCKER_IN_DOCKER even if the ssh port is bound explicitly' do
               ENV['DOCKER_IN_DOCKER'] = 'true'
-              hosts[0]['docker_port_bindings'] = {
-                '22/tcp' => [{ 'HostPort' => '8022', 'HostIp' => '127.0.0.1' }],
-              }
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
               docker.provision
 
               expect(hosts[0]['ip']).to eq '192.0.2.1'
