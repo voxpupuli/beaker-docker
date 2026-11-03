@@ -598,14 +598,22 @@ module Beaker
       # operation taking 30 seconds while the lookup times out.
       # Also unbreak users with a bunch of SSH keys loaded in their keyring.
       # Also unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host (UsePAM no)
+      #
+      # RUN uses /bin/sh, which is not bash everywhere (it is dash on
+      # Debian/Ubuntu), so this sticks to POSIX sh: no compgen, no find.
+      # sshd_config is required, so sed failing on it fails the build.
+      # The files in sshd_config.d are optional: an unmatched glob is left as
+      # the literal pattern by every POSIX shell, hence the -f test.
       dockerfile += <<~DF
-        RUN sed -ri \
+        RUN set -- /etc/ssh/sshd_config; \
+        for f in /etc/ssh/sshd_config.d/*; do if [ -f "$f" ]; then set -- "$@" "$f"; fi; done; \
+        sed -ri \
         -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
         -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
         -e 's/^#?UseDNS .*/UseDNS no/' \
         -e 's/^#?UsePAM .*/UsePAM no/' \
         -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' \
-        /etc/ssh/sshd_config $(compgen -G '/etc/ssh/sshd_config.d/*' || echo '')
+        "$@"
       DF
 
       # Any extra commands specified for the host
