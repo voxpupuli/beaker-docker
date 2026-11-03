@@ -388,7 +388,7 @@ module Beaker
         container.exec(%w[apt-get update])
         container.exec(%w[apt-get install -y openssh-server openssh-client])
         container.exec(pam_loginuid_fix)
-      when *DNF_PLATFORMS
+      when /el-[89]/, /fedora-(2[2-9]|3[0-9])/, /amazon-2023/
         container.exec(%w[dnf clean all])
         container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
         container.exec(%w[ssh-keygen -A])
