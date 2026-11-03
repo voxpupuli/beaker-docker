@@ -999,23 +999,11 @@ module Beaker
           expect(dockerfile).to include('zypper -n in openssh')
         end
 
-        (22..39).to_a.each do |fedora_release|
+        (22..45).to_a.each do |fedora_release|
           it "uses dnf on fedora #{fedora_release}" do
             FakeFS.deactivate!
             dockerfile = docker.send(:dockerfile_for, make_host('none', {
                                                                   'platform' => Beaker::Platform.new("fedora-#{fedora_release}-x86_64"),
-                                                                  'image' => 'foobar',
-                                                                }))
-
-            expect(dockerfile).to include('dnf install -y sudo')
-          end
-        end
-
-        (40..45).to_a.each do |fedora_release|
-          it "uses dnf on fedora #{fedora_release}" do
-            FakeFS.deactivate!
-            dockerfile = docker.send(:dockerfile_for, make_host('none', {
-                                                                  'platform' => "fedora-#{fedora_release}-x86_64",
                                                                   'image' => 'foobar',
                                                                 }))
 
