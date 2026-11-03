@@ -488,7 +488,8 @@ module Beaker
       docker_buildargs = {}
       docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
       docker_buildargs_env&.split(/ +|\t+/)&.each do |arg|
-        key, value = arg.split('=')
+        # split on the first '=' only, values such as URLs may contain more
+        key, value = arg.split('=', 2)
         if key
           docker_buildargs[key] = value
         else
