@@ -142,11 +142,13 @@ module Beaker
 
     # Did the user configure a binding for the ssh port (22/tcp) on this host?
     # The default binding to a random port is always present on the container,
-    # so this has to be looked up in the host's options.
+    # so this has to be looked up in the host's options. A `22/tcp` key with no
+    # value (nil or an empty list) publishes nothing, so it does not count.
     def explicit_ssh_port_binding?(host)
-      return false unless host && host['docker_port_bindings']
+      bindings = host && host['docker_port_bindings']
+      return false unless bindings.is_a?(Hash)
 
-      host['docker_port_bindings'].keys.map(&:to_s).include?('22/tcp')
+      bindings.any? { |port, mapping| port.to_s == '22/tcp' && !Array(mapping).empty? }
     end
 
     # Find out where the ssh port is from the container

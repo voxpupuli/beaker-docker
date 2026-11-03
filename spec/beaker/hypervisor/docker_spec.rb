@@ -836,6 +836,16 @@ module Beaker
               expect(hosts[0]['port']).to eq 22
             end
 
+            [nil, []].each do |empty_binding|
+              it "is still treated like docker-in-docker when the ssh binding is #{empty_binding.inspect}" do
+                hosts[0]['docker_port_bindings'] = { '22/tcp' => empty_binding }
+                docker.provision
+
+                expect(hosts[0]['ip']).to eq '192.0.2.1'
+                expect(hosts[0]['port']).to eq 22
+              end
+            end
+
             it 'keeps connecting to the container IP with DOCKER_IN_DOCKER even if the ssh port is bound explicitly' do
               ENV['DOCKER_IN_DOCKER'] = 'true'
               hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
