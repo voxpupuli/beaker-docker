@@ -189,6 +189,49 @@ module Beaker
           end
         end
 
+        # container.exec runs an argv without a shell, so every element has to be
+        # a complete argument: no literal quotes and nothing split on spaces.
+        describe 'exec argument vectors' do
+          # a plain method rather than a let: the group is already at the
+          # RSpec/MultipleMemoizedHelpers limit
+          def recorded_commands(container)
+            commands = []
+            allow(container).to receive(:exec) { |cmd| commands << cmd }
+            commands
+          end
+
+          platforms.each do |platform|
+            it "does not pass literal quotes as part of an argument on #{platform}" do
+              commands = recorded_commands(test_container)
+              host['platform'] = platform
+              docker.install_ssh_components(test_container, host)
+
+              expect(commands.flatten).not_to include(a_string_matching(/\A'|'\z/))
+            end
+          end
+
+          it 'runs the pam_loginuid fix through a shell so that the glob is expanded' do
+            commands = recorded_commands(test_container)
+            host['platform'] = 'ubuntu-20.04-x86_64'
+            docker.install_ssh_components(test_container, host)
+
+            pam = commands.find { |cmd| cmd.join(' ').include?('pam_loginuid') }
+            expect(pam.first(2)).to eq(['/bin/sh', '-c'])
+            expect(pam.length).to eq(3)
+            expect(pam.last).to start_with("sed '").and end_with("' -i /etc/pam.d/*")
+          end
+
+          %w[sles-12-x86_64 archlinux-2017.12.27-x86_64].each do |platform|
+            it "passes the UsePAM sed expression as a single argument on #{platform}" do
+              commands = recorded_commands(test_container)
+              host['platform'] = platform
+              docker.install_ssh_components(test_container, host)
+
+              expect(commands).to include(['sed', '-ri', 's/^#?UsePAM .*/UsePAM no/', '/etc/ssh/sshd_config'])
+            end
+          end
+        end
+
         # install_ssh_components has to pick the same package manager as dockerfile_for
         %w[el-8 el-9 el-10 el-11 fedora-39 fedora-40 fedora-43 amazon-2023].each do |os|
           it "installs sshd with dnf, not yum, on #{os}" do
@@ -321,6 +364,17 @@ module Beaker
           expect(::Docker::Image).to receive(:build).with('special testing value', { rm: true, buildargs: '{"HTTP_PROXY":"http://1.1.1.1:3128","HTTPS_PROXY":"https://1.1.1.1:3129"}' })
 
           docker.provision
+        end
+
+        it 'keeps equal signs in the values of ENV DOCKER_BUILDARGS' do
+          allow(docker).to receive(:dockerfile_for).and_return('special testing value')
+          ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128/?a=b&c=d TOKEN=YWJjZA== EMPTY= UNSET'
+          expected = '{"HTTP_PROXY":"http://1.1.1.1:3128/?a=b&c=d","TOKEN":"YWJjZA==","EMPTY":"","UNSET":null}'
+          expect(::Docker::Image).to receive(:build).with('special testing value', { rm: true, buildargs: expected })
+
+          docker.provision
+        ensure
+          ENV.delete('DOCKER_BUILDARGS')
         end
 
         it 'creates a container with correct image and hostname' do
