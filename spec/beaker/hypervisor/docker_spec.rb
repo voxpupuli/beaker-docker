@@ -1069,6 +1069,22 @@ module Beaker
           end
         end
 
+        # RUN is executed by /bin/sh, which is dash on Debian/Ubuntu (or ash
+        # on busybox), so bash builtins such as compgen are not available.
+        it 'configures sshd using POSIX sh only' do
+          FakeFS.deactivate!
+          platforms.each do |platform|
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => platform,
+                                                                  'image' => 'foobar',
+                                                                }))
+
+            expect(dockerfile).not_to include('compgen')
+            expect(dockerfile).to include('RUN set -- /etc/ssh/sshd_config; for f in /etc/ssh/sshd_config.d/*; do if [ -f "$f" ]; then set -- "$@" "$f"; fi; done; sed -ri')
+            expect(dockerfile).to include(%q(MaxAuthTries 1000/' "$@"))
+          end
+        end
+
         it 'uses zypper on sles' do
           FakeFS.deactivate!
           dockerfile = docker.send(:dockerfile_for, make_host('none', {
