@@ -403,27 +403,27 @@ module Beaker
       when /ubuntu/, /debian/, /cumulus/
         container.exec(%w[apt-get update])
         container.exec(%w[apt-get install -y openssh-server openssh-client])
-        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
+        container.exec(pam_loginuid_fix)
       when /el-[89]/, /fedora-(2[2-9]|3[0-9])/, /amazon-2023/
         container.exec(%w[dnf clean all])
         container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
         container.exec(%w[ssh-keygen -A])
-        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
+        container.exec(pam_loginuid_fix)
       when /^el-/, /centos/, /fedora/, /redhat/, /eos/
         container.exec(%w[yum clean all])
         container.exec(%w[yum install -y sudo openssh-server openssh-clients])
         container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
         container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
-        container.exec(%w[sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*])
+        container.exec(pam_loginuid_fix)
       when /opensuse/, /sles/
         container.exec(%w[zypper -n in openssh])
         container.exec(%w[ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key])
         container.exec(%w[ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key])
-        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
+        container.exec(['sed', '-ri', 's/^#?UsePAM .*/UsePAM no/', '/etc/ssh/sshd_config'])
       when /archlinux/
         container.exec(%w[pacman -S --noconfirm openssh])
         container.exec(%w[ssh-keygen -A])
-        container.exec(%w[sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config])
+        container.exec(['sed', '-ri', 's/^#?UsePAM .*/UsePAM no/', '/etc/ssh/sshd_config'])
         container.exec(%w[systemctl enable sshd])
       when /alpine/
         container.exec(%w[apk add --update openssh])
@@ -486,6 +486,14 @@ module Beaker
 
     private
 
+    # container.exec runs an argv directly, without a shell. The sed script
+    # therefore has to be a single argument without literal quotes, and the
+    # /etc/pam.d/* glob has to be expanded by a shell that we start ourselves.
+    # Neither works with a %w[] array, which splits on every space.
+    def pam_loginuid_fix
+      ['/bin/sh', '-c', "sed 's@session[[:space:]]*required[[:space:]]*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*"]
+    end
+
     # Look up the network a container is attached to. Podman's Docker-compatible
     # API reports HostConfig.NetworkMode as 'bridge' but keys
     # NetworkSettings.Networks by the actual network name, so fall back to the
@@ -503,7 +511,8 @@ module Beaker
       docker_buildargs = {}
       docker_buildargs_env = ENV.fetch('DOCKER_BUILDARGS', nil)
       docker_buildargs_env&.split(/ +|\t+/)&.each do |arg|
-        key, value = arg.split('=')
+        # split on the first '=' only, values such as URLs may contain more
+        key, value = arg.split('=', 2)
         if key
           docker_buildargs[key] = value
         else
