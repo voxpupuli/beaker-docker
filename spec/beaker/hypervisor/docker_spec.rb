@@ -299,6 +299,17 @@ module Beaker
           docker.provision
         end
 
+        it 'keeps equal signs in the values of ENV DOCKER_BUILDARGS' do
+          allow(docker).to receive(:dockerfile_for).and_return('special testing value')
+          ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128/?a=b&c=d TOKEN=YWJjZA== EMPTY= UNSET'
+          expected = '{"HTTP_PROXY":"http://1.1.1.1:3128/?a=b&c=d","TOKEN":"YWJjZA==","EMPTY":"","UNSET":null}'
+          expect(::Docker::Image).to receive(:build).with('special testing value', { rm: true, buildargs: expected })
+
+          docker.provision
+        ensure
+          ENV.delete('DOCKER_BUILDARGS')
+        end
+
         it 'creates a container with correct image and hostname' do
           hosts.each_with_index do |host, _index|
             expect(::Docker::Container).to receive(:create) do |args|
