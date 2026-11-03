@@ -189,6 +189,30 @@ module Beaker
           end
         end
 
+        # install_ssh_components has to pick the same package manager as dockerfile_for
+        %w[el-8 el-9 el-10 el-11 fedora-39 fedora-40 fedora-43 amazon-2023].each do |os|
+          it "installs sshd with dnf, not yum, on #{os}" do
+            commands = []
+            allow(test_container).to receive(:exec) { |cmd| commands << cmd }
+            host['platform'] = "#{os}-x86_64"
+            docker.install_ssh_components(test_container, host)
+
+            expect(commands).to include(%w[dnf install -y sudo openssh-server openssh-clients])
+            expect(commands.flatten).not_to include('yum')
+          end
+        end
+
+        %w[el-7 centos-7].each do |os|
+          it "keeps using yum on #{os}" do
+            commands = []
+            allow(test_container).to receive(:exec) { |cmd| commands << cmd }
+            host['platform'] = "#{os}-x86_64"
+            docker.install_ssh_components(test_container, host)
+
+            expect(commands).to include(%w[yum install -y sudo openssh-server openssh-clients])
+          end
+        end
+
         it 'accepts alpine as valid platform' do
           host['platform'] = Beaker::Platform.new('alpine-3.8-x86_64')
           expect(test_container).to receive(:exec).at_least(:twice)
@@ -985,6 +1009,40 @@ module Beaker
 
             expect(dockerfile).to include('dnf install -y sudo')
           end
+        end
+
+        (40..45).to_a.each do |fedora_release|
+          it "uses dnf on fedora #{fedora_release}" do
+            FakeFS.deactivate!
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => "fedora-#{fedora_release}-x86_64",
+                                                                  'image' => 'foobar',
+                                                                }))
+
+            expect(dockerfile).to include('dnf install -y sudo')
+          end
+        end
+
+        %w[el-8 el-9 el-10 el-11].each do |el|
+          it "uses dnf on #{el}" do
+            FakeFS.deactivate!
+            dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                  'platform' => "#{el}-x86_64",
+                                                                  'image' => 'foobar',
+                                                                }))
+
+            expect(dockerfile).to include('dnf install -y sudo')
+          end
+        end
+
+        it 'keeps using yum on el-7' do
+          FakeFS.deactivate!
+          dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                'platform' => 'el-7-x86_64',
+                                                                'image' => 'foobar',
+                                                              }))
+
+          expect(dockerfile).to include('yum install -y sudo')
         end
 
         it 'uses pacman on archlinux' do
