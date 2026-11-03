@@ -1019,8 +1019,8 @@ module Beaker
           end
         end
 
-        # RUN is executed by /bin/sh, which is dash on Debian/Ubuntu, so bash
-        # builtins such as compgen are not available.
+        # RUN is executed by /bin/sh, which is dash on Debian/Ubuntu (or ash
+        # on busybox), so bash builtins such as compgen are not available.
         it 'configures sshd using POSIX sh only' do
           FakeFS.deactivate!
           platforms.each do |platform|
