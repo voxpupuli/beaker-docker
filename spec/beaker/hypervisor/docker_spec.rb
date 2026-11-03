@@ -1074,8 +1074,11 @@ module Beaker
         let(:test_container) { object_double(container) }
         let(:host) { hosts[0] }
 
-        # The same command the image build runs, see #sshd_config_command
-        let(:sshd_config_exec) { ['/bin/sh', '-c', docker.send(:sshd_config_command)] }
+        # The same command the image build runs, see #sshd_config_command.
+        # A plain method rather than a `let`, to stay under RSpec/MultipleMemoizedHelpers.
+        def sshd_config_exec
+          ['/bin/sh', '-c', docker.send(:sshd_config_command)]
+        end
 
         before do
           allow(test_container).to receive(:id).and_return('abcdef')
