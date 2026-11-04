@@ -290,7 +290,7 @@ module Beaker
           ok = false
           retries = 0
           while !ok && (retries < 5)
-            container = ::Docker::Container.create(container_opts)
+            container = create_container(container_opts, host)
 
             ssh_info = get_ssh_connection_info(container)
             if ::Docker.rootless? && ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024)
@@ -491,6 +491,30 @@ module Beaker
     def platform_opts_for(host)
       platform = host['docker_platform'].to_s
       platform.empty? ? {} : { platform: platform }
+    end
+
+    # Creates the container, for the host's docker_platform if it has one.
+    #
+    # Docker picks the image for the Docker host's own platform when the
+    # container is created without one. An image ID does not always name a
+    # single platform: with the containerd image store, a pulled image keeps
+    # every platform it was pulled for, so a native copy of the same image
+    # would be used instead of the requested one. With a platform, Docker
+    # uses that platform or fails if it is not there.
+    #
+    # Released docker-api versions (2.3, 2.4) only send 'name' as a query
+    # parameter in Docker::Container.create, so the request is sent here.
+    # Use Docker::Container.create again once a release sends 'platform'.
+    def create_container(container_opts, host)
+      platform = host['docker_platform'].to_s
+      return ::Docker::Container.create(container_opts) if platform.empty?
+
+      connection = ::Docker.connection
+      query = { 'platform' => platform }
+      query['name'] = container_opts['name'] if container_opts['name']
+      body = container_opts.reject { |key, _| key.to_s == 'name' }
+      response = connection.post('/containers/create', query, body: JSON.generate(body))
+      ::Docker::Container.get(JSON.parse(response).fetch('Id'), {}, connection)
     end
 
     def buildargs_for(host)

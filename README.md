@@ -79,7 +79,8 @@ CONFIG:
 By default Docker resolves images for the platform of the Docker host. To test
 another architecture, for example `linux/arm64` or `linux/ppc64le` using QEMU
 emulation, set `docker_platform` on the node. It is passed to Docker when the
-image is built or pulled:
+image is built or pulled, and when the container is created (this needs Docker
+API version 1.41 or later, Docker Engine 20.10):
 
 ```yaml
 HOSTS:
