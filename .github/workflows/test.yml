@@ -75,7 +75,7 @@ jobs:
   # checks that this binding is honoured. This does not exercise real WSL
   # networking.
   docker_wsl:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: rubocop_and_matrix
     name: Docker - simulated WSL
     timeout-minutes: 15
