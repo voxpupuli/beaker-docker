@@ -108,14 +108,22 @@ module Beaker
 
     let(:version) { { 'ApiVersion' => '1.18', 'Arch' => 'amd64', 'GitCommit' => '4749651', 'GoVersion' => 'go1.4.2', 'KernelVersion' => '3.16.0-37-generic', 'Os' => 'linux', 'Version' => '1.6.0' } }
 
-    before do
-      allow(::Docker).to receive(:rootless?).and_return(true)
-      @docker_host = ENV.fetch('DOCKER_HOST', nil)
-      ENV.delete('DOCKER_HOST') if @docker_host
+    # These variables change how beaker-docker reaches a container or builds an
+    # image. Clear them so the result doesn't depend on the machine running the
+    # specs (WSLENV is set under WSL), and restore them afterwards so an example
+    # can't leak a value into the next one. Assigning nil removes a variable, so
+    # one that was unset beforehand is unset again.
+    around do |example|
+      names = %w[DOCKER_HOST DOCKER_IN_DOCKER DOCKER_BUILDARGS WSLENV]
+      saved = names.to_h { |name| [name, ENV.fetch(name, nil)] }
+      names.each { |name| ENV.delete(name) }
+      example.run
+    ensure
+      saved.each { |name, value| ENV[name] = value }
     end
 
-    after do
-      ENV['DOCKER_HOST'] = @docker_host if @docker_host
+    before do
+      allow(::Docker).to receive(:rootless?).and_return(true)
     end
 
     context 'with connection failure' do
@@ -170,6 +178,67 @@ module Beaker
           expect(::Docker).to receive(:logger=).with(logger)
 
           docker
+        end
+      end
+
+      describe '#nested_docker?' do
+        let(:wslenv) { 'WT_SESSION:WT_PROFILE_ID' }
+        let(:ssh_bound_host) { { 'docker_port_bindings' => { '22/tcp' => [{ 'HostPort' => '2222' }] } } }
+
+        context 'when DOCKER_IN_DOCKER is set to a value' do
+          %w[1 true TRUE yes on enabled].each do |value|
+            it "is true for #{value.inspect}" do
+              ENV['DOCKER_IN_DOCKER'] = value
+
+              expect(docker.nested_docker?).to be true
+            end
+          end
+
+          ['false', 'FALSE', ' False ', '0', 'no', 'off', 'Off'].each do |value|
+            it "is false for #{value.inspect}" do
+              ENV['DOCKER_IN_DOCKER'] = value
+
+              expect(docker.nested_docker?).to be false
+            end
+          end
+
+          it 'is false under WSL when it is false' do
+            ENV['DOCKER_IN_DOCKER'] = 'false'
+            ENV['WSLENV'] = wslenv
+
+            expect(docker.nested_docker?).to be false
+          end
+
+          it 'is true under WSL when the ssh port is bound explicitly and it is true' do
+            ENV['DOCKER_IN_DOCKER'] = 'true'
+            ENV['WSLENV'] = wslenv
+
+            expect(docker.nested_docker?(ssh_bound_host)).to be true
+          end
+        end
+
+        [nil, '', '  '].each do |value|
+          context "when DOCKER_IN_DOCKER is #{value.inspect}" do
+            before do
+              ENV['DOCKER_IN_DOCKER'] = value
+            end
+
+            it 'is false outside WSL' do
+              expect(docker.nested_docker?).to be false
+            end
+
+            it 'is true under WSL' do
+              ENV['WSLENV'] = wslenv
+
+              expect(docker.nested_docker?).to be true
+            end
+
+            it 'is false under WSL when the ssh port is bound explicitly' do
+              ENV['WSLENV'] = wslenv
+
+              expect(docker.nested_docker?(ssh_bound_host)).to be false
+            end
+          end
         end
       end
 
@@ -828,17 +897,8 @@ module Beaker
             end
 
             before do
-              @docker_in_docker = ENV.fetch('DOCKER_IN_DOCKER', nil)
-              @wslenv = ENV.fetch('WSLENV', nil)
-              ENV.delete('DOCKER_IN_DOCKER')
               ENV['WSLENV'] = 'WT_SESSION:WT_PROFILE_ID'
               allow(docker).to receive(:in_container?).and_return(false)
-            end
-
-            after do
-              ENV['DOCKER_IN_DOCKER'] = @docker_in_docker
-              ENV['WSLENV'] = @wslenv
-              ENV.delete('DOCKER_HOST')
             end
 
             it 'is treated like docker-in-docker and connects to the container IP' do
