@@ -131,9 +131,22 @@ with `podman` 5.6, which builds the pod infrastructure container from a rootfs
 overlay. Running rootful or rootless `podman` inside a rootless `podman`
 container is affected.
 
-To avoid it, mount a directory from the host's regular filesystem over
-`/var/lib/containers`, so that the nested `podman` stores its images and
-containers outside of the overlay. This can be done with `mount_folders`:
+To avoid it, mount a directory from the host's regular filesystem over the
+storage directory the nested `podman` uses, so that it stores its images and
+containers outside of the overlay. This can be done with `mount_folders`. Which
+directory that is depends on the user that runs `podman` inside the test
+container:
+
+| `podman` inside the test container runs as | Default storage directory                                                      |
+|--------------------------------------------|--------------------------------------------------------------------------------|
+| root (rootful)                             | `/var/lib/containers`                                                          |
+| a regular user (rootless)                  | `$HOME/.local/share/containers`, or `$XDG_DATA_HOME/containers` if that is set |
+
+A `graphroot` set in the container's `storage.conf` overrides both. Mount the
+directory that is actually in use: mounting `/var/lib/containers` has no effect
+on a nested `podman` that runs as a regular user.
+
+For a nested `podman` that runs as root:
 
 ```yaml
 HOSTS:
@@ -149,10 +162,29 @@ HOSTS:
         opts: Z
 ```
 
+For a nested `podman` that runs as a regular user, mount the directory over that
+user's storage instead. `testuser` is a placeholder for the user in the
+container:
+
+```yaml
+    mount_folders:
+      podman-storage:
+        host_path: /var/tmp/beaker-podman-storage/el10-testuser
+        container_path: /home/testuser/.local/share/containers
+        opts: Z
+```
+
 Some notes:
 
 * The directory has to exist on the host before the test run and must not be
   on an overlay filesystem itself.
+* The user running the nested `podman` has to be able to write to the directory.
+  With a rootless outer `podman`, user IDs in the container map to different IDs
+  on the host, so a directory created by your own user may not be writable for
+  the container user. `podman unshare chown <uid>:<gid> <directory>` sets the
+  owner using the IDs as the container sees them.
+* If the nested `podman` runs as both root and a regular user, mount a separate
+  directory for each of them.
 * Use a separate directory for every host. Container storage can't be shared
   between `podman` instances that run at the same time.
 * `opts: Z` relabels the directory for SELinux and makes it private to the
