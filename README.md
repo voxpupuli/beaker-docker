@@ -15,6 +15,7 @@ Beaker library to use docker hypervisor
   * [Privileged containers](#privileged-containers)
   * [Cleaning up after tests](#cleaning-up-after-tests)
 * [Working with `podman`](#working-with-podman)
+  * [Running podman inside the test containers](#running-podman-inside-the-test-containers)
 * [Generating a Dockerfile](#generating-a-dockerfile)
 * [Spec tests]()
 * [Acceptance tests]()
@@ -113,6 +114,84 @@ to edit the `dockeropts` hash in your nodeset to include different flags in the
 See the
 [HostConfig](https://any-api.com/docker_com/engine/docs/Definitions/HostConfig)
 portion of the docker API for more information.
+
+### Running podman inside the test containers
+
+If the code under test runs `podman` itself (for example a module that manages
+Quadlets) and the test containers are created by `podman` as well, the nested
+`podman` can fail with an error like this in the kernel log:
+
+```
+overlay: filesystem on /var/lib/containers/storage/overlay-containers/<id>/rootfs/upper not supported as upperdir
+```
+
+The root filesystem of a test container is already an overlay mount, and the
+kernel can't stack another overlay filesystem on top of it. This has been seen
+with `podman` 5.6, which builds the pod infrastructure container from a rootfs
+overlay. Running rootful or rootless `podman` inside a rootless `podman`
+container is affected.
+
+To avoid it, mount a directory from the host's regular filesystem over the
+storage directory the nested `podman` uses, so that it stores its images and
+containers outside of the overlay. This can be done with `mount_folders`. Which
+directory that is depends on the user that runs `podman` inside the test
+container:
+
+| `podman` inside the test container runs as | Default storage directory                                                      |
+|--------------------------------------------|--------------------------------------------------------------------------------|
+| root (rootful)                             | `/var/lib/containers`                                                          |
+| a regular user (rootless)                  | `$HOME/.local/share/containers`, or `$XDG_DATA_HOME/containers` if that is set |
+
+A `graphroot` set in the container's `storage.conf` overrides both. Mount the
+directory that is actually in use: mounting `/var/lib/containers` has no effect
+on a nested `podman` that runs as a regular user.
+
+For a nested `podman` that runs as root:
+
+```yaml
+HOSTS:
+  el10:
+    platform: el-10-x86_64
+    hypervisor: docker
+    image: quay.io/centos/centos:stream10
+    docker_cmd: '["/sbin/init"]'
+    mount_folders:
+      podman-storage:
+        host_path: /var/tmp/beaker-podman-storage/el10
+        container_path: /var/lib/containers
+        opts: Z
+```
+
+For a nested `podman` that runs as a regular user, mount the directory over that
+user's storage instead. `testuser` is a placeholder for the user in the
+container:
+
+```yaml
+    mount_folders:
+      podman-storage:
+        host_path: /var/tmp/beaker-podman-storage/el10-testuser
+        container_path: /home/testuser/.local/share/containers
+        opts: Z
+```
+
+Some notes:
+
+* The directory has to exist on the host before the test run and must not be
+  on an overlay filesystem itself.
+* The user running the nested `podman` has to be able to write to the directory.
+  With a rootless outer `podman`, user IDs in the container map to different IDs
+  on the host, so a directory created by your own user may not be writable for
+  the container user. `podman unshare chown <uid>:<gid> <directory>` sets the
+  owner using the IDs as the container sees them.
+* If the nested `podman` runs as both root and a regular user, mount a separate
+  directory for each of them.
+* Use a separate directory for every host. Container storage can't be shared
+  between `podman` instances that run at the same time.
+* `opts: Z` relabels the directory for SELinux and makes it private to the
+  container. `mount_folders` defaults to the shared label `z` if `opts` is
+  omitted.
+* This only matters when the tests run `podman` inside the test containers.
+  Nothing changes for tests that don't.
 
 ## Generating a Dockerfile
 
