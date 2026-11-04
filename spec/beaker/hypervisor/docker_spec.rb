@@ -342,6 +342,80 @@ module Beaker
           docker.provision
         end
 
+        context 'when the host has "docker_platform" set' do
+          let(:connection) { instance_double(::Docker::Connection) }
+
+          before do
+            hosts.each do |host|
+              host['docker_platform'] = 'linux/ppc64le'
+            end
+            allow(::Docker).to receive(:connection).and_return(connection)
+            allow(connection).to receive(:post).and_return('{"Id":"abcdef"}')
+            allow(::Docker::Container).to receive(:get).and_return(container)
+          end
+
+          it 'creates the container for that platform' do
+            allow(docker).to receive(:dockerfile_for).and_return('special testing value')
+            expect(::Docker::Container).not_to receive(:create)
+            expect(connection).to receive(:post).exactly(3).times do |path, query, opts|
+              expect(path).to eq('/containers/create')
+              expect(query).to include('platform' => 'linux/ppc64le')
+              expect(query['name']).to start_with('beaker-')
+              body = JSON.parse(opts[:body])
+              expect(body).not_to have_key('name')
+              expect(body['Image']).to eq(image.id)
+              '{"Id":"abcdef"}'
+            end
+            expect(::Docker::Container).to receive(:get).with('abcdef', {}, connection).exactly(3).times.and_return(container)
+
+            docker.provision
+          end
+
+          it 'builds the generated Dockerfile for that platform' do
+            allow(docker).to receive(:dockerfile_for).and_return('special testing value')
+            expect(::Docker::Image).to receive(:build).with('special testing value', hash_including(rm: true, platform: 'linux/ppc64le')).exactly(3).times.and_return(image)
+
+            docker.provision
+          end
+
+          it 'builds the image for that platform when use_image_entry_point is set' do
+            hosts.each { |host| host['use_image_entry_point'] = true }
+            allow(docker).to receive(:install_ssh_components)
+            allow(docker).to receive(:fix_ssh)
+            expect(::Docker::Image).to receive(:build).with(anything, hash_including(platform: 'linux/ppc64le')).exactly(3).times.and_return(image)
+
+            docker.provision
+          end
+
+          it 'builds the image for that platform when a dockerfile is set' do
+            hosts.each { |host| host['dockerfile'] = 'mydockerfile' }
+            allow(File).to receive(:exist?).with('mydockerfile').and_return(true)
+            allow(docker).to receive(:install_ssh_components)
+            allow(docker).to receive(:fix_ssh)
+            expect(::Docker::Image).to receive(:build_from_dir).with(anything, hash_including(rm: true, platform: 'linux/ppc64le')).exactly(3).times.and_return(image)
+
+            docker.provision
+          end
+
+          it 'pulls the image for that platform when use_image_as_is is set' do
+            hosts.each do |host|
+              host['use_image_as_is'] = true
+              expect(::Docker::Image).to receive(:create).with('fromImage' => host['image'], platform: 'linux/ppc64le') # once per host
+            end
+
+            docker.provision
+          end
+        end
+
+        it 'does not pass a platform when "docker_platform" is not set' do
+          allow(docker).to receive(:dockerfile_for).and_return('special testing value')
+          expect(::Docker::Image).to receive(:build).with('special testing value', hash_excluding(:platform)).exactly(3).times.and_return(image)
+          expect(::Docker::Container).to receive(:create).exactly(3).times.and_return(container)
+          expect(::Docker).not_to receive(:connection)
+
+          docker.provision
+        end
+
         it 'keeps equal signs in the values of ENV DOCKER_BUILDARGS' do
           allow(docker).to receive(:dockerfile_for).and_return('special testing value')
           ENV['DOCKER_BUILDARGS'] = 'HTTP_PROXY=http://1.1.1.1:3128/?a=b&c=d TOKEN=YWJjZA== EMPTY= UNSET'
