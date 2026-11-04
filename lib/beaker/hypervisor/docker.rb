@@ -3,6 +3,13 @@
 module Beaker
   # Docker hypervisor for Beaker acceptance testing framework
   class Docker < Beaker::Hypervisor
+    # Platforms that use dnf. Shared by the generated Dockerfile (dockerfile_for)
+    # and the sideloaded sshd installation (install_ssh_components) so that the
+    # two can't drift apart. The two digit alternatives cover el-10 and later
+    # and fedora-30 and later (including 40+), which earlier fell through to the
+    # legacy yum branch.
+    DNF_PLATFORMS = [/el-(?:[89]|\d{2,})/, /fedora-(?:2[2-9]|[3-9]\d)/, /amazon-2023/].freeze
+
     # Docker hypvervisor initializtion
     # Env variables supported:
     # DOCKER_REGISTRY: Docker registry URL
@@ -381,7 +388,7 @@ module Beaker
         container.exec(%w[apt-get update])
         container.exec(%w[apt-get install -y openssh-server openssh-client])
         container.exec(pam_loginuid_fix)
-      when /el-[89]/, /fedora-(2[2-9]|3[0-9])/, /amazon-2023/
+      when *DNF_PLATFORMS
         container.exec(%w[dnf clean all])
         container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
         container.exec(%w[ssh-keygen -A])
@@ -531,7 +538,7 @@ module Beaker
           RUN apt-get update \
           && apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
         DF
-      when /el-([8-9]|10)/, /fedora-(2[2-9]|3)/, /amazon-2023/
+      when *DNF_PLATFORMS
         dockerfile += <<~DF
           RUN dnf clean all \
           && dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
