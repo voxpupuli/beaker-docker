@@ -108,14 +108,22 @@ module Beaker
 
     let(:version) { { 'ApiVersion' => '1.18', 'Arch' => 'amd64', 'GitCommit' => '4749651', 'GoVersion' => 'go1.4.2', 'KernelVersion' => '3.16.0-37-generic', 'Os' => 'linux', 'Version' => '1.6.0' } }
 
-    before do
-      allow(::Docker).to receive(:rootless?).and_return(true)
-      @docker_host = ENV.fetch('DOCKER_HOST', nil)
-      ENV.delete('DOCKER_HOST') if @docker_host
+    # These variables change how beaker-docker reaches a container or builds an
+    # image. Clear them so the result doesn't depend on the machine running the
+    # specs (WSLENV is set under WSL), and restore them afterwards so an example
+    # can't leak a value into the next one. Assigning nil removes a variable, so
+    # one that was unset beforehand is unset again.
+    around do |example|
+      names = %w[DOCKER_HOST DOCKER_IN_DOCKER DOCKER_BUILDARGS WSLENV]
+      saved = names.to_h { |name| [name, ENV.fetch(name, nil)] }
+      names.each { |name| ENV.delete(name) }
+      example.run
+    ensure
+      saved.each { |name, value| ENV[name] = value }
     end
 
-    after do
-      ENV['DOCKER_HOST'] = @docker_host if @docker_host
+    before do
+      allow(::Docker).to receive(:rootless?).and_return(true)
     end
 
     context 'with connection failure' do
@@ -170,6 +178,67 @@ module Beaker
           expect(::Docker).to receive(:logger=).with(logger)
 
           docker
+        end
+      end
+
+      describe '#nested_docker?' do
+        let(:wslenv) { 'WT_SESSION:WT_PROFILE_ID' }
+        let(:ssh_bound_host) { { 'docker_port_bindings' => { '22/tcp' => [{ 'HostPort' => '2222' }] } } }
+
+        context 'when DOCKER_IN_DOCKER is set to a value' do
+          %w[1 true TRUE yes on enabled].each do |value|
+            it "is true for #{value.inspect}" do
+              ENV['DOCKER_IN_DOCKER'] = value
+
+              expect(docker.nested_docker?).to be true
+            end
+          end
+
+          ['false', 'FALSE', ' False ', '0', 'no', 'off', 'Off'].each do |value|
+            it "is false for #{value.inspect}" do
+              ENV['DOCKER_IN_DOCKER'] = value
+
+              expect(docker.nested_docker?).to be false
+            end
+          end
+
+          it 'is false under WSL when it is false' do
+            ENV['DOCKER_IN_DOCKER'] = 'false'
+            ENV['WSLENV'] = wslenv
+
+            expect(docker.nested_docker?).to be false
+          end
+
+          it 'is true under WSL when the ssh port is bound explicitly and it is true' do
+            ENV['DOCKER_IN_DOCKER'] = 'true'
+            ENV['WSLENV'] = wslenv
+
+            expect(docker.nested_docker?(ssh_bound_host)).to be true
+          end
+        end
+
+        [nil, '', '  '].each do |value|
+          context "when DOCKER_IN_DOCKER is #{value.inspect}" do
+            before do
+              ENV['DOCKER_IN_DOCKER'] = value
+            end
+
+            it 'is false outside WSL' do
+              expect(docker.nested_docker?).to be false
+            end
+
+            it 'is true under WSL' do
+              ENV['WSLENV'] = wslenv
+
+              expect(docker.nested_docker?).to be true
+            end
+
+            it 'is false under WSL when the ssh port is bound explicitly' do
+              ENV['WSLENV'] = wslenv
+
+              expect(docker.nested_docker?(ssh_bound_host)).to be false
+            end
+          end
         end
       end
 
@@ -803,6 +872,101 @@ module Beaker
                 expect(hosts[0]['port']).to eq 8022
                 expect(hosts[0]['vm_ip']).to eq '192.0.2.10'
               end
+            end
+          end
+
+          context 'when running under WSL' do
+            # Not the default 8022, so that a test can't pass by accident using the fixture's port.
+            # Docker reports the published port as a string.
+            let(:ssh_binding) { [{ 'HostPort' => '2222', 'HostIp' => '127.0.0.1' }] }
+
+            # The container reports the published ssh port. The nested code path ignores it.
+            let(:container_config) do
+              {
+                'HostConfig' => {
+                  'NetworkMode' => 'slirp4netns',
+                },
+                'NetworkSettings' => {
+                  'IPAddress' => '192.0.2.1',
+                  'Ports' => {
+                    '22/tcp' => ssh_binding,
+                  },
+                  'Gateway' => '192.0.2.254',
+                },
+              }
+            end
+
+            before do
+              ENV['WSLENV'] = 'WT_SESSION:WT_PROFILE_ID'
+              allow(docker).to receive(:in_container?).and_return(false)
+            end
+
+            it 'is treated like docker-in-docker and connects to the container IP' do
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.1'
+              expect(hosts[0]['port']).to eq 22
+            end
+
+            it 'creates the container with the requested binding and connects through it when the ssh port is bound explicitly' do
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              created = []
+              allow(::Docker::Container).to receive(:create) do |args|
+                created << args
+                container
+              end
+              docker.provision
+
+              expect(created.first[:HostConfig][:PortBindings]['22/tcp']).to eq(ssh_binding)
+              expect(hosts[0]['ip']).to eq '127.0.0.1'
+              expect(hosts[0]['port']).to eq '2222'
+            end
+
+            it 'uses the DOCKER_HOST address with the published port when the ssh port is bound explicitly' do
+              ENV['DOCKER_HOST'] = 'tcp://192.0.2.2:2375'
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.2'
+              expect(hosts[0]['port']).to eq '2222'
+            end
+
+            it 'uses the bridge gateway with the published port inside a container when the ssh port is bound explicitly' do
+              allow(docker).to receive(:in_container?).and_return(true)
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.254'
+              expect(hosts[0]['port']).to eq '2222'
+            end
+
+            it 'is still treated like docker-in-docker when only other ports are bound' do
+              hosts[0]['docker_port_bindings'] = {
+                '8080/tcp' => [{ 'HostPort' => '8080', 'HostIp' => '0.0.0.0' }],
+              }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.1'
+              expect(hosts[0]['port']).to eq 22
+            end
+
+            [nil, []].each do |empty_binding|
+              it "is still treated like docker-in-docker when the ssh binding is #{empty_binding.inspect}" do
+                hosts[0]['docker_port_bindings'] = { '22/tcp' => empty_binding }
+                docker.provision
+
+                expect(hosts[0]['ip']).to eq '192.0.2.1'
+                expect(hosts[0]['port']).to eq 22
+              end
+            end
+
+            it 'keeps connecting to the container IP with DOCKER_IN_DOCKER even if the ssh port is bound explicitly' do
+              ENV['DOCKER_IN_DOCKER'] = 'true'
+              hosts[0]['docker_port_bindings'] = { '22/tcp' => ssh_binding }
+              docker.provision
+
+              expect(hosts[0]['ip']).to eq '192.0.2.1'
+              expect(hosts[0]['port']).to eq 22
             end
           end
 
