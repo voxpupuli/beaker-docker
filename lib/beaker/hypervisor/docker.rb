@@ -126,11 +126,15 @@ module Beaker
 
     # Nested Docker scenarios
     #
-    # DOCKER_IN_DOCKER always selects the nested behaviour. WSL is assumed to be
-    # nested as well, unless the host explicitly publishes the ssh port through
-    # `docker_port_bindings`: an explicit choice by the user wins over the guess.
+    # An explicit DOCKER_IN_DOCKER decides: 0, false, no and off (in any case)
+    # select the normal behaviour, any other value the nested one. An empty value
+    # counts as unset, because a variable that is exported but empty is not a
+    # choice. Only when it is unset is WSL assumed to be nested, unless the host
+    # explicitly publishes the ssh port through `docker_port_bindings`: an
+    # explicit choice by the user wins over the guess.
     def nested_docker?(host = nil)
-      return true if ENV.fetch('DOCKER_IN_DOCKER', nil)
+      setting = ENV.fetch('DOCKER_IN_DOCKER', '').strip.downcase
+      return !%w[0 false no off].include?(setting) unless setting.empty?
 
       wsl? && !explicit_ssh_port_binding?(host)
     end
