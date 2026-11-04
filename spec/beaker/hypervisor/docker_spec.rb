@@ -1074,39 +1074,73 @@ module Beaker
         let(:test_container) { object_double(container) }
         let(:host) { hosts[0] }
 
+        # The same command the image build runs, see #sshd_config_command.
+        # A plain method rather than a `let`, to stay under RSpec/MultipleMemoizedHelpers.
+        def sshd_config_exec
+          ['/bin/sh', '-c', docker.send(:sshd_config_command)]
+        end
+
         before do
           allow(test_container).to receive(:id).and_return('abcdef')
         end
 
         it 'calls exec once when called without host' do
+          expect(test_container).to receive(:exec).once.with(sshd_config_exec)
+          docker.send(:fix_ssh, test_container)
+        end
+
+        it 'applies every sshd_config setting the image build applies' do
           expect(test_container).to receive(:exec).once.with(
-            include(/PermitRootLogin/) &&
-            include(/PasswordAuthentication/) &&
-            include(/UseDNS/) &&
-            include(/MaxAuthTries/),
+            ['/bin/sh', '-c', include('PermitRootLogin yes', 'PasswordAuthentication yes', 'UseDNS no', 'UsePAM no', 'MaxAuthTries 1000')],
           )
           docker.send(:fix_ssh, test_container)
         end
 
         it 'execs sshd on alpine' do
           host['platform'] = Beaker::Platform.new('alpine-3.8-x86_64')
-          expect(test_container).to receive(:exec).with(array_including('sed'))
+          expect(test_container).to receive(:exec).with(sshd_config_exec)
           expect(test_container).to receive(:exec).with(%w[/usr/sbin/sshd])
           docker.send(:fix_ssh, test_container, host)
         end
 
         it 'restarts ssh service on ubuntu' do
           host['platform'] = Beaker::Platform.new('ubuntu-20.04-x86_64')
-          expect(test_container).to receive(:exec).with(array_including('sed'))
+          expect(test_container).to receive(:exec).with(sshd_config_exec)
           expect(test_container).to receive(:exec).with(%w[service ssh restart])
           docker.send(:fix_ssh, test_container, host)
         end
 
         it 'restarts sshd service otherwise' do
           host['platform'] = Beaker::Platform.new('centos-6-x86_64')
-          expect(test_container).to receive(:exec).with(array_including('sed'))
+          expect(test_container).to receive(:exec).with(sshd_config_exec)
           expect(test_container).to receive(:exec).with(%w[service sshd restart])
           docker.send(:fix_ssh, test_container, host)
+        end
+      end
+
+      describe '#sshd_config_command' do
+        let(:command) { docker.send(:sshd_config_command) }
+
+        it 'sets every sshd option beaker needs' do
+          expect(command).to include('PermitRootLogin yes', 'PasswordAuthentication yes', 'UseDNS no', 'UsePAM no', 'MaxAuthTries 1000')
+        end
+
+        it 'also patches the files in sshd_config.d' do
+          expect(command).to include('/etc/ssh/sshd_config.d/*')
+        end
+
+        it 'does not use bash builtins' do
+          expect(command).not_to include('compgen')
+        end
+
+        it 'is the step dockerfile_for runs' do
+          FakeFS.deactivate!
+          dockerfile = docker.send(:dockerfile_for, make_host('none', {
+                                                                'platform' => 'centos-7-x86_64',
+                                                                'image' => 'foobar',
+                                                              }))
+
+          expect(dockerfile).to include("RUN #{command}\n")
         end
       end
     end
