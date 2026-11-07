@@ -936,6 +936,31 @@ module Beaker
           docker.cleanup
         end
 
+        # docker-api converts Excon HTTP errors into Docker::Error::* exceptions
+        context 'when docker-api raises Docker errors' do
+          before do
+            allow(docker).to receive(:sleep).and_return(true)
+          end
+
+          it 'continues with the next step when the container cannot be killed because it is not running' do
+            allow(container).to receive(:kill).and_raise(::Docker::Error::ConflictError, 'container is not running')
+            expect(container).to receive(:delete).exactly(3).times
+            expect { docker.cleanup }.not_to raise_error
+          end
+
+          it 'still removes the images when deleting the container fails' do
+            allow(container).to receive(:delete).and_raise(::Docker::Error::NotFoundError, 'no such container')
+            expect(::Docker::Image).to receive(:remove).with(image.id).exactly(3).times
+            expect { docker.cleanup }.not_to raise_error
+          end
+
+          it 'logs the error message' do
+            allow(container).to receive(:kill).and_raise(::Docker::Error::ConflictError, 'container is not running')
+            expect(logger).to receive(:warn).with(/stop of container abcdef failed: container is not running/).at_least(:once)
+            docker.cleanup
+          end
+        end
+
         it 'does not delete the image if docker_preserve_image is set to true' do
           allow(docker).to receive(:sleep).and_return(true)
           hosts.each do |host|
