@@ -430,14 +430,14 @@ module Beaker
           begin
             container.kill
             sleep 2 # avoid a race condition where the root FS can't unmount
-          rescue Excon::Errors::ClientError => e
-            @logger.warn("stop of container #{container.id} failed: #{e.response.body}")
+          rescue Excon::Errors::ClientError, ::Docker::Error::DockerError => e
+            @logger.warn("stop of container #{container.id} failed: #{error_detail(e)}")
           end
           @logger.debug("delete container #{container.id}")
           begin
             container.delete(force: true)
-          rescue Excon::Errors::ClientError => e
-            @logger.warn("deletion of container #{container.id} failed: #{e.response.body}")
+          rescue Excon::Errors::ClientError, ::Docker::Error::DockerError => e
+            @logger.warn("deletion of container #{container.id} failed: #{error_detail(e)}")
           end
         end
 
@@ -451,7 +451,7 @@ module Beaker
           begin
             ::Docker::Image.remove(image_id)
           rescue Excon::Errors::ClientError => e
-            @logger.warn("deletion of image #{image_id} failed: #{e.response.body}")
+            @logger.warn("deletion of image #{image_id} failed: #{error_detail(e)}")
           rescue ::Docker::Error::DockerError => e
             @logger.warn("deletion of image #{image_id} caused internal Docker error: #{e.message}")
           end
@@ -462,6 +462,13 @@ module Beaker
     end
 
     private
+
+    # docker-api turns Excon HTTP errors into Docker::Error::* exceptions, which
+    # have no #response. Excon errors that reach us directly do.
+    def error_detail(error)
+      response = error.respond_to?(:response) ? error.response : nil
+      response.respond_to?(:body) ? response.body : error.message
+    end
 
     # container.exec runs an argv directly, without a shell. The sed script
     # therefore has to be a single argument without literal quotes, and the
