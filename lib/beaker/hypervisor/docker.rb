@@ -91,7 +91,7 @@ module Beaker
     def get_container_image(host)
       @logger.debug('Creating image')
 
-      return ::Docker::Image.create('fromImage' => host['image']) if host['use_image_as_is']
+      return ::Docker::Image.create('fromImage' => host['image'], **platform_opts_for(host)) if host['use_image_as_is']
 
       dockerfile = host['dockerfile']
       if dockerfile
@@ -107,7 +107,7 @@ module Beaker
             'dockerfile' => dockerfile,
             :rm => true,
             :buildargs => buildargs_for(host),
-          },
+          }.merge(platform_opts_for(host)),
         )
 
       elsif host['use_image_entry_point']
@@ -118,10 +118,10 @@ module Beaker
 
         cmd = host['docker_cmd']
         df += cmd if cmd
-        return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
+        return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) }.merge(platform_opts_for(host)))
       end
 
-      ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
+      ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) }.merge(platform_opts_for(host)))
     end
 
     # Nested Docker scenarios
@@ -290,7 +290,7 @@ module Beaker
           ok = false
           retries = 0
           while !ok && (retries < 5)
-            container = ::Docker::Container.create(container_opts)
+            container = create_container(container_opts, host)
 
             ssh_info = get_ssh_connection_info(container)
             if ::Docker.rootless? && ssh_info[:ip] == '127.0.0.1' && (ssh_info[:port].to_i < 1024)
@@ -482,6 +482,39 @@ module Beaker
 
     def root_password
       'root'
+    end
+
+    # Extra options for building or pulling an image for a specific platform
+    # (for example linux/arm64 or linux/ppc64le). Without it Docker resolves the
+    # image for the Docker host's own platform, which fails when a base image is
+    # only published for another architecture.
+    def platform_opts_for(host)
+      platform = host['docker_platform'].to_s
+      platform.empty? ? {} : { platform: platform }
+    end
+
+    # Creates the container, for the host's docker_platform if it has one.
+    #
+    # Docker picks the image for the Docker host's own platform when the
+    # container is created without one. An image ID does not always name a
+    # single platform: with the containerd image store, a pulled image keeps
+    # every platform it was pulled for, so a native copy of the same image
+    # would be used instead of the requested one. With a platform, Docker
+    # uses that platform or fails if it is not there.
+    #
+    # Released docker-api versions (2.3, 2.4) only send 'name' as a query
+    # parameter in Docker::Container.create, so the request is sent here.
+    # Use Docker::Container.create again once a release sends 'platform'.
+    def create_container(container_opts, host)
+      platform = host['docker_platform'].to_s
+      return ::Docker::Container.create(container_opts) if platform.empty?
+
+      connection = ::Docker.connection
+      query = { 'platform' => platform }
+      query['name'] = container_opts['name'] if container_opts['name']
+      body = container_opts.reject { |key, _| key.to_s == 'name' }
+      response = connection.post('/containers/create', query, body: JSON.generate(body))
+      ::Docker::Container.get(JSON.parse(response).fetch('Id'), {}, connection)
     end
 
     def buildargs_for(host)
