@@ -69,6 +69,26 @@ jobs:
       - name: Run acceptance tests
         run: bundle exec rake test:acceptance
 
+  # Simulates the WSL code path on a regular runner. WSLENV makes
+  # beaker-docker assume WSL, which normally means connecting to the container
+  # IP on port 22. The nodeset binds the ssh port explicitly, and the test
+  # checks that this binding is honoured. This does not exercise real WSL
+  # networking.
+  docker_wsl:
+    runs-on: ubuntu-26.04
+    needs: rubocop_and_matrix
+    name: Docker - simulated WSL
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Ruby ${{ needs.rubocop_and_matrix.outputs.latest_ruby }}
+        uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
+        with:
+          ruby-version: ${{ needs.rubocop_and_matrix.outputs.latest_ruby }}
+          bundler-cache: true
+      - name: Run WSL acceptance test
+        run: bundle exec rake test:acceptance:wsl
+
   # Run Beaker itself inside a container talking to the host daemon, so the
   # test containers are siblings. Covers both connection routing modes:
   # gateway - in_container? detects /.dockerenv and connects via the bridge
@@ -169,6 +189,7 @@ jobs:
     needs:
       - rubocop_and_matrix
       - docker
+      - docker_wsl
       - beaker_in_container
       - beaker_in_podman
       - podman
