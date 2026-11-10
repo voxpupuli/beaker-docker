@@ -3,6 +3,24 @@
 module Beaker
   # Docker hypervisor for Beaker acceptance testing framework
   class Docker < Beaker::Hypervisor
+    # The sshd_config settings beaker needs, as sed expressions. They are
+    # applied when the image is built (dockerfile_for) and again by fix_ssh,
+    # which runs after a puppet run may have rewritten the config, so they
+    # live in one place to keep those two from drifting apart.
+    SSHD_SED_EXPRESSIONS = [
+      # Allow root login using a password
+      's/^#?PermitRootLogin .*/PermitRootLogin yes/',
+      's/^#?PasswordAuthentication .*/PasswordAuthentication yes/',
+      # Disable reverse DNS lookups to prevent every. single. ssh
+      # operation taking 30 seconds while the lookup times out.
+      's/^#?UseDNS .*/UseDNS no/',
+      # Unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host
+      's/^#?UsePAM .*/UsePAM no/',
+      # Unbreak users with a bunch of SSH keys loaded in their keyring.
+      's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
+    ].freeze
+    private_constant :SSHD_SED_EXPRESSIONS
+
     # Docker hypvervisor initializtion
     # Env variables supported:
     # DOCKER_REGISTRY: Docker registry URL
@@ -471,6 +489,25 @@ module Beaker
       ['/bin/sh', '-c', "sed 's@session[[:space:]]*required[[:space:]]*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*"]
     end
 
+    # Shell command that applies SSHD_SED_EXPRESSIONS to /etc/ssh/sshd_config
+    # and to every file in /etc/ssh/sshd_config.d, since sshd uses the first
+    # value it finds for a setting and a drop-in can override the main file.
+    #
+    # It is run by /bin/sh, as a Dockerfile RUN step and through
+    # container.exec(['/bin/sh', '-c', ...]). That shell is not bash everywhere
+    # (it is dash on Debian/Ubuntu), so this sticks to POSIX sh: no compgen, no
+    # find. sshd_config is required, so sed failing on it fails the command.
+    # The files in sshd_config.d are optional: an unmatched glob is left as the
+    # literal pattern by every POSIX shell, hence the -f test.
+    def sshd_config_command
+      expressions = SSHD_SED_EXPRESSIONS.map { |expression| "-e '#{expression}'" }.join(' ')
+      [
+        'set -- /etc/ssh/sshd_config;',
+        'for f in /etc/ssh/sshd_config.d/*; do if [ -f "$f" ]; then set -- "$@" "$f"; fi; done;',
+        "sed -ri #{expressions} \"$@\"",
+      ].join(' ')
+    end
+
     # Look up the network a container is attached to. Podman's Docker-compatible
     # API reports HostConfig.NetworkMode as 'bridge' but keys
     # NetworkSettings.Networks by the actual network name, so fall back to the
@@ -570,28 +607,9 @@ module Beaker
         && echo root:#{root_password} | chpasswd
       DF
 
-      # Configure sshd service to allowroot login using password
-      # Also, disable reverse DNS lookups to prevent every. single. ssh
-      # operation taking 30 seconds while the lookup times out.
-      # Also unbreak users with a bunch of SSH keys loaded in their keyring.
-      # Also unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host (UsePAM no)
-      #
-      # RUN uses /bin/sh, which is not bash everywhere (it is dash on
-      # Debian/Ubuntu), so this sticks to POSIX sh: no compgen, no find.
-      # sshd_config is required, so sed failing on it fails the build.
-      # The files in sshd_config.d are optional: an unmatched glob is left as
-      # the literal pattern by every POSIX shell, hence the -f test.
-      dockerfile += <<~DF
-        RUN set -- /etc/ssh/sshd_config; \
-        for f in /etc/ssh/sshd_config.d/*; do if [ -f "$f" ]; then set -- "$@" "$f"; fi; done; \
-        sed -ri \
-        -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
-        -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
-        -e 's/^#?UseDNS .*/UseDNS no/' \
-        -e 's/^#?UsePAM .*/UsePAM no/' \
-        -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' \
-        "$@"
-      DF
+      # Configure the sshd service so beaker can log in as root with a
+      # password; see SSHD_SED_EXPRESSIONS for the settings
+      dockerfile += "RUN #{sshd_config_command}\n"
 
       # Any extra commands specified for the host
       dockerfile += (host['docker_image_commands'] || []).map { |cmd| "RUN #{cmd}\n" }.join
@@ -613,18 +631,13 @@ module Beaker
     end
 
     # a puppet run may have changed the ssh config which would
-    # keep us out of the container.  This is a best effort to fix it.
+    # keep us out of the container.  This is a best effort to fix it,
+    # by applying the same sshd_config changes as the image build does.
     # Optionally pass in a host object to to determine which ssh
     # restart command we should try.
     def fix_ssh(container, host = nil)
       @logger.debug("Fixing ssh on container #{container.id}")
-      container.exec(['sed', '-ri',
-                      '-e', 's/^#?PermitRootLogin .*/PermitRootLogin yes/',
-                      '-e', 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/',
-                      '-e', 's/^#?UseDNS .*/UseDNS no/',
-                      # Unbreak users with a bunch of SSH keys loaded in their keyring.
-                      '-e', 's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
-                      '/etc/ssh/sshd_config',])
+      container.exec(['/bin/sh', '-c', sshd_config_command])
 
       return unless host
 
