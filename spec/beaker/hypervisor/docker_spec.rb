@@ -954,6 +954,18 @@ module Beaker
             expect { docker.cleanup }.not_to raise_error
           end
 
+          it 'continues cleanup for other hosts after a container lookup fails' do
+            allow(docker).to receive(:find_container).and_call_original
+            allow(docker).to receive(:find_container)
+              .with(hosts[0])
+              .and_raise(::Docker::Error::TimeoutError, 'lookup timed out')
+            expect(logger).to receive(:warn).with("lookup of container for #{hosts[0].name} failed: lookup timed out")
+            expect(container).to receive(:delete).with(force: true).twice
+            expect(::Docker::Image).to receive(:remove).with(image.id).twice
+
+            docker.cleanup
+          end
+
           it 'logs the error message' do
             allow(container).to receive(:kill).and_raise(::Docker::Error::ConflictError, 'container is not running')
             expect(logger).to receive(:warn).with(/stop of container abcdef failed: container is not running/).at_least(:once)

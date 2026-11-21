@@ -424,7 +424,13 @@ module Beaker
         # container
         next if host['docker_preserve_container']
 
-        container = find_container(host)
+        begin
+          container = find_container(host)
+        rescue Excon::Errors::ClientError, ::Docker::Error::DockerError => e
+          @logger.warn("lookup of container for #{host.name} failed: #{error_detail(e)}")
+          next
+        end
+
         if container
           @logger.debug("stop container #{container.id}")
           begin
