@@ -177,10 +177,6 @@ module Beaker
         let(:test_container) { object_double(container) }
         let(:host) { hosts[0] }
 
-        before do
-          allow(docker).to receive(:dockerfile_for)
-        end
-
         platforms.each do |platform|
           it 'calls exec at least twice' do
             host['platform'] = platform
@@ -232,27 +228,27 @@ module Beaker
           end
         end
 
-        # install_ssh_components has to pick the same package manager as dockerfile_for
-        %w[el-8 el-9 el-10 el-11 fedora-39 fedora-40 fedora-43 amazon-2023].each do |os|
-          it "installs sshd with dnf, not yum, on #{os}" do
-            commands = []
-            allow(test_container).to receive(:exec) { |cmd| commands << cmd }
-            host['platform'] = "#{os}-x86_64"
+        {
+          'el-7' => 'yum',
+          'centos-7' => 'yum',
+          'el-8' => 'dnf',
+          'el-10' => 'dnf',
+          'el-11' => 'dnf',
+          'fedora-21' => 'yum',
+          'fedora-22' => 'dnf',
+          'fedora-39' => 'dnf',
+          'fedora-40' => 'dnf',
+          'fedora-45' => 'dnf',
+          'amazon-2023' => 'dnf',
+        }.each do |os, manager|
+          it "selects #{manager} for both sshd install paths on #{os}" do
+            host['platform'] = Beaker::Platform.new("#{os}-x86_64")
+            host['image'] = 'foobar'
+            allow(test_container).to receive(:exec)
+            expect(test_container).to receive(:exec).with([manager, 'install', '-y', 'sudo', 'openssh-server', 'openssh-clients'])
             docker.install_ssh_components(test_container, host)
 
-            expect(commands).to include(%w[dnf install -y sudo openssh-server openssh-clients])
-            expect(commands.flatten).not_to include('yum')
-          end
-        end
-
-        %w[el-7 centos-7].each do |os|
-          it "keeps using yum on #{os}" do
-            commands = []
-            allow(test_container).to receive(:exec) { |cmd| commands << cmd }
-            host['platform'] = "#{os}-x86_64"
-            docker.install_ssh_components(test_container, host)
-
-            expect(commands).to include(%w[yum install -y sudo openssh-server openssh-clients])
+            expect(docker.send(:dockerfile_for, host)).to include("RUN #{manager} clean all")
           end
         end
 
@@ -1067,40 +1063,6 @@ module Beaker
                                                               }))
 
           expect(dockerfile).to include('zypper -n in openssh')
-        end
-
-        (22..45).to_a.each do |fedora_release|
-          it "uses dnf on fedora #{fedora_release}" do
-            FakeFS.deactivate!
-            dockerfile = docker.send(:dockerfile_for, make_host('none', {
-                                                                  'platform' => Beaker::Platform.new("fedora-#{fedora_release}-x86_64"),
-                                                                  'image' => 'foobar',
-                                                                }))
-
-            expect(dockerfile).to include('dnf install -y sudo')
-          end
-        end
-
-        %w[el-8 el-9 el-10 el-11].each do |el|
-          it "uses dnf on #{el}" do
-            FakeFS.deactivate!
-            dockerfile = docker.send(:dockerfile_for, make_host('none', {
-                                                                  'platform' => "#{el}-x86_64",
-                                                                  'image' => 'foobar',
-                                                                }))
-
-            expect(dockerfile).to include('dnf install -y sudo')
-          end
-        end
-
-        it 'keeps using yum on el-7' do
-          FakeFS.deactivate!
-          dockerfile = docker.send(:dockerfile_for, make_host('none', {
-                                                                'platform' => 'el-7-x86_64',
-                                                                'image' => 'foobar',
-                                                              }))
-
-          expect(dockerfile).to include('yum install -y sudo')
         end
 
         it 'uses pacman on archlinux' do

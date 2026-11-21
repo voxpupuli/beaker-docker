@@ -3,13 +3,6 @@
 module Beaker
   # Docker hypervisor for Beaker acceptance testing framework
   class Docker < Beaker::Hypervisor
-    # Platforms that use dnf. Shared by the generated Dockerfile (dockerfile_for)
-    # and the sideloaded sshd installation (install_ssh_components) so that the
-    # two can't drift apart. The two digit alternatives cover el-10 and later
-    # and fedora-30 and later (including 40+), which earlier fell through to the
-    # legacy yum branch.
-    DNF_PLATFORMS = [/el-(?:[89]|\d{2,})/, /fedora-(?:2[2-9]|[3-9]\d)/, /amazon-2023/].freeze
-
     # Docker hypvervisor initializtion
     # Env variables supported:
     # DOCKER_REGISTRY: Docker registry URL
@@ -380,6 +373,10 @@ module Beaker
 
       hack_etc_hosts @hosts, @options
     end
+
+    # Shared by install_ssh_components and dockerfile_for.
+    DNF_PLATFORMS = [/el-(?:[89]|\d{2,})/, /fedora-(?:2[2-9]|[3-9]\d)/, /amazon-2023/].freeze
+    private_constant :DNF_PLATFORMS
 
     # This sideloads sshd after a container starts
     def install_ssh_components(container, host)
