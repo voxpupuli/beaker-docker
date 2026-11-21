@@ -2,6 +2,10 @@
 
 require 'spec_helper'
 require 'fakefs/spec_helpers'
+require 'fileutils'
+require 'open3'
+require 'shellwords'
+require 'tmpdir'
 
 module Beaker
   platforms = [
@@ -1031,7 +1035,7 @@ module Beaker
 
             expect(dockerfile).not_to include('compgen')
             expect(dockerfile).to include('RUN set -- /etc/ssh/sshd_config; for f in /etc/ssh/sshd_config.d/*; do if [ -f "$f" ]; then set -- "$@" "$f"; fi; done; sed -ri')
-            expect(dockerfile).to include(%q(MaxAuthTries 1000/' "$@"))
+            expect(dockerfile).to include(%q(MaxAuthTries 1000/I' "$@"))
           end
         end
 
@@ -1127,6 +1131,22 @@ module Beaker
 
         it 'also patches the files in sshd_config.d' do
           expect(command).to include('/etc/ssh/sshd_config.d/*')
+        end
+
+        it 'rewrites directives with case differences and horizontal whitespace in an included file' do
+          FakeFS.without do
+            Dir.mktmpdir do |dir|
+              main = File.join(dir, 'sshd_config')
+              drop_in = File.join(dir, 'sshd_config.d', '00-local.conf')
+              FileUtils.mkdir_p(File.dirname(drop_in))
+              File.write(main, "Include #{dir}/sshd_config.d/*.conf\nPasswordAuthentication yes\n")
+              File.write(drop_in, "  passwordauthentication\tno\nPermitRootLogin\tno\n# UseDNS yes\n")
+
+              _stdout, stderr, status = Open3.capture3('/bin/sh', '-c', command.gsub('/etc/ssh', Shellwords.escape(dir)))
+              expect(status.success?).to be(true), stderr
+              expect(File.read(drop_in).lines.map(&:chomp)).to eq(['PasswordAuthentication yes', 'PermitRootLogin yes', 'UseDNS no'])
+            end
+          end
         end
 
         it 'does not use bash builtins' do

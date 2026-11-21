@@ -9,15 +9,15 @@ module Beaker
     # live in one place to keep those two from drifting apart.
     SSHD_SED_EXPRESSIONS = [
       # Allow root login using a password
-      's/^#?PermitRootLogin .*/PermitRootLogin yes/',
-      's/^#?PasswordAuthentication .*/PasswordAuthentication yes/',
+      's/^[[:blank:]]*(#[[:blank:]]*)?PermitRootLogin[[:blank:]]+.*/PermitRootLogin yes/I',
+      's/^[[:blank:]]*(#[[:blank:]]*)?PasswordAuthentication[[:blank:]]+.*/PasswordAuthentication yes/I',
       # Disable reverse DNS lookups to prevent every. single. ssh
       # operation taking 30 seconds while the lookup times out.
-      's/^#?UseDNS .*/UseDNS no/',
+      's/^[[:blank:]]*(#[[:blank:]]*)?UseDNS[[:blank:]]+.*/UseDNS no/I',
       # Unbreak CentOS9 & Fedora containers on Ubuntu 24.04 host
-      's/^#?UsePAM .*/UsePAM no/',
+      's/^[[:blank:]]*(#[[:blank:]]*)?UsePAM[[:blank:]]+.*/UsePAM no/I',
       # Unbreak users with a bunch of SSH keys loaded in their keyring.
-      's/^#?MaxAuthTries.*/MaxAuthTries 1000/',
+      's/^[[:blank:]]*(#[[:blank:]]*)?MaxAuthTries[[:blank:]]+.*/MaxAuthTries 1000/I',
     ].freeze
     private_constant :SSHD_SED_EXPRESSIONS
 
