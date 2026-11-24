@@ -374,6 +374,10 @@ module Beaker
       hack_etc_hosts @hosts, @options
     end
 
+    # Shared by install_ssh_components and dockerfile_for.
+    DNF_PLATFORMS = [/el-(?:[89]|\d{2,})/, /fedora-(?:2[2-9]|[3-9]\d)/, /amazon-2023/].freeze
+    private_constant :DNF_PLATFORMS
+
     # This sideloads sshd after a container starts
     def install_ssh_components(container, host)
       case host['platform']
@@ -381,7 +385,7 @@ module Beaker
         container.exec(%w[apt-get update])
         container.exec(%w[apt-get install -y openssh-server openssh-client])
         container.exec(pam_loginuid_fix)
-      when /el-[89]/, /fedora-(2[2-9]|3[0-9])/, /amazon-2023/
+      when *DNF_PLATFORMS
         container.exec(%w[dnf clean all])
         container.exec(%w[dnf install -y sudo openssh-server openssh-clients])
         container.exec(%w[ssh-keygen -A])
@@ -531,7 +535,7 @@ module Beaker
           RUN apt-get update \
           && apt-get install -y openssh-server openssh-client #{additional_packages.join(' ')}
         DF
-      when /el-([8-9]|10)/, /fedora-(2[2-9]|3)/, /amazon-2023/
+      when *DNF_PLATFORMS
         dockerfile += <<~DF
           RUN dnf clean all \
           && dnf install -y sudo openssh-server openssh-clients #{additional_packages.join(' ')} \
