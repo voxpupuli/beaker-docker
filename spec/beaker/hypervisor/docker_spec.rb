@@ -177,10 +177,6 @@ module Beaker
         let(:test_container) { object_double(container) }
         let(:host) { hosts[0] }
 
-        before do
-          allow(docker).to receive(:dockerfile_for)
-        end
-
         platforms.each do |platform|
           it 'calls exec at least twice' do
             host['platform'] = platform
@@ -229,6 +225,30 @@ module Beaker
 
               expect(commands).to include(['sed', '-ri', 's/^#?UsePAM .*/UsePAM no/', '/etc/ssh/sshd_config'])
             end
+          end
+        end
+
+        {
+          'el-7' => 'yum',
+          'centos-7' => 'yum',
+          'el-8' => 'dnf',
+          'el-10' => 'dnf',
+          'el-11' => 'dnf',
+          'fedora-21' => 'yum',
+          'fedora-22' => 'dnf',
+          'fedora-39' => 'dnf',
+          'fedora-40' => 'dnf',
+          'fedora-45' => 'dnf',
+          'amazon-2023' => 'dnf',
+        }.each do |os, manager|
+          it "selects #{manager} for both sshd install paths on #{os}" do
+            host['platform'] = Beaker::Platform.new("#{os}-x86_64")
+            host['image'] = 'foobar'
+            allow(test_container).to receive(:exec)
+            expect(test_container).to receive(:exec).with([manager, 'install', '-y', 'sudo', 'openssh-server', 'openssh-clients'])
+            docker.install_ssh_components(test_container, host)
+
+            expect(docker.send(:dockerfile_for, host)).to include("RUN #{manager} clean all")
           end
         end
 
@@ -1043,18 +1063,6 @@ module Beaker
                                                               }))
 
           expect(dockerfile).to include('zypper -n in openssh')
-        end
-
-        (22..39).to_a.each do |fedora_release|
-          it "uses dnf on fedora #{fedora_release}" do
-            FakeFS.deactivate!
-            dockerfile = docker.send(:dockerfile_for, make_host('none', {
-                                                                  'platform' => Beaker::Platform.new("fedora-#{fedora_release}-x86_64"),
-                                                                  'image' => 'foobar',
-                                                                }))
-
-            expect(dockerfile).to include('dnf install -y sudo')
-          end
         end
 
         it 'uses pacman on archlinux' do
