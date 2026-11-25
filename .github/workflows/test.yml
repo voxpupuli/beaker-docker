@@ -164,6 +164,44 @@ jobs:
       - name: Run acceptance tests
         run: bundle exec rake test:acceptance
 
+  # Run the same foreign-architecture acceptance test against both APIs.
+  cross_platform:
+    runs-on: ubuntu-24.04
+    needs: rubocop_and_matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [docker, podman]
+    name: ARM64 on AMD64 (${{ matrix.backend }})
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Enable ARM64 emulation
+        run: |
+          test "$(uname -m)" = x86_64
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support
+          sudo update-binfmts --enable qemu-aarch64
+          grep -qx enabled /proc/sys/fs/binfmt_misc/qemu-aarch64
+          grep -q '^flags:.*F' /proc/sys/fs/binfmt_misc/qemu-aarch64
+      - name: Start podman
+        if: matrix.backend == 'podman'
+        run: |
+          sudo systemctl stop docker.service docker.socket
+          systemctl start --user podman.socket
+          echo "DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock" >> "$GITHUB_ENV"
+      - name: Install Ruby ${{ needs.rubocop_and_matrix.outputs.latest_ruby }}
+        uses: ruby/setup-ruby@be3c7df29b3349ec6bcfc6b4792f1cf9f5237d18 # v1.343.0
+        with:
+          ruby-version: ${{ needs.rubocop_and_matrix.outputs.latest_ruby }}
+          bundler-cache: true
+      - name: Run ARM64 acceptance tests
+        env:
+          BEAKER_setfile: acceptance/config/nodes/arm64.yaml
+        run: |
+          bundle exec beaker --hosts "$BEAKER_setfile" \
+            --tests acceptance/platform_tests/ --log-level debug --debug
+
   tests:
     if: always()
     needs:
@@ -172,6 +210,7 @@ jobs:
       - beaker_in_container
       - beaker_in_podman
       - podman
+      - cross_platform
       - rspec
     runs-on: ubuntu-24.04
     name: Test suite

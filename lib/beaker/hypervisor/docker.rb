@@ -90,8 +90,9 @@ module Beaker
 
     def get_container_image(host)
       @logger.debug('Creating image')
+      platform_opts = platform_opts_for(host)
 
-      return ::Docker::Image.create('fromImage' => host['image']) if host['use_image_as_is']
+      return ::Docker::Image.create('fromImage' => host['image'], **platform_opts) if host['use_image_as_is']
 
       dockerfile = host['dockerfile']
       if dockerfile
@@ -107,7 +108,7 @@ module Beaker
             'dockerfile' => dockerfile,
             :rm => true,
             :buildargs => buildargs_for(host),
-          },
+          }.merge(platform_opts),
         )
 
       elsif host['use_image_entry_point']
@@ -118,10 +119,10 @@ module Beaker
 
         cmd = host['docker_cmd']
         df += cmd if cmd
-        return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) })
+        return ::Docker::Image.build(df, { rm: true, buildargs: buildargs_for(host) }.merge(platform_opts))
       end
 
-      ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) })
+      ::Docker::Image.build(dockerfile_for(host), { rm: true, buildargs: buildargs_for(host) }.merge(platform_opts))
     end
 
     # Nested Docker scenarios
@@ -233,6 +234,7 @@ module Beaker
         container_opts = get_container_opts(host, image_name)
         container_opts.merge!(@options[:dockeropts]) if @options[:dockeropts]
         container_opts.merge!(host['dockeropts']) if host['dockeropts']
+        container_opts.merge!(platform_opts_for(host))
 
         container = find_container(host)
 
@@ -482,6 +484,15 @@ module Beaker
 
     def root_password
       'root'
+    end
+
+    # Extra options for building or pulling an image for a specific platform
+    # (for example linux/arm64 or linux/ppc64le). Without it Docker resolves the
+    # image for the Docker host's own platform, which fails when a base image is
+    # only published for another architecture.
+    def platform_opts_for(host)
+      platform = host['docker_platform'].to_s
+      platform.empty? ? {} : { platform: platform }
     end
 
     def buildargs_for(host)

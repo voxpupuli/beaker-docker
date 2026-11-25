@@ -23,6 +23,7 @@ HOSTS:
     platform: debian-12-x86_64
     hypervisor: docker
     image: debian:12
+    docker_platform: linux/amd64
     roles:
       - agent
     docker_cmd: '["/sbin/init"]'

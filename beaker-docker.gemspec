@@ -34,7 +34,7 @@ Gem::Specification.new do |s|
 
   # Run time dependencies
   s.add_dependency 'beaker', '>= 4', '< 8'
-  s.add_dependency 'docker-api', '~> 2.3'
+  s.add_dependency 'docker-api', '~> 2.5'
   # excon is a docker-api dependency, 1.2.6 is broken
   # https://github.com/excon/excon/issues/884
   s.add_dependency 'excon', '>= 1.2.5', '< 2', '!= 1.2.6'
